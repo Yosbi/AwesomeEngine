@@ -1,0 +1,6 @@
+;AweD3D.def
+;The following functions are exported from this DLL
+LIBRARY	"AweD3D.dll"
+EXPORTS
+	CreateRenderDevice
+	ReleaseRenderDevice
