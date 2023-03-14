@@ -66,7 +66,10 @@ HRESULT AweD3D::Clear(bool bClearPixel, bool bClearDepth, bool bClearStencil)
 
 void AweD3D::SetClearColor(float fRed, float fGreen, float fBlue)
 {
-	m_ClearColor = { fRed, fGreen, fBlue, 1.0f };
+	m_ClearColor[0] = fRed;
+	m_ClearColor[1] = fGreen;
+	m_ClearColor[2] = fBlue;
+	m_ClearColor[3] = 1.0f;
 }
 
 HRESULT AweD3D::Go()
@@ -78,28 +81,23 @@ void AweD3D::Log(std::wstring, ...)
 {
 }
 
-void AweD3D::OnResize()
+void AweD3D::ResizeSwapChain()
 {
-	assert(m_d3d12Device);
-	assert(m_SwapChain);
-
-
-	// Flush before changing any resources.
-	m_pCommandQueue->Flush();
-
-	// Release the previous resources we will be recreating.
-	for (int i = 0; i < sm_nSwapChainBufferCount; ++i)
-		m_SwapChainBuffer[i].Reset();
-	m_DepthStencilBuffer.Reset();
-
 	// Resize the swap chain.
 	ThrowIfFailed(m_SwapChain->ResizeBuffers(
 		sm_nSwapChainBufferCount,
 		m_nClientWidth, m_nClientHeight,
 		m_BackBufferFormat,
-		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH));
+		CheckTearingSupport() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0));
 
 	m_nCurrBackBuffer = 0;
+}
+
+void AweD3D::UpdateRenderTargetView()
+{
+	// Release the previous resources we will be recreating.
+	for (int i = 0; i < sm_nSwapChainBufferCount; ++i)
+		m_SwapChainBuffer[i].Reset();
 
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
 	for (UINT i = 0; i < sm_nSwapChainBufferCount; i++)
@@ -108,6 +106,11 @@ void AweD3D::OnResize()
 		m_d3d12Device->CreateRenderTargetView(m_SwapChainBuffer[i].Get(), nullptr, rtvHeapHandle);
 		rtvHeapHandle.Offset(1, m_RtvDescriptorSize);
 	}
+}
+
+void AweD3D::UpdateDepthStencilView()
+{
+	m_DepthStencilBuffer.Reset();
 
 	// Create the depth/stencil buffer and view.
 	D3D12_RESOURCE_DESC depthStencilDesc;
@@ -118,8 +121,8 @@ void AweD3D::OnResize()
 	depthStencilDesc.DepthOrArraySize = 1;
 	depthStencilDesc.MipLevels = 1;
 	depthStencilDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
-	depthStencilDesc.SampleDesc.Count = m_b4xMsaaState ? 4 : 1;
-	depthStencilDesc.SampleDesc.Quality = m_b4xMsaaState ? (m_n4xMsaaQuality - 1) : 0;
+	depthStencilDesc.SampleDesc.Count = 1;
+	depthStencilDesc.SampleDesc.Quality = 0;
 	depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
 	depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
 
@@ -146,7 +149,7 @@ void AweD3D::OnResize()
 
 	// Transition the resource from its initial state to be used as a depth buffer.
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
-	
+
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_DepthStencilBuffer.Get(),
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	commandList->ResourceBarrier(1, &barrier);
@@ -156,6 +159,19 @@ void AweD3D::OnResize()
 
 	// Wait until resize is complete.
 	m_pCommandQueue->Flush();
+}
+
+void AweD3D::OnResize()
+{
+	assert(m_d3d12Device);
+	assert(m_SwapChain);
+
+	// Flush before changing any resources.
+	m_pCommandQueue->Flush();
+
+	ResizeSwapChain();
+	UpdateRenderTargetView();
+	UpdateDepthStencilView();
 
 	// Update the viewport transform to cover the client area.
 	m_ScreenViewport.TopLeftX = 0;

@@ -71,7 +71,7 @@ HRESULT ReleaseRenderDevice(AwesomeRenderDevice** pDevice)
 // Desc: Constructor
 //-----------------------------------------------------------------------------
 AweD3D::AweD3D(HINSTANCE hDll) :
-	m_hDLL(hDll), 
+	m_hDLL(hDll),
 	m_hWnd(nullptr),
 	m_nClientWidth(1280),
 	m_nClientHeight(720),
@@ -82,20 +82,14 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 	m_d3d12Device(nullptr),
 	m_dxgiFactory(nullptr),
 	m_SwapChain(nullptr),
-	m_ClearColor({ 0.0f, 0.0f, 0.0f, 1.0f }),
-	m_pCommandQueue(nullptr)
-{
-	// Update the viewport transform to cover the client area.
-	m_ScreenViewport.TopLeftX = 0;
-	m_ScreenViewport.TopLeftY = 0;
-	m_ScreenViewport.Width = static_cast<float>(m_nClientWidth);
-	m_ScreenViewport.Height = static_cast<float>(m_nClientHeight);
-	m_ScreenViewport.MinDepth = 0.0f;
-	m_ScreenViewport.MaxDepth = 1.0f;
-
-	// The sissor is the entire view port
-	m_ScissorRect = { 0, 0, m_nClientWidth, m_nClientHeight };
-}
+	m_pCommandQueue(nullptr),
+	m_bVSync(true),
+	m_ScissorRect({ 0, 0, m_nClientWidth, m_nClientHeight }),
+	m_ScreenViewport({/*TopLeftX*/ 0, /*TopLeftY*/ 0, 
+		/*Width*/ static_cast<float>(m_nClientWidth), 
+		/*Height*/ static_cast<float>(m_nClientHeight) , 
+		/*MinDepth*/ 0.0f, /*MaxDepth*/ 1.0f})
+{}
 
 //-----------------------------------------------------------------------------
 // Name: ~AweD3D
@@ -118,6 +112,26 @@ void AweD3D::Release()
 	m_pCommandQueue = nullptr;
 }
 
+
+//-----------------------------------------------------------------------------
+// Name: EnableDebugLayer
+// Desc: if DEBUG flag is defined, it allows the to log all the possible errors
+// produced by the DX12 objects
+//-----------------------------------------------------------------------------
+bool AweD3D::EnableDebugLayer()
+{
+#if defined(DEBUG) || defined(_DEBUG) 
+	// Enable the D3D12 debug layer.
+	{
+		ComPtr<ID3D12Debug> debugController;
+		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
+		debugController->EnableDebugLayer();
+		return true;
+	}
+#endif
+	return false;
+}
+
 //-----------------------------------------------------------------------------
 // Name: Init
 // Desc: Initialize  the idea here will be to use a dialogbox to select 
@@ -138,24 +152,19 @@ HRESULT AweD3D::Init(HWND hWnd)
 	
 }
 
-//-----------------------------------------------------------------------------
-// Name: InitDirect3D
-// Desc: Initialize the direct3D objects
-//-----------------------------------------------------------------------------
-bool AweD3D::InitDirect3D()
+void AweD3D::InitFactory()
 {
-#if defined(DEBUG) || defined(_DEBUG) 
-	// Enable the D3D12 debug layer.
-	{
-		ComPtr<ID3D12Debug> debugController;
-		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
-		debugController->EnableDebugLayer();
-	}
-#endif
+	UINT createFactoryFlags = 0;
+
+	if (EnableDebugLayer())
+		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 
 	// Creating factory
-	ThrowIfFailed(CreateDXGIFactory(IID_PPV_ARGS(&m_dxgiFactory)));
+	ThrowIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_dxgiFactory)));
+}
 
+void AweD3D::CreateDevice()
+{
 	// Try to create hardware device.
 	HRESULT hardwareResult = D3D12CreateDevice(
 		nullptr,             // default adapter
@@ -174,29 +183,91 @@ bool AweD3D::InitDirect3D()
 			IID_PPV_ARGS(&m_d3d12Device)));
 	}
 
+	// Enable debug messages in debug mode.
+#if defined(_DEBUG)
+	ComPtr<ID3D12InfoQueue> pInfoQueue;
+	if (SUCCEEDED(m_d3d12Device.As(&pInfoQueue)))
+	{
+		pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_CORRUPTION, TRUE);
+		pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_ERROR, TRUE);
+		pInfoQueue->SetBreakOnSeverity(D3D12_MESSAGE_SEVERITY_WARNING, TRUE);
+		// Suppress whole categories of messages
+		//D3D12_MESSAGE_CATEGORY Categories[] = {};
 
+		// Suppress messages based on their severity level
+		D3D12_MESSAGE_SEVERITY Severities[] =
+		{
+			D3D12_MESSAGE_SEVERITY_INFO
+		};
 
-	// Getting sizes of resource descriptors(views) as these are hardware deppendant
+		// Suppress individual messages by their ID
+		D3D12_MESSAGE_ID DenyIds[] = {
+			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,   // I'm really not sure how to avoid this message.
+			D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,                         // This warning occurs when using capture frame while graphics debugging.
+			D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE,                       // This warning occurs when using capture frame while graphics debugging.
+		};
+
+		D3D12_INFO_QUEUE_FILTER NewFilter = {};
+		//NewFilter.DenyList.NumCategories = _countof(Categories);
+		//NewFilter.DenyList.pCategoryList = Categories;
+		NewFilter.DenyList.NumSeverities = _countof(Severities);
+		NewFilter.DenyList.pSeverityList = Severities;
+		NewFilter.DenyList.NumIDs = _countof(DenyIds);
+		NewFilter.DenyList.pIDList = DenyIds;
+
+		ThrowIfFailed(pInfoQueue->PushStorageFilter(&NewFilter));
+	}
+#endif
+}
+
+void AweD3D::CreateCommandQueue()
+{
+	// Creating command queue 
+	m_pCommandQueue = new AweD3DCommandQueue(m_d3d12Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+}
+
+bool AweD3D::CheckTearingSupport()
+{
+	BOOL allowTearing = FALSE;
+
+	// Rather than create the DXGI 1.5 factory interface directly, we create the
+	// DXGI 1.4 interface and query for the 1.5 interface. This is to enable the 
+	// graphics debugging tools which will not support the 1.5 factory interface 
+	// until a future update.
+	ComPtr<IDXGIFactory5> factory5;
+	if (SUCCEEDED(m_dxgiFactory.As(&factory5)))
+	{
+		if (FAILED(factory5->CheckFeatureSupport(
+			DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+			&allowTearing, sizeof(allowTearing))))
+		{
+			allowTearing = FALSE;
+		}
+	}
+	
+
+	return allowTearing == TRUE;
+}
+
+void AweD3D::InitDescriptorSizes()
+{
 	m_RtvDescriptorSize = m_d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	m_DsvDescriptorSize = m_d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	m_CbvSrvUavDescriptorSize = m_d3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+}
+//-----------------------------------------------------------------------------
+// Name: InitDirect3D
+// Desc: Initialize the direct3D objects
+//-----------------------------------------------------------------------------
+bool AweD3D::InitDirect3D()
+{
 
-	// Checking for 4X MSAA support for the backbuffer format
-	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
-	msQualityLevels.Format = m_BackBufferFormat;
-	msQualityLevels.SampleCount = 4;
-	msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
-	msQualityLevels.NumQualityLevels = 0;
-	ThrowIfFailed(m_d3d12Device->CheckFeatureSupport(
-		D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
-		&msQualityLevels,
-		sizeof(msQualityLevels)));
-
-	m_n4xMsaaQuality = msQualityLevels.NumQualityLevels;
-	assert(m_n4xMsaaQuality > 0 && "Unexpected MSAA quality level.");
-
-	// Creating command queue 
-	m_pCommandQueue = new AweD3DCommandQueue(m_d3d12Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+	InitFactory();
+	CreateDevice();
+	CreateCommandQueue();
+	
+	// Getting sizes of resource descriptors(views) as these are hardware deppendant
+	InitDescriptorSizes();
 
 	CreateSwapChain();
 	CreateRtvAndDsvDescriptorHeaps();
@@ -209,27 +280,27 @@ void AweD3D::CreateSwapChain()
 	// Release the previous swapchain we will be recreating.
 	m_SwapChain.Reset();
 
-	DXGI_SWAP_CHAIN_DESC sd;
-	sd.BufferDesc.Width = m_nClientWidth;
-	sd.BufferDesc.Height = m_nClientHeight;
-	sd.BufferDesc.RefreshRate.Numerator = 60;
-	sd.BufferDesc.RefreshRate.Denominator = 1;
-	sd.BufferDesc.Format = m_BackBufferFormat;
-	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-	sd.SampleDesc.Count = m_b4xMsaaState ? 4 : 1;
-	sd.SampleDesc.Quality = m_b4xMsaaState ? (m_n4xMsaaQuality - 1) : 0;
+	DXGI_SWAP_CHAIN_DESC1 sd;
+	sd.Width = m_nClientWidth;
+	sd.Height = m_nClientHeight;
+	sd.Format = m_BackBufferFormat;
+	sd.Stereo = FALSE;
+	sd.SampleDesc.Count = 1;
+	sd.SampleDesc.Quality = 0;
 	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	sd.BufferCount = sm_nSwapChainBufferCount;
-	sd.OutputWindow = m_hWnd;
-	sd.Windowed = true;
+	sd.Scaling = DXGI_SCALING_STRETCH;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	sd.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+	sd.Flags = CheckTearingSupport() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 	// Note: Swap chain uses queue to perform flush.
-	ThrowIfFailed(m_dxgiFactory->CreateSwapChain(
+	ThrowIfFailed(m_dxgiFactory->CreateSwapChainForHwnd(
 		m_pCommandQueue->GetD3D12CommandQueue().Get(),
+		m_hWnd,
 		&sd,
+		nullptr,
+		nullptr,
 		m_SwapChain.GetAddressOf()));
 
 	// Disable the Alt+Enter fullscreen toggle feature. Switching to fullscreen
@@ -237,22 +308,23 @@ void AweD3D::CreateSwapChain()
 	ThrowIfFailed(m_dxgiFactory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER));
 }
 
+ComPtr<ID3D12DescriptorHeap> AweD3D::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors)
+{
+	ComPtr<ID3D12DescriptorHeap> descriptorHeap;
+
+	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
+	desc.NumDescriptors = numDescriptors;
+	desc.Type = type;
+	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	desc.NodeMask = 0;
+
+	ThrowIfFailed(m_d3d12Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)));
+
+	return descriptorHeap;
+}
+
 void AweD3D::CreateRtvAndDsvDescriptorHeaps()
 {
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
-	rtvHeapDesc.NumDescriptors = sm_nSwapChainBufferCount;
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	rtvHeapDesc.NodeMask = 0;
-	ThrowIfFailed(m_d3d12Device->CreateDescriptorHeap(
-		&rtvHeapDesc, IID_PPV_ARGS(m_RtvHeap.GetAddressOf())));
-
-
-	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
-	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	dsvHeapDesc.NodeMask = 0;
-	ThrowIfFailed(m_d3d12Device->CreateDescriptorHeap(
-		&dsvHeapDesc, IID_PPV_ARGS(m_DsvHeap.GetAddressOf())));
+	m_RtvHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, sm_nSwapChainBufferCount);
+	m_DsvHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
 }

@@ -23,6 +23,7 @@
 #include "d3dx12.h"
 #include <dxgi.h>
 #include <dxgi1_4.h>
+#include <dxgi1_5.h>
 #include <DirectXColors.h>
 #include <directxmath.h>
 #include "AweD3DException.h"
@@ -36,8 +37,8 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "D3DCompiler.lib")
 
-using Microsoft::WRL::ComPtr;
-using namespace DirectX;
+using Microsoft::WRL::ComPtr;	// TODO: Avoid this
+using namespace DirectX;		// TODO: Avoid this
 
 //----------------------------------------------------------------------
 // Name: DLLEntryPoint
@@ -76,14 +77,29 @@ public:
 
 private:
 	// Private functions
+	virtual void Release(); // Release memory and objects created
+
+
 	HRESULT Go();																		// Start API with values from dialog box
 	void	Log(std::wstring, ...);														// Write to log file
 
-	virtual void Release();
+	
 
-	virtual bool InitDirect3D();
+	bool EnableDebugLayer();
+	void InitFactory();
+	void CreateDevice();
+	void CreateCommandQueue();
+	bool CheckTearingSupport();
+	void InitDescriptorSizes();
+	bool InitDirect3D();
 	void CreateSwapChain();
 	void CreateRtvAndDsvDescriptorHeaps();
+	void ResizeSwapChain();
+	void UpdateRenderTargetView();
+	void UpdateDepthStencilView();
+	ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
+		
+
 	void OnResize();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilView() const;
@@ -105,7 +121,7 @@ private:
 
 	Microsoft::WRL::ComPtr<IDXGIFactory4> m_dxgiFactory;
 	Microsoft::WRL::ComPtr<ID3D12Device2> m_d3d12Device;
-	Microsoft::WRL::ComPtr<IDXGISwapChain> m_SwapChain;
+	Microsoft::WRL::ComPtr<IDXGISwapChain1> m_SwapChain;
 
 	// Buffer descriptors sizes
 	UINT m_RtvDescriptorSize = 0;		// Render target 
@@ -115,10 +131,6 @@ private:
 	// Buffers formats
 	DXGI_FORMAT m_BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM; // Backbuffer format
 	DXGI_FORMAT m_DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; // DeepStencil 
-
-	// Multisampling 
-	bool      m_b4xMsaaState = false;    // 4X MSAA enabled
-	UINT      m_n4xMsaaQuality = 0;      // quality level of 4X MSAA
 
 	// Swap chain stuff and actual buffers refs
 	static const int sm_nSwapChainBufferCount = 2;
@@ -137,10 +149,10 @@ private:
 
 	// CommandQueue
 	AweD3DCommandQueue* m_pCommandQueue;
-
-	DirectX::XMVECTORF32 m_ClearColor;
+	float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	bool m_bIsSceneRunning;
 	bool m_bStencil;
+	bool m_bVSync;
 
 };
 
