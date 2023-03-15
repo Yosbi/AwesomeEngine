@@ -84,6 +84,7 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 	m_SwapChain(nullptr),
 	m_pCommandQueue(nullptr),
 	m_bVSync(true),
+	m_bTearingSupported(false),
 	m_ScissorRect({ 0, 0, m_nClientWidth, m_nClientHeight }),
 	m_ScreenViewport({/*TopLeftX*/ 0, /*TopLeftY*/ 0, 
 		/*Width*/ static_cast<float>(m_nClientWidth), 
@@ -226,7 +227,7 @@ void AweD3D::CreateCommandQueue()
 	m_pCommandQueue = new AweD3DCommandQueue(m_d3d12Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
-bool AweD3D::CheckTearingSupport()
+void AweD3D::CheckTearingSupport()
 {
 	BOOL allowTearing = FALSE;
 
@@ -246,7 +247,7 @@ bool AweD3D::CheckTearingSupport()
 	}
 	
 
-	return allowTearing == TRUE;
+	m_bTearingSupported = (allowTearing == TRUE);
 }
 
 void AweD3D::InitDescriptorSizes()
@@ -266,6 +267,7 @@ bool AweD3D::InitDirect3D()
 	CreateDevice();
 	CreateCommandQueue();
 	
+	
 	// Getting sizes of resource descriptors(views) as these are hardware deppendant
 	InitDescriptorSizes();
 
@@ -277,6 +279,8 @@ bool AweD3D::InitDirect3D()
 
 void AweD3D::CreateSwapChain()
 {
+	CheckTearingSupport();
+
 	// Release the previous swapchain we will be recreating.
 	m_SwapChain.Reset();
 
@@ -292,7 +296,7 @@ void AweD3D::CreateSwapChain()
 	sd.Scaling = DXGI_SCALING_STRETCH;
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-	sd.Flags = CheckTearingSupport() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
+	sd.Flags = m_bTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 	// Note: Swap chain uses queue to perform flush.
 	ThrowIfFailed(m_dxgiFactory->CreateSwapChainForHwnd(

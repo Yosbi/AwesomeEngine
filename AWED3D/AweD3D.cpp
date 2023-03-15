@@ -53,7 +53,9 @@ void AweD3D::EndRendering()
 	m_pCommandQueue->ExecuteCommandList(commandList);
 	
 	// swap the back and front buffers
-	ThrowIfFailed(m_SwapChain->Present(1, 0));
+	UINT syncInterval = m_bVSync ? 1 : 0;
+	UINT presentFlags = m_bTearingSupported && !m_bVSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+	ThrowIfFailed(m_SwapChain->Present(syncInterval, presentFlags)); // (1, 0)
 	m_nCurrBackBuffer = (m_nCurrBackBuffer + 1) % sm_nSwapChainBufferCount;
 
 	m_pCommandQueue->Flush();
@@ -88,7 +90,7 @@ void AweD3D::ResizeSwapChain()
 		sm_nSwapChainBufferCount,
 		m_nClientWidth, m_nClientHeight,
 		m_BackBufferFormat,
-		CheckTearingSupport() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0));
+		m_bTearingSupported ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0));
 
 	m_nCurrBackBuffer = 0;
 }

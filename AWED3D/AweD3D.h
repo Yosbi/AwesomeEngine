@@ -89,7 +89,7 @@ private:
 	void InitFactory();
 	void CreateDevice();
 	void CreateCommandQueue();
-	bool CheckTearingSupport();
+	void CheckTearingSupport();
 	void InitDescriptorSizes();
 	bool InitDirect3D();
 	void CreateSwapChain();
@@ -152,6 +152,7 @@ private:
 	float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	bool m_bIsSceneRunning;
 	bool m_bStencil;
+	bool m_bTearingSupported;
 	bool m_bVSync;
 
 };
