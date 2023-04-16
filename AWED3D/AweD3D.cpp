@@ -4,8 +4,6 @@
 // yosbi@outlook.com
 // Created on 11/03/2023
 //-----------------------------------------------------------------------
-
-
 #include "AweD3D.h"
 
 
@@ -18,17 +16,9 @@ HRESULT AweD3D::BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearSt
 {
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
 
-	commandList->RSSetViewports(1, &m_ScreenViewport);
-	commandList->RSSetScissorRects(1, &m_ScissorRect);
-
 	// Indicate a state transition on the resource usage.
 	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(getCurrentBackBuffer(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	commandList->ResourceBarrier(1, &barrier);
-
-	// Specify the buffers we are going to render to.
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = getCurrentBackBufferView();
-	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = getDepthStencilView();
-	commandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
 
 	// Clear the back buffer and depth buffer.
 	commandList->ClearRenderTargetView(getCurrentBackBufferView(), m_ClearColor, 0, nullptr);
@@ -76,11 +66,13 @@ void AweD3D::SetClearColor(float fRed, float fGreen, float fBlue)
 
 HRESULT AweD3D::Go()
 {
+	// TODO: do a dialog box to select settings (screen resolution, gpu settings, etc)
 	return E_NOTIMPL;
 }
 
 void AweD3D::Log(std::wstring, ...)
 {
+	// TODO: do a log
 }
 
 void AweD3D::ResizeSwapChain()
@@ -203,4 +195,144 @@ D3D12_CPU_DESCRIPTOR_HANDLE AweD3D::getCurrentBackBufferView() const
 ID3D12Resource* AweD3D::getCurrentBackBuffer() const
 {
 	return m_SwapChainBuffer[m_nCurrBackBuffer].Get();
+}
+
+void AweD3D::UpdateBufferResource(
+	ComPtr<ID3D12GraphicsCommandList2> commandList,
+	ID3D12Resource** pDestinationResource,
+	ID3D12Resource** pIntermediateResource,
+	size_t numElements, size_t elementSize, const void* bufferData)
+{
+	auto device = m_d3d12Device.Get();
+
+	size_t bufferSize = numElements * elementSize;
+
+	// Create a committed resource for the GPU resource in a default heap.
+	ThrowIfFailed(device->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(pDestinationResource)));
+
+	// Create an committed resource for the upload.
+	if (bufferData)
+	{
+		ThrowIfFailed(device->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(pIntermediateResource)));
+
+		D3D12_SUBRESOURCE_DATA subresourceData = {};
+		subresourceData.pData = bufferData;
+		subresourceData.RowPitch = bufferSize;
+		subresourceData.SlicePitch = subresourceData.RowPitch;
+
+		UpdateSubresources(commandList.Get(),
+			*pDestinationResource, *pIntermediateResource,
+			0, 0, 1, &subresourceData);
+	}
+}
+
+unsigned int AweD3D::LoadMesh(std::wstring sFileName) {
+	return LoadMesh(sFileName, 0.5f, 0.5f, 0.5f, 1.0f);
+}
+
+unsigned int AweD3D::LoadMesh(std::wstring sFileName, float red, float green, float blue, float alpha)
+{
+	
+	// TODO: Thread safety
+	AweMesh aweMesh;
+	aweMesh.setDefaultVerticesColor(red, green, blue, alpha);
+	aweMesh.loadOBJ(GetAssetFullPath(sFileName.c_str()));
+	m_meshes.push_back(aweMesh);
+	return (unsigned int)m_meshes.size() - 1;
+}
+
+void AweD3D::LoadMeshToGPU(unsigned int meshIndex)
+{
+	// TODO: handle out of bound error
+
+	AweMesh* mesh = &m_meshes.at(meshIndex);
+
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
+
+	// Upload vertex buffer data.
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
+	ComPtr<ID3D12Resource> intermediateVertexBuffer;
+	UpdateBufferResource(commandList,
+		&vertexBuffer, &intermediateVertexBuffer,
+		mesh->getVerteces().size(), sizeof(Vertex), mesh->getVerteces().data());
+
+	// Create the vertex buffer view.
+	D3D12_VERTEX_BUFFER_VIEW* vertexBufferView = mesh->getVertexBufferView();
+	vertexBufferView->BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexBufferView->SizeInBytes = (unsigned int)(mesh->getVerteces().size() * sizeof(Vertex));
+	vertexBufferView->StrideInBytes = sizeof(Vertex);
+
+	mesh->setVertexBuffer(vertexBuffer);
+
+	// Upload index buffer data.
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+	ComPtr<ID3D12Resource> intermediateIndexBuffer;
+	UpdateBufferResource(commandList,
+		&indexBuffer, &intermediateIndexBuffer,
+		mesh->getIndex().size(), sizeof(WORD), mesh->getIndex().data());
+
+	// Create index buffer view.
+	D3D12_INDEX_BUFFER_VIEW* indexBufferView = mesh->getIndexBufferView();
+	indexBufferView->BufferLocation = indexBuffer->GetGPUVirtualAddress();
+	indexBufferView->Format = DXGI_FORMAT_R16_UINT;
+	//m_IndexBufferView.SizeInBytes = sizeof(g_Indicies);
+	indexBufferView->SizeInBytes = (unsigned int)(mesh->getIndex().size() * sizeof(WORD));
+
+	mesh->setIndexBuffer(indexBuffer);
+
+
+	m_pCommandQueue->ExecuteCommandList(commandList);
+	m_pCommandQueue->Flush();
+}
+
+void AweD3D::RenderMesh(unsigned int meshIndex)
+{
+	// TODO: handle out of bound error
+	AweMesh* mesh = &m_meshes.at(meshIndex);
+	D3D12_VERTEX_BUFFER_VIEW* vertexBufferView = mesh->getVertexBufferView();
+	D3D12_INDEX_BUFFER_VIEW* indexBufferView = mesh->getIndexBufferView();
+
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
+
+	commandList->RSSetViewports(1, &m_ScreenViewport);
+	commandList->RSSetScissorRects(1, &m_ScissorRect);
+
+	// Specify the buffers we are going to render to.
+	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = getCurrentBackBufferView();
+	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = getDepthStencilView();
+	commandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
+
+	commandList->SetPipelineState(m_pipelineState.Get());
+	commandList->SetGraphicsRootSignature(m_rootSignature.Get());
+
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	commandList->IASetVertexBuffers(0, 1, vertexBufferView);
+	//commandList->IASetIndexBuffer(indexBufferView);
+	
+	// Update the MVP matrix
+	//XMMATRIX mvpMatrix = GetMVPMatrix(mesh);
+	XMMATRIX modelMatrix = mesh->getModelMatrix();
+
+	XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, m_ViewMatrix);
+	mvpMatrix = XMMatrixMultiply(mvpMatrix, m_ProjectionMatrix);
+	mvpMatrix = XMMatrixTranspose(mvpMatrix);
+	commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+
+
+	commandList->DrawInstanced(mesh->getVerteces().size(), 1, 0, 0);
+	//commandList->DrawIndexedInstanced((unsigned int)mesh->getIndex().size(), 1, 0, 0, 0);
+
+	m_pCommandQueue->ExecuteCommandList(commandList);
 }

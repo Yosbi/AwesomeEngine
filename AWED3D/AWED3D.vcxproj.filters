@@ -33,6 +33,12 @@
     <ClInclude Include="AwesomeGameTimer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AweMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AweUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AweD3DInit.cpp">
@@ -50,10 +56,20 @@
     <ClCompile Include="AweD3D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AweMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AweD3DWorldViewProj.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="AweD3D.def">
       <Filter>Source Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="DefaultPixelShader.hlsl" />
+    <FxCompile Include="DefaultVertexShader.hlsl" />
   </ItemGroup>
 </Project>

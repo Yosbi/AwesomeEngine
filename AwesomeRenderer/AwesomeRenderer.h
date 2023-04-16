@@ -14,7 +14,6 @@
 #include "AwesomeRenderDevice.h"
 #include <stdio.h>
 
-
 //----------------------------------------------------------------------
 // Name: AwesomeRenderer (class)
 // Desc:The class of the static lib used to create, get a pointer, and

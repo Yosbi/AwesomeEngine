@@ -4,6 +4,7 @@
 
 //include our library
 #pragma comment(lib, "AweD3D.lib")
+#pragma comment(lib, "AweMath.lib")
 
 
 // windows stuff
@@ -15,9 +16,15 @@ TCHAR     g_szAppClass[] = TEXT("FrameWorktest");
 BOOL g_bIsActive = FALSE;
 bool g_bDone = false;
 
+unsigned int Chinesse = 0;
+
 // renderer object
 LPAWERENDERER     g_pRenderer = NULL;
 LPAWERENDERDEVICE g_pDevice = NULL;
+
+AWEVector eyePosition;
+AWEVector focusPoint;
+AWEVector upDirection; 
 
 /**
  * WinMain function to get the thing started.
@@ -67,6 +74,11 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     if (FAILED(hr = ProgramStartup())) 
         return E_ABORT;
 
+    if (FAILED(hr = LoadAssets()))
+        return E_ABORT;
+
+    initCamera();
+
     ShowWindow(hWnd, SW_SHOW);
     
     // everything went smooth
@@ -95,6 +107,20 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 } // WinMain
 /*----------------------------------------------------------------*/
 
+void initCamera() {
+    eyePosition = AWEVector(0, 0, -30);
+    focusPoint = AWEVector(0, 0, 0);
+    upDirection = AWEVector(0, 1, 0);
+
+    g_pDevice->setFoV(45.0f);
+    g_pDevice->setClippingPlanes(0.1f, 1000.0f);
+
+    updateCamera();
+}
+
+void updateCamera() {
+    g_pDevice->SetViewMatrix(eyePosition, focusPoint, upDirection);
+}
 
 /**
  * MsgProc to deal with incoming windows messages.
@@ -121,6 +147,19 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_bDone = true;
                     PostMessage(hWnd, WM_CLOSE, 0, 0);
                     return 0;
+
+                case 'A':
+                    eyePosition.x -= 5.1f;
+                    break;
+                case 'D':
+                    eyePosition.x += 5.1f;
+                    break;
+                case 'W':
+                    eyePosition.y -= 5.1f;
+                    break;
+                case 'S':
+                    eyePosition.y += 5.1f;
+                    break;
                 } break;
             }
         } break;
@@ -161,7 +200,11 @@ HRESULT ProgramStartup() {
 } // ProgramStartup
 /*----------------------------------------------------------------*/
 
-
+HRESULT LoadAssets() {
+    Chinesse = g_pDevice->LoadMesh(L"Chinesse.obj", 0.75f, 0.25f, 0.0f, 1.0f);
+    g_pDevice->LoadMeshToGPU(Chinesse);
+    return S_OK;
+}
 /**
  * Release the render device and stuff.
  */
@@ -180,10 +223,13 @@ HRESULT ProgramCleanup(void) {
  * Do one frame.
  */
 HRESULT ProgramTick(void) {
+
+    updateCamera();
    
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
 
+    g_pDevice->RenderMesh(Chinesse);
 
     // flip backbuffer to front
     g_pDevice->EndRendering();

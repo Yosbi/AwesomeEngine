@@ -20,19 +20,30 @@
 // includes
 //----------------------------------------------------------------------
 #include "../AwesomeRenderer/AwesomeRenderDevice.h"
-#include "d3dx12.h"
+#include <initguid.h>
+#include <windows.h>
+#include <wrl/client.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
 #include <dxgi1_5.h>
 #include <DirectXColors.h>
 #include <directxmath.h>
+#include <d3dcompiler.h>
+#include <string>
+#include <comdef.h>
+#include "d3dx12.h"
+#include "../AweMath/AweMath.h"
 #include "AweD3DException.h"
 #include "AweD3DCommandQueue.h"
+#include "AweUtil.h"
+#include "AweMesh.h"
+#include <vector>
 
 
 //----------------------------------------------------------------------
 // Linking necessary d3d12 libraries
 //----------------------------------------------------------------------
+#pragma comment(lib, "AweMath.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "D3DCompiler.lib")
@@ -75,6 +86,18 @@ public:
 	HRESULT Clear(bool bClearPixel, bool bClearDepth, bool bClearStencil);				// Clear pixel, depth and stencil buffer
 	void	SetClearColor(float fRed, float fGreen, float fBlue);						// Change background color
 
+
+	// Mesh things
+	unsigned int LoadMesh(std::wstring sFileName);
+	unsigned int LoadMesh(std::wstring sFileName, float red, float green, float blue, float alpha);
+	void LoadMeshToGPU(unsigned int meshIndex);
+	void RenderMesh(unsigned int meshIndex);
+
+	// Camera-projection things
+	void setClippingPlanes(float near, float far);
+	void setFoV(float FoV);
+	void SetViewMatrix(const AWEVector& eyePosition, const AWEVector& focusPoint, const AWEVector& upDirection);
+
 private:
 	// Private functions
 	virtual void Release(); // Release memory and objects created
@@ -83,12 +106,13 @@ private:
 	HRESULT Go();																		// Start API with values from dialog box
 	void	Log(std::wstring, ...);														// Write to log file
 
-	
-
 	bool EnableDebugLayer();
 	void InitFactory();
 	void CreateDevice();
 	void CreateCommandQueue();
+	void CreateDefaultRootSignature();
+	void LoadDefaultShaders();
+	void CreateDefaultPipelineStateObject();
 	void CheckTearingSupport();
 	void InitDescriptorSizes();
 	bool InitDirect3D();
@@ -97,6 +121,12 @@ private:
 	void ResizeSwapChain();
 	void UpdateRenderTargetView();
 	void UpdateDepthStencilView();
+	void UpdateBufferResource(
+		ComPtr<ID3D12GraphicsCommandList2> commandList,
+		ID3D12Resource** pDestinationResource,
+		ID3D12Resource** pIntermediateResource,
+		size_t numElements, size_t elementSize, const void* bufferData);
+	
 	ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
 		
 
@@ -105,6 +135,10 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilView() const;
 	D3D12_CPU_DESCRIPTOR_HANDLE getCurrentBackBufferView() const;
 	ID3D12Resource* getCurrentBackBuffer()const;
+
+
+	void SetProjMatrix();
+	XMMATRIX GetMVPMatrix(AweMesh* mesh);
 
 private:
 
@@ -117,6 +151,12 @@ private:
 	int						m_nClientHeight;	// Screen Height
 	bool					m_bWindowed;		// Windowed mode?
 	bool					m_bRunning;			// After succesfull 
+	float					m_fFoV;
+	float					m_fNear;
+	float					m_fFar;
+
+	DirectX::XMMATRIX m_ViewMatrix;
+	DirectX::XMMATRIX m_ProjectionMatrix;
 
 
 	Microsoft::WRL::ComPtr<IDXGIFactory4> m_dxgiFactory;
@@ -137,7 +177,6 @@ private:
 	int m_nCurrBackBuffer = 0;
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_SwapChainBuffer[sm_nSwapChainBufferCount];
 	Microsoft::WRL::ComPtr<ID3D12Resource> m_DepthStencilBuffer;
-	Microsoft::WRL::ComPtr<ID3D12Resource> m_vertexBuffer;
 
 	// Buffer Descriptor heaps
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
@@ -148,13 +187,24 @@ private:
 	D3D12_RECT m_ScissorRect;
 
 	// CommandQueue
-	AweD3DCommandQueue* m_pCommandQueue;
+	std::shared_ptr<AweD3DCommandQueue> m_pCommandQueue;
 	float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	bool m_bIsSceneRunning;
 	bool m_bStencil;
 	bool m_bTearingSupported;
 	bool m_bVSync;
 
+	// Default root signature and pipeline state and shader
+	// TODO: do this dinamically later
+	ComPtr<ID3D12RootSignature> m_rootSignature;
+	ComPtr<ID3D12PipelineState> m_pipelineState;
+	ComPtr<ID3DBlob> m_vertexShader;
+	ComPtr<ID3DBlob> m_pixelShader;
+
+	// Meshes list
+	std::vector<AweMesh> m_meshes;
+
+	XMMATRIX m_ModelMatrix;
 };
 
 #endif // !AWED3D_H

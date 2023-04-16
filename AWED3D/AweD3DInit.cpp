@@ -85,12 +85,25 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 	m_pCommandQueue(nullptr),
 	m_bVSync(true),
 	m_bTearingSupported(false),
+	m_fFoV(45.0f),
+	m_fNear(0.1f),
+	m_fFar(100.0f),
+	m_ProjectionMatrix(DirectX::XMMatrixIdentity()),
+	m_ViewMatrix(DirectX::XMMatrixIdentity()),
 	m_ScissorRect({ 0, 0, m_nClientWidth, m_nClientHeight }),
 	m_ScreenViewport({/*TopLeftX*/ 0, /*TopLeftY*/ 0, 
 		/*Width*/ static_cast<float>(m_nClientWidth), 
 		/*Height*/ static_cast<float>(m_nClientHeight) , 
 		/*MinDepth*/ 0.0f, /*MaxDepth*/ 1.0f})
-{}
+{
+	SetProjMatrix();
+
+	AWEVector eyePosition = AWEVector(0, 0, -30);
+	AWEVector focusPoint = AWEVector(0, 0, 0);
+	AWEVector upDirection = AWEVector(0, 1, 0);
+	SetViewMatrix(eyePosition, focusPoint, upDirection);
+	
+}
 
 //-----------------------------------------------------------------------------
 // Name: ~AweD3D
@@ -108,9 +121,6 @@ AweD3D::~AweD3D()
 //-----------------------------------------------------------------------------
 void AweD3D::Release()
 {
-	m_pCommandQueue->Flush();
-	delete m_pCommandQueue;
-	m_pCommandQueue = nullptr;
 }
 
 
@@ -161,7 +171,8 @@ void AweD3D::InitFactory()
 		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 
 	// Creating factory
-	ThrowIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_dxgiFactory)));
+	//ThrowIfFailed(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&m_dxgiFactory)));
+	ThrowIfFailed(CreateDXGIFactory( IID_PPV_ARGS(&m_dxgiFactory)));
 }
 
 void AweD3D::CreateDevice()
@@ -169,7 +180,7 @@ void AweD3D::CreateDevice()
 	// Try to create hardware device.
 	HRESULT hardwareResult = D3D12CreateDevice(
 		nullptr,             // default adapter
-		D3D_FEATURE_LEVEL_12_2,
+		D3D_FEATURE_LEVEL_12_0,
 		IID_PPV_ARGS(&m_d3d12Device));
 
 	// Fallback to WARP device.
@@ -184,7 +195,7 @@ void AweD3D::CreateDevice()
 			IID_PPV_ARGS(&m_d3d12Device)));
 	}
 
-	// Enable debug messages in debug mode.
+	/*/ Enable debug messages in debug mode.
 #if defined(_DEBUG)
 	ComPtr<ID3D12InfoQueue> pInfoQueue;
 	if (SUCCEEDED(m_d3d12Device.As(&pInfoQueue)))
@@ -218,13 +229,13 @@ void AweD3D::CreateDevice()
 
 		ThrowIfFailed(pInfoQueue->PushStorageFilter(&NewFilter));
 	}
-#endif
+#endif*/
 }
 
 void AweD3D::CreateCommandQueue()
 {
 	// Creating command queue 
-	m_pCommandQueue = new AweD3DCommandQueue(m_d3d12Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+	m_pCommandQueue = std::make_shared<AweD3DCommandQueue>(m_d3d12Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
 void AweD3D::CheckTearingSupport()
@@ -268,13 +279,98 @@ bool AweD3D::InitDirect3D()
 	CreateCommandQueue();
 	
 	
-	// Getting sizes of resource descriptors(views) as these are hardware deppendant
+	// Getting sizes of resource descriptors(views) as these are hardware dependant
 	InitDescriptorSizes();
 
 	CreateSwapChain();
 	CreateRtvAndDsvDescriptorHeaps();
 
+	// TODO: This will later will created dinamically, for now we use a default shader
+	CreateDefaultRootSignature();
+	LoadDefaultShaders();
+	CreateDefaultPipelineStateObject();
+
 	return true;
+}
+
+void AweD3D::CreateDefaultRootSignature() {
+	// Create a root signature.
+	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+	if (FAILED(m_d3d12Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+	{
+		featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+	}
+
+	// Allow input layout and deny unnecessary access to certain pipeline stages.
+	D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
+	// A single 32-bit constant root parameter that is used by the vertex shader.
+	CD3DX12_ROOT_PARAMETER1 rootParameters[1];
+	rootParameters[0].InitAsConstants(sizeof(XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
+	rootSignatureDescription.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
+
+	// Serialize the root signature.
+	ComPtr<ID3DBlob> rootSignatureBlob;
+	ComPtr<ID3DBlob> errorBlob;
+	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription,
+		featureData.HighestVersion, &rootSignatureBlob, &errorBlob));
+	// Create the root signature.
+	ThrowIfFailed(m_d3d12Device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(),
+		rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+}
+
+void AweD3D::LoadDefaultShaders() 
+{
+#if defined(_DEBUG)
+	// Enable better shader debugging with the graphics debugging tools.
+	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+	UINT compileFlags = 0;
+#endif
+
+	std::wstring str = GetAssetFullPath(L"DefaultVertexShader.cso");
+	// Load the vertex shader.
+	ThrowIfFailed(D3DReadFileToBlob(GetAssetFullPath(L"DefaultVertexShader.cso").c_str(), &m_vertexShader));
+
+	// Load the pixel shader.
+	ThrowIfFailed(D3DReadFileToBlob(GetAssetFullPath(L"DefaultPixelShader.cso").c_str(), &m_pixelShader));
+}
+
+void AweD3D::CreateDefaultPipelineStateObject()
+{
+	// Define the vertex input layout.
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+	{
+		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+	};
+
+	// Describe and create the graphics pipeline state object (PSO).
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
+	psoDesc.pRootSignature = m_rootSignature.Get();
+	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vertexShader.Get());
+	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_pixelShader.Get());
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.SampleDesc.Count = 1;
+	ThrowIfFailed(m_d3d12Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
 }
 
 void AweD3D::CreateSwapChain()

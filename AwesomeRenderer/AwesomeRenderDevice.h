@@ -13,6 +13,9 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <string>
+#include <vector>
+#include "../AweMath/AweMath.h"
 
 
 //----------------------------------------------------------------------
@@ -52,6 +55,29 @@ public:
 
 	// Change background color
 	virtual void	SetClearColor(float fRed, float fGreen, float fBlue) = 0;
+
+	// Section Mesh:
+	// Loads a new mesh
+	virtual unsigned int LoadMesh(std::wstring sFileName) = 0;
+	virtual unsigned int LoadMesh(std::wstring sFileName, float red, float green, float blue, float alpha) = 0;
+
+	// Set a mesh to gpu memory
+	virtual void LoadMeshToGPU(unsigned int meshIndex) = 0;
+
+	// Render a mesh in gpu memory, if the mesh is not in gpu memory it will load it
+	// Note: it is better to use the SetMeshToGPUMemory in the loading stage
+	virtual void RenderMesh(unsigned int meshIndex) = 0;
+
+	// Section Camera-projection:
+	// Set fov and near and far planes
+	virtual void setClippingPlanes(float near, float far) = 0;
+
+	// Set FoV
+	virtual void setFoV(float FoV) = 0;
+
+	// View matrix form position, fix point, worldup
+	virtual void SetViewMatrix(const AWEVector& eyePosition, const AWEVector& focusPoint, const AWEVector& upDirection) = 0;
+
 };
 typedef class AwesomeRenderDevice* LPAWERENDERDEVICE;
 

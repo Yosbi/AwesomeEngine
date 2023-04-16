@@ -5,8 +5,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <string>
-#include "OBJLoader.h"
 #include "..\AwesomeRenderer\AwesomeRenderer.h"
+#include "..\AweMath\AweMath.h"
 // D E F I N E S ///////////////////////////////////////////////////
 
 
@@ -14,8 +14,11 @@
 
 LRESULT   WINAPI MsgProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT   ProgramStartup();
+HRESULT	  LoadAssets();
 HRESULT   ProgramCleanup(void);
 HRESULT   ProgramTick(void);
+void	initCamera();
+void updateCamera();
 
 
 #endif
