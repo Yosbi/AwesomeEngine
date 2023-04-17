@@ -301,8 +301,6 @@ void AweD3D::RenderMesh(unsigned int meshIndex)
 {
 	// TODO: handle out of bound error
 	AweMesh* mesh = &m_meshes.at(meshIndex);
-	D3D12_VERTEX_BUFFER_VIEW* vertexBufferView = mesh->getVertexBufferView();
-	D3D12_INDEX_BUFFER_VIEW* indexBufferView = mesh->getIndexBufferView();
 
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
 
@@ -310,16 +308,14 @@ void AweD3D::RenderMesh(unsigned int meshIndex)
 	commandList->RSSetScissorRects(1, &m_ScissorRect);
 
 	// Specify the buffers we are going to render to.
-	D3D12_CPU_DESCRIPTOR_HANDLE backBufferView = getCurrentBackBufferView();
-	D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = getDepthStencilView();
-	commandList->OMSetRenderTargets(1, &backBufferView, true, &depthStencilView);
+	commandList->OMSetRenderTargets(1, &getCurrentBackBufferView(), true, &getDepthStencilView());
 
 	commandList->SetPipelineState(m_pipelineState.Get());
 	commandList->SetGraphicsRootSignature(m_rootSignature.Get());
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	commandList->IASetVertexBuffers(0, 1, vertexBufferView);
-	//commandList->IASetIndexBuffer(indexBufferView);
+	commandList->IASetVertexBuffers(0, 1, mesh->getVertexBufferView());
+	//commandList->IASetIndexBuffer(mesh->getIndexBufferView());
 	
 	// Update the MVP matrix
 	//XMMATRIX mvpMatrix = GetMVPMatrix(mesh);

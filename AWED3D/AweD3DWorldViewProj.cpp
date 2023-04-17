@@ -22,7 +22,7 @@ void AweD3D::SetViewMatrix(const AWEVector& eyePosition, const AWEVector& focusP
 void AweD3D::SetProjMatrix()
 {
 	float aspectRatio = m_nClientWidth / static_cast<float>(m_nClientHeight);
-	m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fFoV), aspectRatio, 0.1f, 100.0f);
+	m_ProjectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(m_fFoV), aspectRatio,  m_fNear, m_fFar);
 }
 
 XMMATRIX AweD3D::GetMVPMatrix(AweMesh* mesh)

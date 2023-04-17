@@ -16,7 +16,8 @@ TCHAR     g_szAppClass[] = TEXT("FrameWorktest");
 BOOL g_bIsActive = FALSE;
 bool g_bDone = false;
 
-unsigned int Chinesse = 0;
+UINT Chinesse = 0;
+UINT Terrain = 0;
 
 // renderer object
 LPAWERENDERER     g_pRenderer = NULL;
@@ -201,7 +202,10 @@ HRESULT ProgramStartup() {
 /*----------------------------------------------------------------*/
 
 HRESULT LoadAssets() {
-    Chinesse = g_pDevice->LoadMesh(L"Chinesse.obj", 0.75f, 0.25f, 0.0f, 1.0f);
+    Terrain = g_pDevice->LoadMesh(L"terrain.obj", 0.54f, 0.32f, 0.07f, 1.0f);
+    g_pDevice->LoadMeshToGPU(Terrain);
+
+    Chinesse = g_pDevice->LoadMesh(L"Chinesse.obj");
     g_pDevice->LoadMeshToGPU(Chinesse);
     return S_OK;
 }
@@ -228,6 +232,8 @@ HRESULT ProgramTick(void) {
    
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
+
+    g_pDevice->RenderMesh(Terrain);
 
     g_pDevice->RenderMesh(Chinesse);
 
