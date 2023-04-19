@@ -54,17 +54,17 @@ public:
 
     // Functions
     inline void		Set(float _x, float _y, float _z, float _w = 1.0f);		// Set the verctor values
-    inline float	GetLength();										// Length (magnitude)
+    inline float	GetLength();										    // Length (magnitude)
     inline float	GetSqrLength() const;									// Square Length
-    inline void		Negate();										// Vector mult -1
-    inline void		Normalize();										// Normalize vector
+    inline void		Negate();										        // Vector mult -1
+    inline void		Normalize();										    // Normalize vector
     inline float	AngleWith(AWEVector& v);								// Angle in radians
-    inline void		RotateWith(const AWEMatrix& m);						// Apply rotation with matrix
+    inline void		RotateWith(const AWEMatrix& m);						    // Apply rotation with matrix
     inline void		InvRotateWith(const AWEMatrix& m);						// Apply inverse rotation with matrix
     inline void		Difference(const AWEVector& v1, const AWEVector& v2);	// Diference from v1 to v2
 
-    void	operator += (const AWEVector& v);									// Operator +=
-    void	operator -= (const AWEVector& v);									// Operator -=
+    void	operator += (const AWEVector& v);								// Operator +=
+    void	operator -= (const AWEVector& v);								// Operator -=
     void	operator *= (float f);											// Scalar mult (scale vector)
     void	operator /= (float f);											// Scale down
     void	operator += (float f);											// Add scalar
@@ -74,11 +74,11 @@ public:
     AWEVector operator /  (float f)		   const;							// Scalar divide
     AWEVector operator +  (float f)		   const;							// Add scalar
     AWEVector operator -  (float f)		   const;							// Substract scalar
-    AWEVector operator *  (const AWEMatrix& m) const;							// Vector-matrix product
-    AWEVector operator +  (const AWEVector& v) const;							// Vector addition
-    AWEVector operator -  (const AWEVector& v) const;							// Substraction
+    AWEVector operator *  (const AWEMatrix& m) const;						// Vector-matrix product
+    AWEVector operator +  (const AWEVector& v) const;						// Vector addition
+    AWEVector operator -  (const AWEVector& v) const;						// Substraction
 
-    inline AWEVector Cross(const AWEVector& v2);						// Cross product
+    inline AWEVector Cross(const AWEVector& v2);						    // Cross product
 
     // Variables
     float x, y, z, w;		// Coordinate set
@@ -96,16 +96,16 @@ public:
     AWEMatrix(void);
 
     // Functions
-    inline void Identity(void);										// identity matrix
-    inline void RotaX(float a);										// Rotation matrix arround x axis
-    inline void RotaY(float a);										// Rotation matrix arround y axis
-    inline void RotaZ(float a);										// Rotation matrix arround z axis
+    inline void Identity(void);										    // identity matrix
+    inline void RotaX(float a);										    // Rotation matrix arround x axis
+    inline void RotaY(float a);										    // Rotation matrix arround y axis
+    inline void RotaZ(float a);										    // Rotation matrix arround z axis
     inline void Rota(const AWEVector& vc);								// Rotation matrix arround x, y and z
     inline void Rota(float x, float y, float z);						// Rotation matrix arround x, y and z
     inline void RotaArbi(const AWEVector& vcAxis, float a);				// Rotation arround an arbitrary axis
     inline void ApplyInverseRota(AWEVector* pvc);						// Inverse rotation
     inline void Translate(float dx, float dy, float dz);				// Translate a certain distance
-    inline void SetTranslation(AWEVector vc, bool EraseContent = false);	// Set translation values
+    inline void SetTranslation(AWEVector vc, bool EraseContent = false);// Set translation values
     inline AWEVector GetTranslation(void);								// Get the translation value
 
     inline void LookAt(AWEVector vcPos, AWEVector vcLookAt,
@@ -115,7 +115,7 @@ public:
     inline void InverseOf(const AWEMatrix& m);							// invert m, save result in this	  
    
     AWEMatrix operator * (const AWEMatrix& m)const;						// matrix multiplication
-    AWEVector operator * (const AWEVector& vc)const;						// matrix vector multiplication
+    AWEVector operator * (const AWEVector& vc)const;					// matrix vector multiplication
 
     // Variables
     float _11, _12, _13, _14;

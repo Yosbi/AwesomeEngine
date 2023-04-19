@@ -5,6 +5,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <string>
+#include <vector>
 #include "..\AwesomeRenderer\AwesomeRenderer.h"
 #include "..\AweMath\AweMath.h"
 // D E F I N E S ///////////////////////////////////////////////////
@@ -17,8 +18,8 @@ HRESULT   ProgramStartup();
 HRESULT	  LoadAssets();
 HRESULT   ProgramCleanup(void);
 HRESULT   ProgramTick(void);
-void	initCamera();
-void updateCamera();
+void	  initCamera();
+void	  updateCamera(AWEVector deltaPos);
 
 
 #endif

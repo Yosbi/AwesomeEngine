@@ -1,7 +1,5 @@
 #include "main.h"         // prototypes and stuff
 
-
-
 //include our library
 #pragma comment(lib, "AweD3D.lib")
 #pragma comment(lib, "AweMath.lib")
@@ -23,9 +21,8 @@ UINT Terrain = 0;
 LPAWERENDERER     g_pRenderer = NULL;
 LPAWERENDERDEVICE g_pDevice = NULL;
 
-AWEVector eyePosition;
-AWEVector focusPoint;
-AWEVector upDirection; 
+UINT camera = 0;
+std::vector<UINT> g_vcCameras;
 
 /**
  * WinMain function to get the thing started.
@@ -109,18 +106,17 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 /*----------------------------------------------------------------*/
 
 void initCamera() {
-    eyePosition = AWEVector(0, 0, -30);
-    focusPoint = AWEVector(0, 0, 0);
-    upDirection = AWEVector(0, 1, 0);
+    g_vcCameras.push_back(g_pDevice->CreateCamera());
+    g_vcCameras.push_back(g_pDevice->CreateCamera(AWEVector(0, 100, -30), AWEVector(0, 0, 0), AWEVector(0, 1, 0)));
+    g_vcCameras.push_back(g_pDevice->CreateCamera(AWEVector(100, 10, 30), AWEVector(0, 0, 0), AWEVector(0, 1, 0)));
 
     g_pDevice->setFoV(45.0f);
     g_pDevice->setClippingPlanes(0.1f, 1000.0f);
 
-    updateCamera();
 }
 
-void updateCamera() {
-    g_pDevice->SetViewMatrix(eyePosition, focusPoint, upDirection);
+void updateCamera(AWEVector deltaPos) {
+    g_pDevice->moveCameraPositionDelta(g_vcCameras.at(camera), deltaPos);
 }
 
 /**
@@ -150,22 +146,24 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     return 0;
 
                 case 'A':
-                    eyePosition.x -= 5.1f;
+                    updateCamera(AWEVector(-1.0f, 0.0f, 0.0f));
                     break;
                 case 'D':
-                    eyePosition.x += 5.1f;
+                    updateCamera(AWEVector(1.0f, 0.0f, 0.0f));
                     break;
                 case 'W':
-                    eyePosition.y -= 5.1f;
+                    updateCamera(AWEVector(0.0f, -1.0f, 0.0f));
                     break;
                 case 'S':
-                    eyePosition.y += 5.1f;
+                    updateCamera(AWEVector(0.0f, 1.0f, 0.0f));
                     break;
+                case 'C':
+                    camera += 1;
+                    if (camera % g_vcCameras.size() == 0)
+                        camera = 0;
                 } break;
             }
         } break;
-
-
 
         default: break;
     }
@@ -227,11 +225,9 @@ HRESULT ProgramCleanup(void) {
  * Do one frame.
  */
 HRESULT ProgramTick(void) {
-
-    updateCamera();
    
     // clear buffers and start scene
-    g_pDevice->BeginRendering(true, true, true);
+    g_pDevice->BeginRendering(g_vcCameras.at(camera), true, true, true);
 
     g_pDevice->RenderMesh(Terrain);
 

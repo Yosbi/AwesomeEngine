@@ -45,7 +45,7 @@ public:
 	//---------------------------
 
 	// Clear buffer and prepare for rendering
-	virtual HRESULT BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearStencil) = 0;
+	virtual HRESULT BeginRendering(UINT camera, bool bClearPixel, bool bClearDepth, bool bClearStencil) = 0;
 
 	// End rendering and flip pixel buffer to front
 	virtual void	EndRendering() = 0;
@@ -75,8 +75,12 @@ public:
 	// Set FoV
 	virtual void setFoV(float FoV) = 0;
 
-	// View matrix form position, fix point, worldup
-	virtual void SetViewMatrix(const AWEVector& eyePosition, const AWEVector& focusPoint, const AWEVector& upDirection) = 0;
+	// Cameras
+	virtual UINT CreateCamera() = 0;
+	virtual UINT CreateCamera(AWEVector eyePosition, AWEVector focusPoint, AWEVector upDirection) = 0;
+	virtual void moveCameraPositionDelta(UINT cameraIndex, AWEVector deltaPos) = 0;
+	virtual void moveCameraFocusDelta(UINT cameraIndex, AWEVector deltaPos) = 0;
+
 
 };
 typedef class AwesomeRenderDevice* LPAWERENDERDEVICE;

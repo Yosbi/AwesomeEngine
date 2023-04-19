@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Awe.h" />
+    <ClInclude Include="AweCamera.h" />
     <ClInclude Include="AweD3D.h" />
     <ClInclude Include="AweD3DCommandQueue.h" />
     <ClInclude Include="AweD3DException.h" />
@@ -30,6 +31,7 @@
     <ClInclude Include="d3dx12.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AweCamera.cpp" />
     <ClCompile Include="AweD3D.cpp" />
     <ClCompile Include="AweD3DCommandQueue.cpp" />
     <ClCompile Include="AweD3DException.cpp" />
