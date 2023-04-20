@@ -8,17 +8,20 @@
 #include <vector>
 #include "..\AwesomeRenderer\AwesomeRenderer.h"
 #include "..\AweMath\AweMath.h"
+#include "..\AwesomeInput\AwesomeInput.h"
 // D E F I N E S ///////////////////////////////////////////////////
 
 
 // P R O T O T Y P E S /////////////////////////////////////////////
 
 LRESULT   WINAPI MsgProc(HWND, UINT, WPARAM, LPARAM);
-HRESULT   ProgramStartup();
+HRESULT   RendererStartup();
 HRESULT	  LoadAssets();
 HRESULT   ProgramCleanup(void);
 HRESULT   ProgramTick(void);
 void	  initCamera();
+HRESULT   InputStartup();
+void      updateInput();
 void	  updateCamera(AWEVector deltaPos);
 
 

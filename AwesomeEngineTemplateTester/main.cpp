@@ -1,8 +1,9 @@
 #include "main.h"         // prototypes and stuff
 
 //include our library
-#pragma comment(lib, "AweD3D.lib")
+//#pragma comment(lib, "AweD3D.lib")
 #pragma comment(lib, "AweMath.lib")
+//#pragma comment(lib, "AweDXInput.lib")
 
 
 // windows stuff
@@ -20,6 +21,10 @@ UINT Terrain = 0;
 // renderer object
 LPAWERENDERER     g_pRenderer = NULL;
 LPAWERENDERDEVICE g_pDevice = NULL;
+
+// Input object
+LPAWEINPUT g_pYInput;
+LPAWEINPUTDEVICE g_pYInputDevice;
 
 UINT camera = 0;
 std::vector<UINT> g_vcCameras;
@@ -69,8 +74,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
 
     // try to start the engine
-    if (FAILED(hr = ProgramStartup())) 
+    if (FAILED(hr = RendererStartup())) 
         return E_ABORT;
+
+    // Try to start the input module
+    else if (FAILED(InputStartup()))
+    {
+        return E_ABORT;
+    }
 
     if (FAILED(hr = LoadAssets()))
         return E_ABORT;
@@ -112,11 +123,73 @@ void initCamera() {
 
     g_pDevice->setFoV(45.0f);
     g_pDevice->setClippingPlanes(0.1f, 1000.0f);
-
 }
 
 void updateCamera(AWEVector deltaPos) {
     g_pDevice->moveCameraPositionDelta(g_vcCameras.at(camera), deltaPos);
+}
+
+//-----------------------------------------------------------------------------
+// Name: InputStartup()
+// Desc: Turn on the input module
+//-----------------------------------------------------------------------------
+HRESULT InputStartup()
+{
+    RECT mouseCage = { 0,0,0,0 };
+    mouseCage.right = 1280;
+    mouseCage.bottom = 720;
+
+    // Create device
+    g_pYInput = new AwesomeInput(g_hInst);
+    if (FAILED(g_pYInput->CreateDevice())) return E_FAIL;
+
+    // Get the device
+    g_pYInputDevice = g_pYInput->GetDevice();
+    if (g_pYInputDevice == NULL) return E_FAIL;
+
+    // Init the device
+    if (FAILED(g_pYInputDevice->Init(g_hWnd, &mouseCage)))
+    {
+        return E_FAIL;
+    }
+
+    return S_OK;
+}
+#include <iostream>
+void updateInput()
+{
+    // get the imputs to control the camera
+    g_pYInputDevice->Update();
+
+    // rotation
+    POINT sump = { 0,0 };
+    float fBackForw = 0.0f;
+    POINT p = g_pYInputDevice->GetMouseDelta();
+    sump.x += p.x;
+    fBackForw += p.y;
+    std::cout << "sump.x " << sump.x << std::endl;
+
+    //if (fBackForw < 3.0f)
+    //    fBackForw = 3.0f;
+
+    // up & down
+    float up = 0.0f;
+    if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_W))
+    {
+        up += 1.0f;
+    }
+    if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_S))
+    {
+        up -= 1.0f;
+    }
+
+    AWEMatrix vmat;
+    vmat.Identity();
+    vmat.RotaY(-0.4f * ((sump.x * 3.14) / 180));
+
+    updateCamera(AWEVector(0, up, 0.2f * (-fBackForw)) * vmat);
+    //g_pDevice->SetViewLookAt(YVector(0, up, 0.2f * (-fBackForw)) * vmat, YVector(0, 0, 0), YVector(0, 1, 0));
+
 }
 
 /**
@@ -145,7 +218,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     PostMessage(hWnd, WM_CLOSE, 0, 0);
                     return 0;
 
-                case 'A':
+                /*case 'A':
                     updateCamera(AWEVector(-1.0f, 0.0f, 0.0f));
                     break;
                 case 'D':
@@ -156,12 +229,13 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case 'S':
                     updateCamera(AWEVector(0.0f, 1.0f, 0.0f));
-                    break;
+                    break;*/
                 case 'C':
                     camera += 1;
                     if (camera % g_vcCameras.size() == 0)
                         camera = 0;
                 } break;
+
             }
         } break;
 
@@ -176,7 +250,7 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 /**
  * Create a render device and stuff.
  */
-HRESULT ProgramStartup() {
+HRESULT RendererStartup() {
 
     // create a render objekt
     g_pRenderer = new AwesomeRenderer(g_hInst);
@@ -226,6 +300,8 @@ HRESULT ProgramCleanup(void) {
  */
 HRESULT ProgramTick(void) {
    
+    updateInput();
+
     // clear buffers and start scene
     g_pDevice->BeginRendering(g_vcCameras.at(camera), true, true, true);
 

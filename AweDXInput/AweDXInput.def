@@ -1,0 +1,6 @@
+;AweDXInput.def
+;The following functions are exported from this DLL
+LIBRARY   "AweDXInput.dll"
+EXPORTS
+   CreateInputDevice
+   ReleaseInputDevice
