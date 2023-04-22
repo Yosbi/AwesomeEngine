@@ -88,7 +88,6 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 	m_fFoV(45.0f),
 	m_fNear(0.1f),
 	m_fFar(100.0f),
-	m_nActiveCamera(0),
 	m_ProjectionMatrix(DirectX::XMMatrixIdentity()),
 	m_ViewMatrix(DirectX::XMMatrixIdentity()),
 	m_ScissorRect({ 0, 0, m_nClientWidth, m_nClientHeight }),
@@ -99,10 +98,7 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 {
 	SetProjMatrix();
 
-	// igniting the first camera 
-	m_cameras.push_back(AweCamera(AWEVector(0, 0, -30), AWEVector(0, 0, 0), AWEVector(0, 1, 0)));
-
-	SetViewMatrix(m_nActiveCamera);
+	SetViewMatrix(AWEVector(0, 0, -30), AWEVector(0, 0, 0), AWEVector(0, 1, 0));
 	
 }
 

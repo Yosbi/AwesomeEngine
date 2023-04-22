@@ -45,7 +45,7 @@ public:
 	//---------------------------
 
 	// Clear buffer and prepare for rendering
-	virtual HRESULT BeginRendering(UINT camera, bool bClearPixel, bool bClearDepth, bool bClearStencil) = 0;
+	virtual HRESULT BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearStencil) = 0;
 
 	// End rendering and flip pixel buffer to front
 	virtual void	EndRendering() = 0;
@@ -69,17 +69,14 @@ public:
 	virtual void RenderMesh(unsigned int meshIndex) = 0;
 
 	// Section Camera-projection:
+	// View matrix form position, fix point, worldup
+	virtual void SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp) = 0;
+
 	// Set fov and near and far planes
 	virtual void setClippingPlanes(float near, float far) = 0;
 
 	// Set FoV
 	virtual void setFoV(float FoV) = 0;
-
-	// Cameras
-	virtual UINT CreateCamera() = 0;
-	virtual UINT CreateCamera(AWEVector eyePosition, AWEVector focusPoint, AWEVector upDirection) = 0;
-	virtual void moveCameraPositionDelta(UINT cameraIndex, AWEVector deltaPos) = 0;
-	virtual void moveCameraFocusDelta(UINT cameraIndex, AWEVector deltaPos) = 0;
 
 
 };

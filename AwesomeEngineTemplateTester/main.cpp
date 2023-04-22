@@ -4,6 +4,7 @@
 #pragma comment(lib, "AwesomeInput.lib")
 #pragma comment(lib, "AwesomeMath.lib")
 #pragma comment(lib, "AwesomeRenderer.lib")
+#pragma comment(lib, "AwesomeGeneral.lib")
 
 
 // windows stuff
@@ -26,8 +27,8 @@ LPAWERENDERDEVICE g_pDevice = NULL;
 LPAWEINPUT g_pYInput;
 LPAWEINPUTDEVICE g_pYInputDevice;
 
-UINT camera = 0;
-std::vector<UINT> g_vcCameras;
+AwesomeFreeCam freeCam;
+AwesomeTimer aweTimer(0, 0);
 
 /**
  * WinMain function to get the thing started.
@@ -117,16 +118,21 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 /*----------------------------------------------------------------*/
 
 void initCamera() {
-    g_vcCameras.push_back(g_pDevice->CreateCamera());
-    g_vcCameras.push_back(g_pDevice->CreateCamera(AWEVector(0, 100, -30), AWEVector(0, 0, 0), AWEVector(0, 1, 0)));
-    g_vcCameras.push_back(g_pDevice->CreateCamera(AWEVector(100, 10, 30), AWEVector(0, 0, 0), AWEVector(0, 1, 0)));
-
+    
+    AWEVector pos = AWEVector(0, 0, -30);
+    AWEVector dir = AWEVector(0, 0, 0);
+    AWEVector up = AWEVector(0, 1, 0);
+    freeCam.SetPos(pos);
+    freeCam.SetDir(dir);
+    freeCam.SetUp(up);
+    
     g_pDevice->setFoV(45.0f);
     g_pDevice->setClippingPlanes(0.1f, 1000.0f);
 }
 
-void updateCamera(AWEVector deltaPos) {
-    g_pDevice->moveCameraPositionDelta(g_vcCameras.at(camera), deltaPos);
+void updateCamera(float deltaT) {
+    freeCam.Update(deltaT);
+    g_pDevice->SetViewMatrix(freeCam.GetPos(), freeCam.GetDir(), freeCam.GetUp());
 }
 
 //-----------------------------------------------------------------------------
@@ -162,34 +168,36 @@ void updateInput()
     g_pYInputDevice->Update();
 
     // rotation
-    POINT sump = { 0,0 };
-    float fBackForw = 0.0f;
     POINT p = g_pYInputDevice->GetMouseDelta();
-    sump.x += p.x;
-    fBackForw += p.y;
-    std::cout << "sump.x " << sump.x << std::endl;
 
-    //if (fBackForw < 3.0f)
-    //    fBackForw = 3.0f;
+    // front or back
+    static float Thrust = 0.0f;
+    float Thrust2 = 0.0f;
 
-    // up & down
-    float up = 0.0f;
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_W))
     {
-        up += 0.1f;
+        Thrust = 0.1f;
     }
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_S))
     {
-        up -= 0.1f;
+        Thrust -= 0.10f;
     }
+    //float Thrust = 0.0f;
+    if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_A))
+    {
+        Thrust2 = 10.0f;
+    }
+    if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_D))
+    {
+        Thrust2 -= 10.0f;
+    }
+    freeCam.AddRotationSpeed(Thrust, 0.0f, 0.0f);
 
-    AWEMatrix vmat;
-    vmat.Identity();
-    vmat.RotaY(-0.4f * ((sump.x * 3.14) / 180));
+    //freeCam.SetRotationSpeed(0.0f, p.x, 0.0f);
+    //freeCam.SetThrust(Thrust);
 
-    updateCamera(AWEVector(0, up, 0.2f * (-fBackForw)) * vmat);
-    //g_pDevice->SetViewLookAt(YVector(0, up, 0.2f * (-fBackForw)) * vmat, YVector(0, 0, 0), YVector(0, 1, 0));
-
+    updateCamera(aweTimer.GetElapsed());
+   
 }
 
 /**
@@ -217,10 +225,8 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_bDone = true;
                     PostMessage(hWnd, WM_CLOSE, 0, 0);
                     return 0;
-                case 'C':
-                    camera += 1;
-                    if (camera % g_vcCameras.size() == 0)
-                        camera = 0;
+                //case 'C':
+                    
                 } break;
 
             }
@@ -287,10 +293,12 @@ HRESULT ProgramCleanup(void) {
  */
 HRESULT ProgramTick(void) {
    
+    aweTimer.Update();
+
     updateInput();
 
     // clear buffers and start scene
-    g_pDevice->BeginRendering(g_vcCameras.at(camera), true, true, true);
+    g_pDevice->BeginRendering(true, true, true);
 
     g_pDevice->RenderMesh(Terrain);
 

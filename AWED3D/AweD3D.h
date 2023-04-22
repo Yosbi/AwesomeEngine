@@ -37,7 +37,6 @@
 #include "AweD3DCommandQueue.h"
 #include "AweUtil.h"
 #include "AweMesh.h"
-#include "AweCamera.h"
 #include <vector>
 
 
@@ -82,7 +81,7 @@ public:
 	//---------------------------
 	// Rendering stuff
 	//---------------------------
-	HRESULT BeginRendering(UINT camera, bool bClearPixel, bool bClearDepth, bool bClearStencil);// Clear buffer and prepare for rendering
+	HRESULT BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearStencil);// Clear buffer and prepare for rendering
 	void	EndRendering();																		// End rendering and flip pixel buffer to front
 	HRESULT Clear(bool bClearPixel, bool bClearDepth, bool bClearStencil);						// Clear pixel, depth and stencil buffer
 	void	SetClearColor(float fRed, float fGreen, float fBlue);								// Change background color
@@ -97,12 +96,8 @@ public:
 	// Projection things
 	void setClippingPlanes(float near, float far);
 	void setFoV(float FoV);
+	void SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp);
 
-	// Camera stuff
-	UINT CreateCamera();
-	UINT CreateCamera(AWEVector eyePosition, AWEVector focusPoint, AWEVector upDirection);
-	void moveCameraPositionDelta(UINT cameraIndex, AWEVector deltaPos);
-	void moveCameraFocusDelta(UINT cameraIndex, AWEVector deltaPos);
 
 private:
 	// Private functions
@@ -146,7 +141,6 @@ private:
 	// Camera and projection things
 	void SetProjMatrix();
 	XMMATRIX GetMVPMatrix(AweMesh* mesh);
-	void SetViewMatrix(unsigned int cameraIndex);
 
 
 private:
@@ -211,10 +205,6 @@ private:
 
 	// Meshes list
 	std::vector<AweMesh> m_meshes;
-
-	// Camera list
-	unsigned int m_nActiveCamera;
-	std::vector<AweCamera> m_cameras;
 
 	XMMATRIX m_ModelMatrix;
 };

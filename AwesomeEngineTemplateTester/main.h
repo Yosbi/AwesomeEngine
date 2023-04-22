@@ -9,6 +9,7 @@
 #include "..\AwesomeRenderer\AwesomeRenderer.h"
 #include "..\AwesomeMath\AwesomeMath.h"
 #include "..\AwesomeInput\AwesomeInput.h"
+#include "..\AwesomeGeneral\AwesomeGeneral.h"
 // D E F I N E S ///////////////////////////////////////////////////
 
 

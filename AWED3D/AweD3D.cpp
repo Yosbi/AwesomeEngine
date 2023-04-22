@@ -12,12 +12,8 @@ bool AweD3D::IsRunning()
 	return false;
 }
 
-HRESULT AweD3D::BeginRendering(UINT camera, bool bClearPixel, bool bClearDepth, bool bClearStencil)
+HRESULT AweD3D::BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearStencil)
 {
-	// TODO: handle the camera exeption
-	m_nActiveCamera = camera;
-	SetViewMatrix(m_nActiveCamera);
-
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
 
 	// Indicate a state transition on the resource usage.
