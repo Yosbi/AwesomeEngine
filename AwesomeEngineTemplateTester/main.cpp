@@ -1,9 +1,9 @@
 #include "main.h"         // prototypes and stuff
 
 //include our library
-//#pragma comment(lib, "AweD3D.lib")
+#pragma comment(lib, "AwesomeInput.lib")
 #pragma comment(lib, "AweMath.lib")
-//#pragma comment(lib, "AweDXInput.lib")
+#pragma comment(lib, "AwesomeRenderer.lib")
 
 
 // windows stuff
@@ -176,11 +176,11 @@ void updateInput()
     float up = 0.0f;
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_W))
     {
-        up += 1.0f;
+        up += 0.1f;
     }
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_S))
     {
-        up -= 1.0f;
+        up -= 0.1f;
     }
 
     AWEMatrix vmat;
@@ -217,19 +217,6 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_bDone = true;
                     PostMessage(hWnd, WM_CLOSE, 0, 0);
                     return 0;
-
-                /*case 'A':
-                    updateCamera(AWEVector(-1.0f, 0.0f, 0.0f));
-                    break;
-                case 'D':
-                    updateCamera(AWEVector(1.0f, 0.0f, 0.0f));
-                    break;
-                case 'W':
-                    updateCamera(AWEVector(0.0f, -1.0f, 0.0f));
-                    break;
-                case 'S':
-                    updateCamera(AWEVector(0.0f, 1.0f, 0.0f));
-                    break;*/
                 case 'C':
                     camera += 1;
                     if (camera % g_vcCameras.size() == 0)

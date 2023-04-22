@@ -34,6 +34,7 @@ const float  AWEEPSILON = 0.00001F;
 //-----------------------------------------------------------------------
 class AWEVector;
 class AWEMatrix;
+class AWEQuat;
 
 //-----------------------------------------------------------------------
 // Classes
@@ -122,6 +123,52 @@ public:
     float _21, _22, _23, _24;
     float _31, _32, _33, _34;
     float _41, _42, _43, _44;
+};
+
+//-----------------------------------------------------------------------
+// Name: AWEOPolygon
+// Desc: Basic quaternion class
+//-----------------------------------------------------------------------
+class __declspec(dllexport) AWEQuat {
+public:
+    // Constructors
+    AWEQuat(void) { x = 0.0f, y = 0.0f, z = 0.0f, w = 1.0f; }
+    AWEQuat(float _x, float _y, float _z, float _w)
+    {
+        x = _x; y = _y; z = _z; w = _w;
+    }
+
+    // Functions
+    void  MakeFromEuler(float fPitch, float fYaw, float fRoll);
+    void  Normalize();
+    void  Conjugate(AWEQuat q);
+    void  GetEulers(float* fPitch, float* fYaw, float* fRoll);
+    void  GetMatrix(AWEMatrix* m);
+    float GetMagnitude(void);
+
+
+    void  operator /= (float f);
+    AWEQuat operator /  (float f);
+
+    void  operator *= (float f);
+    AWEQuat operator *  (float f);
+
+    AWEQuat operator *  (const AWEVector& v) const;
+
+    AWEQuat operator *  (const AWEQuat& q) const;
+    void  operator *= (const AWEQuat& q);
+
+    void  operator += (const AWEQuat& q);
+    AWEQuat operator +  (const AWEQuat& q) const;
+
+    AWEQuat operator~(void) const { return AWEQuat(-x, -y, -z, w); }
+
+    void  Rotate(const AWEQuat& q1, const AWEQuat& q2);
+
+    AWEVector Rotate(const AWEVector& v);
+
+    // Variables
+    float x, y, z, w;
 };
 
 #endif //AWEMATH_H

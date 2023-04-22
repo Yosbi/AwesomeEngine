@@ -136,14 +136,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\AwesomeInput\AwesomeInput.vcxproj">
-      <Project>{a9f5f782-874d-4ee7-aef8-f45b3fb11a59}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\AwesomeRenderer\AwesomeRenderer.vcxproj">
-      <Project>{f7957983-2958-45bf-894b-1d7e1b9d44fc}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -23,6 +23,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AWEMatrix.cpp" />
+    <ClCompile Include="AWEQuat.cpp" />
     <ClCompile Include="AWEVector.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
