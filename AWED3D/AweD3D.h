@@ -32,7 +32,7 @@
 #include <string>
 #include <comdef.h>
 #include "d3dx12.h"
-#include "../AweMath/AweMath.h"
+#include "../AwesomeMath/AwesomeMath.h"
 #include "AweD3DException.h"
 #include "AweD3DCommandQueue.h"
 #include "AweUtil.h"
@@ -44,7 +44,7 @@
 //----------------------------------------------------------------------
 // Linking necessary d3d12 libraries
 //----------------------------------------------------------------------
-#pragma comment(lib, "AweMath.lib")
+#pragma comment(lib, "AwesomeMath.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "D3DCompiler.lib")

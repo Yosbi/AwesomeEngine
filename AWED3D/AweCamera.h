@@ -10,7 +10,7 @@
 #define AWE_CAMERA
 #pragma once
 
-#include "../AweMath/AweMath.h"
+#include "../AwesomeMath/AwesomeMath.h"
 #include <DirectXMath.h>
 
 class AweCamera {

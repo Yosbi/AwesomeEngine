@@ -1,5 +1,5 @@
 //-------------------------------------------------------------------------------
-// AWEMath.h
+// AwesomeMath.h
 // Yosbi Alves
 // yosbi@outlook.com
 // Copyright (c) 2023

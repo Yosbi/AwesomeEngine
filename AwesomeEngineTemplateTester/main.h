@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 #include "..\AwesomeRenderer\AwesomeRenderer.h"
-#include "..\AweMath\AweMath.h"
+#include "..\AwesomeMath\AwesomeMath.h"
 #include "..\AwesomeInput\AwesomeInput.h"
 // D E F I N E S ///////////////////////////////////////////////////
 

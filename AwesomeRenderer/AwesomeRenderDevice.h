@@ -15,7 +15,7 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
-#include "../AweMath/AweMath.h"
+#include "../AwesomeMath/AwesomeMath.h"
 
 
 //----------------------------------------------------------------------

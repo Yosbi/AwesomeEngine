@@ -2,7 +2,7 @@
 
 //include our library
 #pragma comment(lib, "AwesomeInput.lib")
-#pragma comment(lib, "AweMath.lib")
+#pragma comment(lib, "AwesomeMath.lib")
 #pragma comment(lib, "AwesomeRenderer.lib")
 
 
