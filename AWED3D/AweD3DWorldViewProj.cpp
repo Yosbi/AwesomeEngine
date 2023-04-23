@@ -19,7 +19,7 @@ void AweD3D::SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, con
 	const XMVECTOR xfocusPoint = XMVectorSet(vcPoint.x, vcPoint.y, vcPoint.z, vcPoint.w);
 	const XMVECTOR xupDirection = XMVectorSet(vcWorldUp.x, vcWorldUp.y, vcWorldUp.z, vcWorldUp.w);
 
-	m_ViewMatrix = XMMatrixLookAtLH(xeyePosition, xfocusPoint, xupDirection);
+	m_ViewMatrix = XMMatrixLookToLH(xeyePosition, xfocusPoint, xupDirection);
 }
 void AweD3D::SetProjMatrix()
 {

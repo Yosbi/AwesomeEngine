@@ -98,7 +98,7 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 {
 	SetProjMatrix();
 
-	SetViewMatrix(AWEVector(0, 0, -30), AWEVector(0, 0, 0), AWEVector(0, 1, 0));
+	//SetViewMatrix(AWEVector(0, 0, -30), AWEVector(0, 0, 0), AWEVector(0, 1, 0));
 	
 }
 

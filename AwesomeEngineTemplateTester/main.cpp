@@ -120,11 +120,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 void initCamera() {
     
     AWEVector pos = AWEVector(0, 0, -30);
-    AWEVector dir = AWEVector(0, 0, 0);
-    AWEVector up = AWEVector(0, 1, 0);
     freeCam.SetPos(pos);
-    freeCam.SetDir(dir);
-    freeCam.SetUp(up);
     
     g_pDevice->setFoV(45.0f);
     g_pDevice->setClippingPlanes(0.1f, 1000.0f);
@@ -171,30 +167,32 @@ void updateInput()
     POINT p = g_pYInputDevice->GetMouseDelta();
 
     // front or back
-    static float Thrust = 0.0f;
+    float Thrust = 0.0f;
     float Thrust2 = 0.0f;
 
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_W))
     {
-        Thrust = 0.1f;
+        Thrust = 5;
     }
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_S))
     {
-        Thrust -= 0.10f;
+        Thrust -= 5;
     }
     //float Thrust = 0.0f;
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_A))
     {
-        Thrust2 = 10.0f;
+        Thrust2 = -5.0f;
     }
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_D))
     {
-        Thrust2 -= 10.0f;
+        Thrust2 = 5.0f;
     }
-    freeCam.AddRotationSpeed(Thrust, 0.0f, 0.0f);
+    freeCam.SetRotationSpeedX(p.y);
+    freeCam.SetRotationSpeedY(p.x);
 
-    //freeCam.SetRotationSpeed(0.0f, p.x, 0.0f);
-    //freeCam.SetThrust(Thrust);
+    //freeCam.SetSpeed(Thrust);
+    //freeCam.SetSlideSpeed(Thrust2);
+    freeCam.SetThrust(Thrust);
 
     updateCamera(aweTimer.GetElapsed());
    
