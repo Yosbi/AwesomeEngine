@@ -27,8 +27,17 @@ LPAWERENDERDEVICE g_pDevice = NULL;
 LPAWEINPUT g_pYInput;
 LPAWEINPUTDEVICE g_pYInputDevice;
 
-AwesomeFreeCam freeCam;
-AwesomeTimer aweTimer(0, 0);
+// Cameras
+std::vector<AwesomeBaseCam*> g_vcCameras;
+USHORT g_nSelectedCamera = 0;
+
+// Timer
+AwesomeTimer g_aweTimer(0, 0);
+
+// Animations
+AwesomeLinearInterpolation g_posLerp;
+AwesomeLinearInterpolation g_dirLerp;
+AwesomeLinearInterpolation g_upLerp;
 
 /**
  * WinMain function to get the thing started.
@@ -118,17 +127,46 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 /*----------------------------------------------------------------*/
 
 void initCamera() {
-    
-    AWEVector pos = AWEVector(0, 0, -30);
-    freeCam.SetPos(pos);
-    
+    AWEVector pos = AWEVector(0, 30, -30);
+    AwesomeFreeCam *freeCam1 = new AwesomeFreeCam();
+    freeCam1->SetPos(pos);
+    freeCam1->SetRotation(( 45 * AWEPI) / 180.0f, 0.0f, 0.0f);
+       
+    pos = AWEVector(0, 10, 30);
+    AwesomeFreeCam* freeCam2 = new AwesomeFreeCam();
+    freeCam2->SetPos(pos);
+    freeCam2->SetRotation((10 * AWEPI) / 180.0f, AWEPI, 0.0f);
+
+
+    pos = AWEVector(0.0f, 100, 0.0f);
+    AwesomeFreeCam* freeCam3 = new AwesomeFreeCam();
+    freeCam3->SetPos(pos);
+    freeCam3->SetRotation((90 * AWEPI) / 180.0f, 0.0f, 0.0f);
+
+    pos = AWEVector(0, 0.0, -30);
+    AwesomeFirstPersonCam* fpCam = new AwesomeFirstPersonCam();
+    fpCam->SetPos(pos);
+
+    g_vcCameras.push_back(freeCam1);
+    g_vcCameras.push_back(freeCam2);
+    g_vcCameras.push_back(freeCam3);
+    g_vcCameras.push_back(fpCam);
+
     g_pDevice->setFoV(45.0f);
     g_pDevice->setClippingPlanes(0.1f, 1000.0f);
 }
 
 void updateCamera(float deltaT) {
-    freeCam.Update(deltaT);
-    g_pDevice->SetViewMatrix(freeCam.GetPos(), freeCam.GetDir(), freeCam.GetUp());
+    // if there is no animation we can update
+    if (g_dirLerp.GetAnimationFinished()) {
+        AwesomeBaseCam* cam = g_vcCameras.at(g_nSelectedCamera);
+        cam->Update(deltaT);
+        g_pDevice->SetViewMatrix(cam->GetPos(), cam->GetDir(), cam->GetUp());
+    }
+    else
+    {
+        g_pDevice->SetViewMatrix(g_posLerp.Update(deltaT), g_dirLerp.Update(deltaT), g_upLerp.Update(deltaT));
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -167,34 +205,45 @@ void updateInput()
     POINT p = g_pYInputDevice->GetMouseDelta();
 
     // front or back
-    float Thrust = 0.0f;
-    float Thrust2 = 0.0f;
+    float thrust = 0.0f;
+    float thrust2 = 0.0f;
 
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_W))
     {
-        Thrust = 5;
+        thrust = 5;
     }
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_S))
     {
-        Thrust -= 5;
+        thrust -= 5;
     }
     //float Thrust = 0.0f;
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_A))
     {
-        Thrust2 = -5.0f;
+        thrust2 = -5.0f;
     }
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_D))
     {
-        Thrust2 = 5.0f;
+        thrust2 = 5.0f;
     }
-    freeCam.SetRotationSpeedX(p.y);
-    freeCam.SetRotationSpeedY(p.x);
+    
+    // if there is no animation we can update
+    if (g_dirLerp.GetAnimationFinished())
+    {
+        AwesomeBaseCam* cam = g_vcCameras.at(g_nSelectedCamera);
+        AWECAMERATYPE cameraType = cam->GetCameraType();
 
-    //freeCam.SetSpeed(Thrust);
-    //freeCam.SetSlideSpeed(Thrust2);
-    freeCam.SetThrust(Thrust);
+        // Only first person camera can move
+        if (cameraType == AWECAMERATYPE::FIRST_PERSON_CAM)
+        {
+            ((AwesomeFirstPersonCam*)(cam))->SetRotationSpeedX(-p.y);
+            ((AwesomeFirstPersonCam*)(cam))->SetRotationSpeedY(-p.x);
 
-    updateCamera(aweTimer.GetElapsed());
+            ((AwesomeFirstPersonCam*)(cam))->SetSpeed(thrust);
+            ((AwesomeFirstPersonCam*)(cam))->SetSlideSpeed(thrust2);
+        }
+    }
+    
+    updateCamera(g_aweTimer.GetElapsed());
    
 }
 
@@ -223,7 +272,30 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     g_bDone = true;
                     PostMessage(hWnd, WM_CLOSE, 0, 0);
                     return 0;
-                //case 'C':
+                case 'C':
+                    if (g_posLerp.GetAnimationFinished()) {
+                        AwesomeBaseCam* oldCam = g_vcCameras.at(g_nSelectedCamera);
+                        AWEVector oldPos = oldCam->GetPos();
+                        AWEVector oldDir = oldCam->GetDir();
+                        AWEVector oldUp = oldCam->GetUp();
+
+                        g_nSelectedCamera++;
+                        if (g_nSelectedCamera % g_vcCameras.size() == 0)
+                            g_nSelectedCamera = 0;
+
+                        AwesomeBaseCam* newCam = g_vcCameras.at(g_nSelectedCamera);
+                        AWEVector newPos = newCam->GetPos();
+                        AWEVector newDir = newCam->GetDir();
+                        AWEVector newUp = newCam->GetUp();
+
+                        g_posLerp.Set(oldPos, newPos);
+                        g_dirLerp.Set(oldDir, newDir);
+                        g_upLerp.Set(oldUp, newUp);
+                    }
+                    
+
+                    //g_positionLerp
+                    break;
                     
                 } break;
 
@@ -291,7 +363,7 @@ HRESULT ProgramCleanup(void) {
  */
 HRESULT ProgramTick(void) {
    
-    aweTimer.Update();
+    g_aweTimer.Update();
 
     updateInput();
 

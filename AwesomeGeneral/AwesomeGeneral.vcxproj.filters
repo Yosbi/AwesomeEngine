@@ -13,36 +13,66 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Timer">
+      <UniqueIdentifier>{8883f7c9-64a2-4d27-b5fa-6b2f1d35b191}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Camera">
+      <UniqueIdentifier>{7a46a500-b775-4642-9325-c7a6eb537067}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Animation">
+      <UniqueIdentifier>{d25a0c8d-a554-495f-9b6b-723fe292a85c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Animation">
+      <UniqueIdentifier>{2ab941dd-3867-4396-b046-98a60c0bee8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Camera">
+      <UniqueIdentifier>{ea51cf61-c4a8-43b5-814a-950acdd8f49b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Timer">
+      <UniqueIdentifier>{b6e914d4-176c-4db4-af3e-1f0aab860906}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AweFreeCam.h">
+      <Filter>Header Files\Camera</Filter>
+    </ClInclude>
     <ClInclude Include="AwesomeBaseCam.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="AwesomeFirstPersonCam.h">
+      <Filter>Header Files\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="AwesomeTimer.h">
+      <Filter>Header Files\Timer</Filter>
+    </ClInclude>
+    <ClInclude Include="AwesomeBaseAnimation.h">
+      <Filter>Header Files\Animation</Filter>
     </ClInclude>
     <ClInclude Include="AwesomeGeneral.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AweFreeCam.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AwesomeFirstPersonCam.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="AwesomeTimer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="AwesomeLinearInterpolation.h">
+      <Filter>Header Files\Animation</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AwesomeBaseCam.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="AwesomeTimer.cpp">
+      <Filter>Source Files\Timer</Filter>
     </ClCompile>
-    <ClCompile Include="AwesomeFreeCam.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="AwesomeBaseCam.cpp">
+      <Filter>Source Files\Camera</Filter>
     </ClCompile>
     <ClCompile Include="AwesomeFirstPersonCam.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="AwesomeTimer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="AwesomeFreeCam.cpp">
+      <Filter>Source Files\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="AwesomeBaseAnimation.cpp">
+      <Filter>Source Files\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="AwesomeLinearInterpolation.cpp">
+      <Filter>Source Files\Animation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

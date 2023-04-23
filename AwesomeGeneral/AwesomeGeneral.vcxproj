@@ -20,15 +20,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AweFreeCam.h" />
+    <ClInclude Include="AwesomeBaseAnimation.h" />
     <ClInclude Include="AwesomeBaseCam.h" />
     <ClInclude Include="AwesomeFirstPersonCam.h" />
     <ClInclude Include="AwesomeGeneral.h" />
+    <ClInclude Include="AwesomeLinearInterpolation.h" />
     <ClInclude Include="AwesomeTimer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AwesomeBaseAnimation.cpp" />
     <ClCompile Include="AwesomeBaseCam.cpp" />
     <ClCompile Include="AwesomeFirstPersonCam.cpp" />
     <ClCompile Include="AwesomeFreeCam.cpp" />
+    <ClCompile Include="AwesomeLinearInterpolation.cpp" />
     <ClCompile Include="AwesomeTimer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

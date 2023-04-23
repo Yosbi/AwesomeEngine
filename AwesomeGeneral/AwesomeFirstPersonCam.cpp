@@ -15,6 +15,7 @@ AwesomeFirstPersonCam::AwesomeFirstPersonCam(void) {
     AwesomeBaseCam::Init();
     m_fSpeed = 0;
     m_fSlide = 0;
+    m_CameraType = FIRST_PERSON_CAM;
 } 
 
 //--------------------------------------------------------------------
@@ -59,7 +60,9 @@ void AwesomeFirstPersonCam::Update(float fET) {
     // move position according to velocity vector
     m_vcPos += m_vcV + vcS;
 }
-
+#include <string>
+#include <sstream>
+#include <iostream>
 //--------------------------------------------------------------------
 // Name: RecalcAxes
 // Desc: Recalc the axes but limiting the y to more or less 80 to -80 
@@ -68,11 +71,9 @@ void AwesomeFirstPersonCam::Update(float fET) {
 void AwesomeFirstPersonCam::RecalcAxes(void) {
     AWEMatrix  mat;
 
-    static float f2PI = 6.283185f;
-
     // keep in range of 360 degree
-    if (m_fRotY > f2PI) m_fRotY -= f2PI;
-    else if (m_fRotY < -f2PI) m_fRotY += f2PI;
+    if (m_fRotY > AWE2PI) m_fRotY -= AWE2PI;
+    else if (m_fRotY < -AWE2PI) m_fRotY += AWE2PI;
 
     // dont look up/down more than 80 degrees
     if (m_fRotX > 1.4f) m_fRotX = 1.4f;
@@ -99,6 +100,10 @@ void AwesomeFirstPersonCam::RecalcAxes(void) {
     m_vcRight.Normalize();
     m_vcUp = m_vcDir.Cross(m_vcRight);
     m_vcUp.Normalize();
+
+
+    OutputDebugStringA((std::to_string(m_vcDir.x) + ", " + std::to_string(m_vcDir.y) + ", " 
+        + std::to_string(m_vcDir.z) + ", " + + "\n").c_str());
 } 
 
 //--------------------------------------------------------------------

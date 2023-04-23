@@ -37,9 +37,6 @@ void AwesomeBaseCam::Init(void) {
 	m_Quat.w = 1.0f;
 }
 
-#include <string>
-#include <sstream>
-#include <iostream>
 //--------------------------------------------------------------------
 // Name: RecalcAxes()
 // Desc: Recalculate the orientation of the local axes according to the
@@ -48,26 +45,24 @@ void AwesomeBaseCam::Init(void) {
 void AwesomeBaseCam::RecalcAxes(void) {
 	AWEQuat    qFrame;
 	AWEMatrix  mat;
-
-	static float f2PI = 6.283185f; 
 	
-	OutputDebugStringA((std::to_string(m_fRotX) + "\n").c_str());
+	//OutputDebugStringA((std::to_string(m_fRotX) + "\n").c_str());
 
 	// keep in range of 360 degree
-	if (m_fRotX > f2PI) 
-		m_fRotX -= f2PI;
-	else if (m_fRotX < -f2PI) 
-		m_fRotX += f2PI;
+	if (m_fRotX > AWE2PI)
+		m_fRotX -= AWE2PI;
+	else if (m_fRotX < -AWE2PI)
+		m_fRotX += AWE2PI;
 
-	if (m_fRotY > f2PI) 
-		m_fRotY -= f2PI;
-	else if (m_fRotY < -f2PI) 
-		m_fRotY += f2PI;
+	if (m_fRotY > AWE2PI)
+		m_fRotY -= AWE2PI;
+	else if (m_fRotY < -AWE2PI)
+		m_fRotY += AWE2PI;
 
-	if (m_fRotZ > f2PI) 
-		m_fRotZ -= f2PI;
-	else if (m_fRotZ < -f2PI) 
-		m_fRotZ += f2PI;
+	if (m_fRotZ > AWE2PI)
+		m_fRotZ -= AWE2PI;
+	else if (m_fRotZ < -AWE2PI)
+		m_fRotZ += AWE2PI;
 
 	// build new quaternion for this rotation
 	qFrame.MakeFromEuler(m_fRotX, m_fRotY, m_fRotZ);

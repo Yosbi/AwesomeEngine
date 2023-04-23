@@ -13,6 +13,13 @@
 
 #include "../AwesomeMath/AwesomeMath.h"
 
+enum AWECAMERATYPE
+{
+    FREE_CAM,
+    FIRST_PERSON_CAM,
+    CUSTOM
+};
+
 class AwesomeBaseCam {
 public:
     AwesomeBaseCam();
@@ -25,6 +32,8 @@ public:
     AWEVector GetUp(void) { return m_vcUp; }
     AWEVector GetDir(void) { return m_vcDir; }
     AWEVector GetVelocity(void) { return m_vcV; }
+
+    AWECAMERATYPE GetCameraType(void) { return m_CameraType; }
 
 protected:
     AWEVector m_vcPos;      // position
@@ -54,6 +63,8 @@ protected:
     // protected methods
     virtual void RecalcAxes(void);
     virtual void Init(void);
+
+    AWECAMERATYPE m_CameraType;
 };
 
 #endif

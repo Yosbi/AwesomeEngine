@@ -14,6 +14,8 @@
 #include "AweFreeCam.h"
 #include "AwesomeFirstPersonCam.h"
 #include "AwesomeTimer.h"
+#include "AwesomeBaseAnimation.h"
+#include "AwesomeLinearInterpolation.h"
 
 #endif // !AWEGENERAL_H
 
