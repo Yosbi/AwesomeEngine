@@ -100,7 +100,7 @@ protected:
 
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvDescriptorHeap;
 
-	UINT m_srvDescriptorSize;
+	UINT m_nSrvDescriptorSize;
 
 };
 

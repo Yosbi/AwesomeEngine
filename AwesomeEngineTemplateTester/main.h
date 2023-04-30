@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <string>
 #include <vector>
+#include <iostream>
 #include "..\AwesomeRenderer\AwesomeRenderer.h"
 #include "..\AwesomeMath\AwesomeMath.h"
 #include "..\AwesomeInput\AwesomeInput.h"
@@ -24,6 +25,7 @@ void	  initCamera();
 HRESULT   InputStartup();
 void      updateInput();
 void	  updateCamera(AWEVector deltaPos);
+void	  updateFPS();
 
 
 #endif

@@ -147,6 +147,7 @@
     <ClInclude Include="AwesomeRenderDevice.h" />
     <ClInclude Include="AwesomeRenderer.h" />
     <ClInclude Include="AwesomeSkinManager.h" />
+    <ClInclude Include="AwesomeVertexCacheManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AwesomeRenderer.cpp" />

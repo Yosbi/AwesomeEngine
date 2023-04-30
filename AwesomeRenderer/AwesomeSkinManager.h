@@ -39,5 +39,4 @@ public:
 	virtual	bool	ColorEqual(const AWESOMECOLOR& pCol0, const AWESOMECOLOR& pCol1) = 0;
 
 };
-typedef class AwesomeSkinManager* LPAWESKINMANAGER;
 #endif

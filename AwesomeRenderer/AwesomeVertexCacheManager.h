@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------
+/*/-----------------------------------------------------------------------
 // AwesomeVertexCacheManager.h
 // Yosbi Alves Saenz
 // yosbi@outlook.com
@@ -24,5 +24,4 @@ public:
 	// Render static buffers with the default given skin. Index buffers is optional.
 	virtual HRESULT Render(UINT nSBufferID) = 0;
 
-
-};
+};*/

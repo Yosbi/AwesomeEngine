@@ -32,7 +32,7 @@ void AweD3DSkinManager::Init(Microsoft::WRL::ComPtr<ID3D12Device2> device, std::
 {
 	m_pDevice = device;
 	m_CommandQueue = commandQueueShrPtr;
-	m_srvDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	m_nSrvDescriptorSize = m_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 }
 
@@ -289,10 +289,12 @@ AWESOMETEXTURE AweD3DSkinManager::CreateTexture(std::wstring fileName)
 
 	// Looking for the right place in the heap
 	CD3DX12_CPU_DESCRIPTOR_HANDLE srvHeapHandle(m_srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
-	srvHeapHandle.Offset(m_Textures.size(), m_srvDescriptorSize);
+	srvHeapHandle.Offset(m_Textures.size(), m_nSrvDescriptorSize);
 
 	// Saving in the heap
 	m_pDevice->CreateShaderResourceView(aweTexture.textureResource.Get(), &aweTexture.viewDescriptor, m_srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	
+	m_CommandQueue->ExecuteCommandList(commandList);
 	return aweTexture;
 }
 
@@ -361,7 +363,7 @@ void AweD3DSkinManager::UpdateTexturesDescriptorHeap()
 	// Create a new descriptor heap for SRVs with the desired number of descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 	srvHeapDesc.NumDescriptors = newNumDescriptors;
-	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> newHeap;
 	ThrowIfFailed(m_pDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&newHeap)));
@@ -371,12 +373,9 @@ void AweD3DSkinManager::UpdateTexturesDescriptorHeap()
 	{
 		CD3DX12_CPU_DESCRIPTOR_HANDLE srcHandle(m_srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 		CD3DX12_CPU_DESCRIPTOR_HANDLE dstHandle(newHeap->GetCPUDescriptorHandleForHeapStart());
-		for (UINT i = 0; i < min(oldNumDescriptors, newNumDescriptors); i++)
-		{
-			m_pDevice->CopyDescriptorsSimple(1, dstHandle, srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-			srcHandle.Offset(m_srvDescriptorSize);
-			dstHandle.Offset(m_srvDescriptorSize);
-		}
+
+		m_pDevice->CopyDescriptorsSimple(oldNumDescriptors, newHeap->GetCPUDescriptorHandleForHeapStart(),
+			srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
 
 	// Replace the old descriptor heap with the new one

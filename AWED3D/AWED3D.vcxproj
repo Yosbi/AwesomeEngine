@@ -25,6 +25,7 @@
     <ClInclude Include="AweD3DCommandQueue.h" />
     <ClInclude Include="AweD3DException.h" />
     <ClInclude Include="AweD3DSkinManager.h" />
+    <ClInclude Include="AweD3DVertexCache.h" />
     <ClInclude Include="AweMesh.h" />
     <ClInclude Include="AweUtil.h" />
     <ClInclude Include="d3dx12.h" />
@@ -35,6 +36,7 @@
     <ClCompile Include="AweD3DException.cpp" />
     <ClCompile Include="AweD3DInit.cpp" />
     <ClCompile Include="AweD3DSkinManager.cpp" />
+    <ClCompile Include="AweD3DVertexCache.cpp" />
     <ClCompile Include="AweD3DWorldViewProj.cpp" />
     <ClCompile Include="AweMesh.cpp" />
   </ItemGroup>

@@ -27,6 +27,9 @@
     <ClInclude Include="AwesomeMiscDefinitions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AwesomeVertexCacheManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AwesomeRenderer.cpp">

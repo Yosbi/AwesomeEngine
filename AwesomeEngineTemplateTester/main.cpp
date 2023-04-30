@@ -11,6 +11,7 @@
 HWND      g_hWnd = NULL;
 HINSTANCE g_hInst = NULL;
 TCHAR     g_szAppClass[] = TEXT("FrameWorktest");
+std::wstring g_windowCaption = L"Awesome Engine v0.1 - By Yosbi Alves Saenz";
 
 // application stuff
 BOOL g_bIsActive = FALSE;
@@ -72,7 +73,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
     // create window
     if (!(hWnd = CreateWindowEx(NULL, g_szAppClass,
-        L"Awesome Engine v0.1 - By Yosbi Alves Saenz",
+        g_windowCaption.c_str(),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU |
         WS_MINIMIZEBOX | WS_VISIBLE,
         GetSystemMetrics(SM_CXSCREEN) / 2 - (1280/2),
@@ -199,7 +200,7 @@ HRESULT InputStartup()
 
     return S_OK;
 }
-#include <iostream>
+
 void updateInput()
 {
     // get the imputs to control the camera
@@ -376,12 +377,30 @@ HRESULT ProgramCleanup(void) {
 /*----------------------------------------------------------------*/
 
 
+void updateFPS() {
+
+    static double timeCount = 0.0f;
+    timeCount += g_aweTimer.GetElapsed();
+
+    if (timeCount > 1.0f) {
+        int fps = std::round(g_aweTimer.GetFPS());
+        std::wstring newCaption = g_windowCaption + L" | " + std::to_wstring(fps);
+
+        // Now set the new caption to the main window. 
+        SetWindowText(g_hWnd, newCaption.c_str());
+
+        timeCount = 0.0f;
+    }
+}
+
 /**
  * Do one frame.
  */
 HRESULT ProgramTick(void) {
    
     g_aweTimer.Update();
+
+    updateFPS();
 
     updateInput();
 
