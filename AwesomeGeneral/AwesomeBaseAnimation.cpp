@@ -1,4 +1,3 @@
-#include "AwesomeBaseAnimation.h"
 //-----------------------------------------------------------------------
 // AwesomeBaseAnimation.cpp
 // Yosbi Alves Saenz
@@ -6,9 +5,12 @@
 // Created on 23/04/2023
 //-----------------------------------------------------------------------
 
+#include "AwesomeBaseAnimation.h"
+
 AwesomeBaseAnimation::AwesomeBaseAnimation()
 {
 	m_bAnimationFinished = true;
+	m_fTotalTime = 0.0f;
 }
 
 AwesomeBaseAnimation::~AwesomeBaseAnimation()

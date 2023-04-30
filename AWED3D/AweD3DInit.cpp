@@ -132,7 +132,7 @@ bool AweD3D::EnableDebugLayer()
 #if defined(DEBUG) || defined(_DEBUG) 
 	// Enable the D3D12 debug layer.
 	{
-		ComPtr<ID3D12Debug> debugController;
+		Microsoft::WRL::ComPtr<ID3D12Debug> debugController;
 		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
 		debugController->EnableDebugLayer();
 		return true;
@@ -184,7 +184,7 @@ void AweD3D::CreateDevice()
 	// Fallback to WARP device.
 	if (FAILED(hardwareResult))
 	{
-		ComPtr<IDXGIAdapter> pWarpAdapter;
+		Microsoft::WRL::ComPtr<IDXGIAdapter> pWarpAdapter;
 		ThrowIfFailed(m_dxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&pWarpAdapter)));
 
 		ThrowIfFailed(D3D12CreateDevice(
@@ -233,7 +233,7 @@ void AweD3D::CreateDevice()
 void AweD3D::CreateCommandQueue()
 {
 	// Creating command queue 
-	m_pCommandQueue = std::make_shared<AweD3DCommandQueue>(m_d3d12Device, D3D12_COMMAND_LIST_TYPE_DIRECT);
+	m_pCommandQueue = std::make_shared<AweD3DCommandQueue>(m_d3d12Device.Get(), D3D12_COMMAND_LIST_TYPE_DIRECT);
 }
 
 void AweD3D::CheckTearingSupport()
@@ -244,7 +244,7 @@ void AweD3D::CheckTearingSupport()
 	// DXGI 1.4 interface and query for the 1.5 interface. This is to enable the 
 	// graphics debugging tools which will not support the 1.5 factory interface 
 	// until a future update.
-	ComPtr<IDXGIFactory5> factory5;
+	Microsoft::WRL::ComPtr<IDXGIFactory5> factory5;
 	if (SUCCEEDED(m_dxgiFactory.As(&factory5)))
 	{
 		if (FAILED(factory5->CheckFeatureSupport(
@@ -288,9 +288,14 @@ bool AweD3D::InitDirect3D()
 	LoadDefaultShaders();
 	CreateDefaultPipelineStateObject();
 
+	InitSkinManager();
+
 	return true;
 }
 
+void AweD3D::InitSkinManager() {
+	m_SkinManager.Init(m_d3d12Device, m_pCommandQueue);
+}
 void AweD3D::CreateDefaultRootSignature() {
 	// Create a root signature.
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
@@ -310,14 +315,14 @@ void AweD3D::CreateDefaultRootSignature() {
 
 	// A single 32-bit constant root parameter that is used by the vertex shader.
 	CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-	rootParameters[0].InitAsConstants(sizeof(XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+	rootParameters[0].InitAsConstants(sizeof(DirectX::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
 	rootSignatureDescription.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
 
 	// Serialize the root signature.
-	ComPtr<ID3DBlob> rootSignatureBlob;
-	ComPtr<ID3DBlob> errorBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> rootSignatureBlob;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
 	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription,
 		featureData.HighestVersion, &rootSignatureBlob, &errorBlob));
 	// Create the root signature.
@@ -406,9 +411,9 @@ void AweD3D::CreateSwapChain()
 	ThrowIfFailed(m_dxgiFactory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER));
 }
 
-ComPtr<ID3D12DescriptorHeap> AweD3D::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors)
+Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> AweD3D::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors)
 {
-	ComPtr<ID3D12DescriptorHeap> descriptorHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
 
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.NumDescriptors = numDescriptors;

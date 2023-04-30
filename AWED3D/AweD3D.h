@@ -35,6 +35,7 @@
 #include "../AwesomeMath/AwesomeMath.h"
 #include "AweD3DException.h"
 #include "AweD3DCommandQueue.h"
+#include "AweD3DSkinManager.h"
 #include "AweUtil.h"
 #include "AweMesh.h"
 #include <vector>
@@ -48,8 +49,8 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "D3DCompiler.lib")
 
-using Microsoft::WRL::ComPtr;	// TODO: Avoid this
-using namespace DirectX;		// TODO: Avoid this
+//using Microsoft::WRL::ComPtr;	// TODO: Avoid this
+//using namespace DirectX;		// TODO: Avoid this
 
 //----------------------------------------------------------------------
 // Name: DLLEntryPoint
@@ -74,8 +75,6 @@ public:
 	// Initialize and release
 	//---------------------------
 	virtual HRESULT Init(HWND hWnd);
-	
-	
 	virtual bool IsRunning();
 
 	//---------------------------
@@ -98,6 +97,9 @@ public:
 	void setFoV(float FoV);
 	void SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp);
 
+	// Skin manager
+	AwesomeSkinManager* GetSkinManager();
+
 
 private:
 	// Private functions
@@ -116,6 +118,7 @@ private:
 	void CreateDefaultPipelineStateObject();
 	void CheckTearingSupport();
 	void InitDescriptorSizes();
+	void InitSkinManager();
 	bool InitDirect3D();
 	void CreateSwapChain();
 	void CreateRtvAndDsvDescriptorHeaps();
@@ -123,12 +126,12 @@ private:
 	void UpdateRenderTargetView();
 	void UpdateDepthStencilView();
 	void UpdateBufferResource(
-		ComPtr<ID3D12GraphicsCommandList2> commandList,
+		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
 		ID3D12Resource** pDestinationResource,
 		ID3D12Resource** pIntermediateResource,
 		size_t numElements, size_t elementSize, const void* bufferData);
 	
-	ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
 		
 
 	void OnResize();
@@ -140,7 +143,7 @@ private:
 
 	// Camera and projection things
 	void SetProjMatrix();
-	XMMATRIX GetMVPMatrix(AweMesh* mesh);
+	DirectX::XMMATRIX GetMVPMatrix(AweMesh* mesh);
 
 
 private:
@@ -157,6 +160,8 @@ private:
 	float					m_fFoV;
 	float					m_fNear;
 	float					m_fFar;
+
+
 
 	DirectX::XMMATRIX m_ViewMatrix;
 	DirectX::XMMATRIX m_ProjectionMatrix;
@@ -198,15 +203,18 @@ private:
 
 	// Default root signature and pipeline state and shader
 	// TODO: do this dinamically later
-	ComPtr<ID3D12RootSignature> m_rootSignature;
-	ComPtr<ID3D12PipelineState> m_pipelineState;
-	ComPtr<ID3DBlob> m_vertexShader;
-	ComPtr<ID3DBlob> m_pixelShader;
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
+	Microsoft::WRL::ComPtr<ID3DBlob> m_vertexShader;
+	Microsoft::WRL::ComPtr<ID3DBlob> m_pixelShader;
+
+	// Modules of the engine
+	AweD3DSkinManager m_SkinManager;
 
 	// Meshes list
 	std::vector<AweMesh> m_meshes;
 
-	XMMATRIX m_ModelMatrix;
+	DirectX::XMMATRIX m_ModelMatrix;
 };
 
 #endif // !AWED3D_H

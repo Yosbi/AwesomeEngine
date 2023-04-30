@@ -12,6 +12,11 @@ bool AweD3D::IsRunning()
 	return false;
 }
 
+AwesomeSkinManager* AweD3D::GetSkinManager()
+{
+	return &m_SkinManager;
+}
+
 HRESULT AweD3D::BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearStencil)
 {
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
@@ -198,7 +203,7 @@ ID3D12Resource* AweD3D::getCurrentBackBuffer() const
 }
 
 void AweD3D::UpdateBufferResource(
-	ComPtr<ID3D12GraphicsCommandList2> commandList,
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
 	ID3D12Resource** pDestinationResource,
 	ID3D12Resource** pIntermediateResource,
 	size_t numElements, size_t elementSize, const void* bufferData)
@@ -263,7 +268,7 @@ void AweD3D::LoadMeshToGPU(unsigned int meshIndex)
 
 	// Upload vertex buffer data.
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
-	ComPtr<ID3D12Resource> intermediateVertexBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateVertexBuffer;
 	UpdateBufferResource(commandList,
 		&vertexBuffer, &intermediateVertexBuffer,
 		mesh->getVerteces().size(), sizeof(Vertex), mesh->getVerteces().data());
@@ -278,7 +283,7 @@ void AweD3D::LoadMeshToGPU(unsigned int meshIndex)
 
 	// Upload index buffer data.
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
-	ComPtr<ID3D12Resource> intermediateIndexBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateIndexBuffer;
 	UpdateBufferResource(commandList,
 		&indexBuffer, &intermediateIndexBuffer,
 		mesh->getIndex().size(), sizeof(WORD), mesh->getIndex().data());
@@ -319,12 +324,12 @@ void AweD3D::RenderMesh(unsigned int meshIndex)
 	
 	// Update the MVP matrix
 	//XMMATRIX mvpMatrix = GetMVPMatrix(mesh);
-	XMMATRIX modelMatrix = mesh->getModelMatrix();
+	DirectX::XMMATRIX modelMatrix = mesh->getModelMatrix();
 
-	XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, m_ViewMatrix);
+	DirectX::XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, m_ViewMatrix);
 	mvpMatrix = XMMatrixMultiply(mvpMatrix, m_ProjectionMatrix);
 	mvpMatrix = XMMatrixTranspose(mvpMatrix);
-	commandList->SetGraphicsRoot32BitConstants(0, sizeof(XMMATRIX) / 4, &mvpMatrix, 0);
+	commandList->SetGraphicsRoot32BitConstants(0, sizeof(DirectX::XMMATRIX) / 4, &mvpMatrix, 0);
 
 
 	commandList->DrawInstanced(mesh->getVerteces().size(), 1, 0, 0);

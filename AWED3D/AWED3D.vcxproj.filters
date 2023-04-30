@@ -36,6 +36,9 @@
     <ClInclude Include="AweUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AweD3DSkinManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AweD3DInit.cpp">
@@ -56,11 +59,15 @@
     <ClCompile Include="AweD3DWorldViewProj.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AweD3DSkinManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="AweD3D.def">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="DefaultPixelShader.hlsl" />

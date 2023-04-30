@@ -143,8 +143,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AwesomeMiscDefinitions.h" />
     <ClInclude Include="AwesomeRenderDevice.h" />
     <ClInclude Include="AwesomeRenderer.h" />
+    <ClInclude Include="AwesomeSkinManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AwesomeRenderer.cpp" />

@@ -60,9 +60,7 @@ void AwesomeFirstPersonCam::Update(float fET) {
     // move position according to velocity vector
     m_vcPos += m_vcV + vcS;
 }
-#include <string>
-#include <sstream>
-#include <iostream>
+
 //--------------------------------------------------------------------
 // Name: RecalcAxes
 // Desc: Recalc the axes but limiting the y to more or less 80 to -80 
@@ -102,8 +100,8 @@ void AwesomeFirstPersonCam::RecalcAxes(void) {
     m_vcUp.Normalize();
 
 
-    OutputDebugStringA((std::to_string(m_vcDir.x) + ", " + std::to_string(m_vcDir.y) + ", " 
-        + std::to_string(m_vcDir.z) + ", " + + "\n").c_str());
+    //OutputDebugStringA((std::to_string(m_vcDir.x) + ", " + std::to_string(m_vcDir.y) + ", " 
+    //    + std::to_string(m_vcDir.z) + ", " + + "\n").c_str());
 } 
 
 //--------------------------------------------------------------------

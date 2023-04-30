@@ -15,6 +15,7 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include "AwesomeSkinManager.h"
 #include "../AwesomeMath/AwesomeMath.h"
 
 
@@ -78,6 +79,8 @@ public:
 	// Set FoV
 	virtual void setFoV(float FoV) = 0;
 
+	// Skin manager
+	virtual AwesomeSkinManager* GetSkinManager() = 0;
 
 };
 typedef class AwesomeRenderDevice* LPAWERENDERDEVICE;

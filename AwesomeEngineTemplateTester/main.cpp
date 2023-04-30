@@ -31,6 +31,10 @@ LPAWEINPUTDEVICE g_pYInputDevice;
 std::vector<AwesomeBaseCam*> g_vcCameras;
 USHORT g_nSelectedCamera = 0;
 
+// Skin manager
+AwesomeSkinManager* g_pAwesomeSkinManager;
+UINT g_nSkinTiles;
+
 // Timer
 AwesomeTimer g_aweTimer(0, 0);
 
@@ -342,6 +346,20 @@ HRESULT LoadAssets() {
 
     Chinesse = g_pDevice->LoadMesh(L"Chinesse.obj");
     g_pDevice->LoadMeshToGPU(Chinesse);
+
+    std::wstring textureTilesAddress = L"tiles.jpg";
+    std::wstring textureMirror = L"mirror.jpg";
+    std::wstring textureCarusso = L"Texture_by_FE_Caruso.jpg";
+
+    AWESOMECOLOR diff = { 1.0f, 1.0f, 1.0f, 1.0f };
+    AWESOMECOLOR ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
+    AWESOMECOLOR spec = { 0.35f, 0.35f, 0.35f, 1.0f };
+    g_nSkinTiles = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
+    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureTilesAddress, false, 1.0f);
+    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureMirror, false, 1.0f);
+    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureCarusso, false, 1.0f);
+
+
     return S_OK;
 }
 /**

@@ -24,6 +24,7 @@
     <ClInclude Include="AweD3D.h" />
     <ClInclude Include="AweD3DCommandQueue.h" />
     <ClInclude Include="AweD3DException.h" />
+    <ClInclude Include="AweD3DSkinManager.h" />
     <ClInclude Include="AweMesh.h" />
     <ClInclude Include="AweUtil.h" />
     <ClInclude Include="d3dx12.h" />
@@ -33,11 +34,13 @@
     <ClCompile Include="AweD3DCommandQueue.cpp" />
     <ClCompile Include="AweD3DException.cpp" />
     <ClCompile Include="AweD3DInit.cpp" />
+    <ClCompile Include="AweD3DSkinManager.cpp" />
     <ClCompile Include="AweD3DWorldViewProj.cpp" />
     <ClCompile Include="AweMesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AweD3D.def" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="DefaultPixelShader.hlsl">
@@ -190,6 +193,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="..\packages\directxtex_desktop_win10.2023.3.30.1\build\native\directxtex_desktop_win10.targets" Condition="Exists('..\packages\directxtex_desktop_win10.2023.3.30.1\build\native\directxtex_desktop_win10.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -197,5 +201,6 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props'))" />
     <Error Condition="!Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.targets'))" />
+    <Error Condition="!Exists('..\packages\directxtex_desktop_win10.2023.3.30.1\build\native\directxtex_desktop_win10.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtex_desktop_win10.2023.3.30.1\build\native\directxtex_desktop_win10.targets'))" />
   </Target>
 </Project>
