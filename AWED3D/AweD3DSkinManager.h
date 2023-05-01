@@ -55,7 +55,7 @@ typedef struct AWESKIN_TYPE
 class AweD3DSkinManager : public AwesomeSkinManager
 {
 	//friend class AweD3DVertexCache;
-	//friend class AweD3DVertexCacheManager;
+	friend class AweD3DVertexCacheManager;
 	//friend class AweD3D;
 
 public:

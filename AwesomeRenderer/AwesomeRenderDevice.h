@@ -74,11 +74,15 @@ public:
 	// View matrix form position, fix point, worldup
 	virtual void SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp) = 0;
 
+	// Set World matrix
+	virtual void SetWorldTransformMatrix(const AWEMatrix& mWorld) = 0;
+
 	// Set fov and near and far planes
 	virtual void setClippingPlanes(float near, float far) = 0;
 
 	// Set FoV
 	virtual void setFoV(float FoV) = 0;
+
 
 	// Skin manager
 	virtual AwesomeSkinManager* GetSkinManager() = 0;

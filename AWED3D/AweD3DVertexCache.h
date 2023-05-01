@@ -30,7 +30,7 @@ typedef struct AWESTATICBUFFER_TYPE
 	int			nNumIndis;
 	int			nNumTris;
 
-	AWESOMEVERTEXID vertexIdType;
+	AWESOMEVERTEXID VID;
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;

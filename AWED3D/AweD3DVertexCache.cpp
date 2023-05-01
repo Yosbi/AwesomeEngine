@@ -17,6 +17,7 @@
 //-----------------------------------------------------------------------------
 AweD3DVertexCacheManager::AweD3DVertexCacheManager()
 {
+	m_dwActiveSB = MAX_ID;
 }
 
 //-----------------------------------------------------------------------------
@@ -53,7 +54,7 @@ HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(AWESOMEVERTEXID VertexID, U
 	awesomeStaticBuffer.nNumVerts = nVerts;
 	awesomeStaticBuffer.nNumIndis = nIndis;
 	awesomeStaticBuffer.nSkinID = nSkinID;
-	awesomeStaticBuffer.vertexIdType = VertexID;
+	awesomeStaticBuffer.VID = VertexID;
 
 	// Get size and format of vertex
 	switch (VertexID) {
@@ -166,150 +167,75 @@ void AweD3DVertexCacheManager::UpdateBufferResource(
 //-----------------------------------------------------------------------------
 HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 {
-	HRESULT hr = Y_OK;
+	HRESULT hr = S_OK;
 	int		iT = 0;
 
-	if (!m_pYD3D->IsSceneRunning())
+	if (!m_pAweD3D->IsSceneRunning())
 	{
-		if (g_bLF) Log("Error: can not render because the scene is not running call begin()");
-		return Y_FAIL;
+		return E_FAIL;
 	}
 
 	//YRENDERSTATE sm = m_pYD3D->GetShadeMode();
 
-	// Active cache gets invalid
-	m_dwActiveCache = MAX_ID;
 
-	if (nID >= m_nNumSB)
+	if (nID >= m_pSB.size())
 	{
-		if (g_bLF)Log("error: invalid static buffer ID");
-		return Y_INVALIDPARAM;
+		return E_INVALIDARG;
 	}
 
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
+	
+	commandList->RSSetViewports(1, m_pAweD3D->GetScreenViewPort());
+	commandList->RSSetScissorRects(1, m_pAweD3D->GetSissorRect());
+
+	// Specify the buffers we are going to render to.
+	commandList->OMSetRenderTargets(1, &m_pAweD3D->getCurrentBackBufferView(), true, &m_pAweD3D->getDepthStencilView());
+
+	commandList->SetPipelineState(m_pAweD3D->m_pipelineState.Get());
+	commandList->SetGraphicsRootSignature(m_pAweD3D->m_rootSignature.Get());
+
+	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	// Setting the matrixes in the shader
+
+	DirectX::XMMATRIX mvpMatrix = m_pAweD3D->GetMVPMatrix();
+	commandList->SetGraphicsRoot32BitConstants(0, sizeof(DirectX::XMMATRIX) / 4, &mvpMatrix, 0);
 
 	// Activate buffers if not already active
 	if (m_dwActiveSB != nID)
 	{
 		// Index buffer used?
-		if (m_pSB[nID].bIndis) m_pDevice->SetIndices(m_pSB[nID].pIB);
+		if (m_pSB[nID].bIndis) 
+			commandList->IASetIndexBuffer(&m_pSB[nID].indexBufferView);
+
 		// Set the vertex buffer
-		m_pDevice->SetStreamSource(0, m_pSB[nID].pVB, 0, m_pSB[nID].nStride);
-		// Set the vertex declaration
-		if (FAILED(SetVertexDeclaration(m_pSB[nID].VID)))
-		{
-			if (g_bLF)Log("Error: SetVertexDeclaration");
-			return Y_FAIL;
-		}
+		commandList->IASetVertexBuffers(0, 1, &m_pSB[nID].vertexBufferView);
 		m_dwActiveSB = nID;
 	}
-	// There is maybe just another indexbuffer active
-	else if (m_dwActiveIB != MAX_ID)
-	{
-		if (m_pSB[nID].bIndis) m_pDevice->SetIndices(m_pSB[nID].pIB);
-		m_dwActiveIB = MAX_ID;
-	}
-
-
+	
 	// Is the device already using this skin?   
-	if (m_pYD3D->GetActiveSkinID() != m_pSB[nID].nSkinID)
+	if (m_pAweD3D->GetActiveSkinID() != m_pSB[nID].nSkinID)
 	{
 		// Set material for device
-		YSKIN* pSkin = &m_pSkinMan->m_pSkins[m_pSB[nID].nSkinID];
+		AWESOMESKIN* pSkin = &m_pSkinMan->m_Skins[m_pSB[nID].nSkinID];
 
-		// Set material for the FX
-		YMATERIAL* pMat = &m_pSkinMan->m_pMaterials[pSkin->nMaterial];
-		m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->SetValue(m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].hDiffuseMat, &pMat->cDiffuse, sizeof(YCOLOR));
-		m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->SetValue(m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].hAmbientMat, &pMat->cAmbient, sizeof(YCOLOR));
-		m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->SetValue(m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].hEmissiveMat, &pMat->cEmissive, sizeof(YCOLOR));
-		m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->SetValue(m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].hSpecMat, &pMat->cSpecular, sizeof(YCOLOR));
-		m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->SetFloat(m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].hSpecPowMat, pMat->fPower);
-
-		// Set texture for device
-		for (iT = 0; iT < 8; iT++)
-		{
-			if (pSkin->nTexture[iT] != MAX_ID)
-				m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->SetTexture(m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].hTex[iT], (LPDIRECT3DTEXTURE9)m_pSkinMan->m_pTextures[pSkin->nTexture[iT]].pData);
-			else
-				break;
-		}
-		m_pDevice->SetTextureStageState(iT, D3DTSS_COLOROP, D3DTOP_DISABLE);
-
-
-		// Set alpha states for device
-		if (pSkin->bAlpha)
-		{
-			m_pDevice->SetRenderState(D3DRS_ALPHAREF, 15);
-			m_pDevice->SetRenderState(D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
-			m_pDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-			m_pDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-			m_pDevice->SetRenderState(D3DRS_ALPHATESTENABLE, TRUE);
-			m_pDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-		}
-		else
-		{
-			m_pDevice->SetRenderState(D3DRS_ALPHATESTENABLE, FALSE);
-			m_pDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
-		}
+		// TODO: Set skin in shader
+		
 		// Skin will change now
-		m_pYD3D->SetActiveSkinID(m_pSB[nID].nSkinID);
+		m_pAweD3D->SetActiveSkinID(m_pSB[nID].nSkinID);
 	}
 
-
-	//  Should I use additive rendering?
-	if (m_pYD3D->UsesAdditiveBlending())
-	{
-		m_pDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-		m_pDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);
-		m_pDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-	}
-	//  Should I use rendering to color buffer at all?
-	else if (!m_pYD3D->UsesColorBuffer())
-	{
-		m_pDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-		m_pDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ZERO);
-		m_pDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_ONE);
-	}
-	//// Should I force alpha blending?
-	//else if(m_pYD3D->UsesAlphaBlending())
-	//{
-	//	m_pDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
-	//	m_pDevice->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
-	//	m_pDevice->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
-	//}
-
-
+	
+	// Finally draw
 	// Indexed primitive
 	if (m_pSB[nID].bIndis)
 	{
-
-		for (int i = 0; i < m_pYD3D->m_nPasses; i++)
-		{
-			//Begin the pass
-			m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->BeginPass(i);
-
-			// Render
-			hr = m_pDevice->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, m_pSB[nID].nNumVerts, 0, m_pSB[nID].nNumTris);
-
-			// End the pass
-			m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->EndPass();
-		}
-
+		commandList->DrawIndexedInstanced(m_pSB[nID].nNumIndis, 1, 0, 0, 0);
 	}
 	// Non-indexed primitive
 	else
 	{
-
-		for (int i = 0; i < m_pYD3D->m_nPasses; i++)
-		{
-			m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->BeginPass(i);
-
-			// Render content			
-			hr = m_pDevice->DrawPrimitive(D3DPT_TRIANGLELIST, 0, m_pSB[nID].nNumTris);
-
-			// End the pass
-			m_pYD3D->m_pYFX[m_pYD3D->m_nActiveFX].FX->EndPass();
-		}
-
+		commandList->DrawInstanced(m_pSB[nID].nNumVerts, 1, 0, 0);
 	}
 
 	return hr;

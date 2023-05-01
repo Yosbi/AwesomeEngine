@@ -36,9 +36,13 @@
 #include "AweD3DException.h"
 #include "AweD3DCommandQueue.h"
 #include "AweD3DSkinManager.h"
+#include "AweD3DVertexCache.h"
 #include "AweUtil.h"
 #include "AweMesh.h"
 #include <vector>
+#include <limits>
+
+#define MAX_ID UINT_MAX
 
 
 //----------------------------------------------------------------------
@@ -66,6 +70,7 @@ BOOL WINAPI	DllEntryPoint(HINSTANCE hDll, DWORD fdwReason, LPVOID lpvReserved);
 
 class AweD3D : public AwesomeRenderDevice
 {
+	friend AweD3DVertexCacheManager;
 public:
 	// Const and dest
 	AweD3D(HINSTANCE hDll); 
@@ -84,7 +89,9 @@ public:
 	void	EndRendering();																		// End rendering and flip pixel buffer to front
 	HRESULT Clear(bool bClearPixel, bool bClearDepth, bool bClearStencil);						// Clear pixel, depth and stencil buffer
 	void	SetClearColor(float fRed, float fGreen, float fBlue);								// Change background color
-
+	bool	IsSceneRunning();
+	D3D12_VIEWPORT* GetScreenViewPort();
+	D3D12_RECT*	   GetSissorRect();
 
 	// Mesh things
 	unsigned int LoadMesh(std::wstring sFileName);
@@ -96,9 +103,13 @@ public:
 	void setClippingPlanes(float near, float far);
 	void setFoV(float FoV);
 	void SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp);
+	void SetWorldTransformMatrix(const AWEMatrix& mWorld);
 
 	// Skin manager
 	AwesomeSkinManager* GetSkinManager();
+	UINT	GetActiveSkinID() { return m_nActiveSkin; }
+	void	SetActiveSkinID(UINT nID) { m_nActiveSkin = nID; }
+
 
 
 private:
@@ -125,11 +136,7 @@ private:
 	void ResizeSwapChain();
 	void UpdateRenderTargetView();
 	void UpdateDepthStencilView();
-	void UpdateBufferResource(
-		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
-		ID3D12Resource** pDestinationResource,
-		ID3D12Resource** pIntermediateResource,
-		size_t numElements, size_t elementSize, const void* bufferData);
+	
 	
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
 		
@@ -143,7 +150,7 @@ private:
 
 	// Camera and projection things
 	void SetProjMatrix();
-	DirectX::XMMATRIX GetMVPMatrix(AweMesh* mesh);
+	DirectX::XMMATRIX GetMVPMatrix();
 
 
 private:
@@ -160,7 +167,10 @@ private:
 	float					m_fFoV;
 	float					m_fNear;
 	float					m_fFar;
+	bool					m_bIsSceneRunning;
+	UINT					m_nActiveSkin;
 
+	DirectX::XMMATRIX m_WorldMatrix;
 	DirectX::XMMATRIX m_ViewMatrix;
 	DirectX::XMMATRIX m_ProjectionMatrix;
 
@@ -194,7 +204,6 @@ private:
 	// CommandQueue
 	std::shared_ptr<AweD3DCommandQueue> m_pCommandQueue;
 	float m_ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	bool m_bIsSceneRunning;
 	bool m_bStencil;
 	bool m_bTearingSupported;
 	bool m_bVSync;

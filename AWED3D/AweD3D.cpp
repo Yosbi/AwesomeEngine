@@ -19,6 +19,7 @@ AwesomeSkinManager* AweD3D::GetSkinManager()
 
 HRESULT AweD3D::BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearStencil)
 {
+	m_bIsSceneRunning = true;
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
 
 	// Indicate a state transition on the resource usage.
@@ -54,6 +55,8 @@ void AweD3D::EndRendering()
 	m_nCurrBackBuffer = (m_nCurrBackBuffer + 1) % sm_nSwapChainBufferCount;
 
 	m_pCommandQueue->Flush();
+	
+	m_bIsSceneRunning = false;
 }
 
 HRESULT AweD3D::Clear(bool bClearPixel, bool bClearDepth, bool bClearStencil)
@@ -67,6 +70,21 @@ void AweD3D::SetClearColor(float fRed, float fGreen, float fBlue)
 	m_ClearColor[1] = fGreen;
 	m_ClearColor[2] = fBlue;
 	m_ClearColor[3] = 1.0f;
+}
+
+bool AweD3D::IsSceneRunning()
+{
+	return m_bIsSceneRunning;
+}
+
+D3D12_VIEWPORT* AweD3D::GetScreenViewPort()
+{
+	return &m_ScreenViewport;
+}
+
+D3D12_RECT* AweD3D::GetSissorRect()
+{
+	return &m_ScissorRect;
 }
 
 HRESULT AweD3D::Go()
