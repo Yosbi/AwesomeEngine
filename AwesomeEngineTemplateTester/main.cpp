@@ -128,8 +128,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
     // return back to windows
     return (int)msg.wParam;
-} // WinMain
-/*----------------------------------------------------------------*/
+} 
 
 void initCamera() {
     AWEVector pos = AWEVector(0, 30, -30);
@@ -312,8 +311,6 @@ LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
-/*----------------------------------------------------------------*/
-
 
 /**
  * Create a render device and stuff.
@@ -338,8 +335,7 @@ HRESULT RendererStartup() {
     }
 
     return S_OK;
-} // ProgramStartup
-/*----------------------------------------------------------------*/
+} 
 
 HRESULT LoadAssets() {
     Terrain = g_pDevice->LoadMesh(L"terrain.obj", 0.54f, 0.32f, 0.07f, 1.0f);
@@ -373,9 +369,7 @@ HRESULT ProgramCleanup(void) {
     }
 
     return S_OK;
-} // ProgramCleanup
-/*----------------------------------------------------------------*/
-
+} 
 
 void updateFPS() {
 
@@ -415,7 +409,4 @@ HRESULT ProgramTick(void) {
     g_pDevice->EndRendering();
 
     return S_OK;
-} // Tick
-/*----------------------------------------------------------------*/
-
-
+} 

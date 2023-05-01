@@ -45,4 +45,39 @@ typedef struct AWEMATERIAL_TYPE
 	float  fPower;			// Specular power
 } AWESOMEMATERIAL;
 
+//-----------------------------------------------------------------------
+// Vertex types
+//-----------------------------------------------------------------------
+//----------------------------------------------------------------------
+// Name: YVERTEXID
+// Desc: Definition of the vertex types in a enum
+//----------------------------------------------------------------------
+typedef enum AWEVERTEXID_TYPE
+{
+	VID_PS,		// Untransformed position only
+	VID_UU,		// Untransformed and unlit vertex
+	VID_UL,		// Untransformed and lit vertex
+	//VID_CA,		// Used for character animation
+	//VID_3T,		// Three texture coords pairs
+	//VID_TV		// Like UU but with tangent vector
+} AWESOMEVERTEXID;
+
+// Just untransformed position
+typedef struct PVERTEX_TYPE {
+	float x, y, z;
+} PVERTEX;
+
+// Untransformed unlit vertex
+typedef struct VERTEX_TYPE {
+	float x, y, z;
+	float vcN[3];
+	float tu, tv;
+} VERTEX;
+
+// Untransformed and lit vertex
+typedef struct LVERTEX_TYPE {
+	float x, y, z;
+	DWORD Color;
+	float tu, tv;
+} LVERTEX;
 #endif

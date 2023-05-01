@@ -1,4 +1,4 @@
-/*/-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // AweD3DException.h
 // Yosbi Alves Saenz
 // yosbi@outlook.com
@@ -29,8 +29,14 @@ typedef struct AWESTATICBUFFER_TYPE
 	int			nNumVerts;
 	int			nNumIndis;
 	int			nNumTris;
-	LPDIRECT3DVERTEXBUFFER9 pVB;
-	LPDIRECT3DINDEXBUFFER9	pIB;
+
+	AWESOMEVERTEXID vertexIdType;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 } AWESOMESTATICBUFFER;
 
 //----------------------------------------------------------------------
@@ -49,22 +55,26 @@ public:
 		std::shared_ptr<AweD3DSkinManager> pSkinMan, std::shared_ptr<AweD3D> pAweD3D);
 
 	// Public functions
-	HRESULT		 CreateStaticBuffer(UINT nSkinID, UINT nVerts, UINT nIdis, const void* pVerts,
+	HRESULT		 CreateStaticBuffer(AWESOMEVERTEXID VertexID, UINT nSkinID, UINT nVerts, UINT nIdis, const void* pVerts,
 		const WORD* pIndis, UINT* pnID);
 	HRESULT		 Render(UINT nSBufferID);
 
 private:
 	// Private functions	
-	HRESULT		 SetVertexDeclaration(DWORD VertexID);
+	void UpdateBufferResource(
+		Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+		ID3D12Resource** pDestinationResource,
+		ID3D12Resource** pIntermediateResource,
+		size_t numElements, size_t elementSize, const void* bufferData);
 
 	// Private member vars
 	Microsoft::WRL::ComPtr<ID3D12Device2> m_pDevice;	// Direct3d device
-	std::shared_ptr<AweD3DCommandQueue> m_CommandQueue; // Command queue
+	std::shared_ptr<AweD3DCommandQueue> m_pCommandQueue; // Command queue
 	std::shared_ptr<AweD3DSkinManager> m_pSkinMan;		// The skin manager
-	std::shared_ptr<AweD3D> m_pAweD3D;					// 
+	std::shared_ptr<AweD3D> m_pAweD3D;					// The AweD3D
 
 	std::vector<AWESOMESTATICBUFFER> m_pSB;			// Array of Static vertex buffer
 	DWORD				 m_dwActiveSB;				// The currently active static buffer
 };
 
-#endif*/
+#endif

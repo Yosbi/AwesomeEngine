@@ -1,4 +1,4 @@
-/*/-----------------------------------------------------------------------
+//-----------------------------------------------------------------------
 // AweD3DException.h
 // Yosbi Alves Saenz
 // yosbi@outlook.com
@@ -32,172 +32,133 @@ AweD3DVertexCacheManager::~AweD3DVertexCacheManager()
 // Desc: Crank up the Vertex Cache manager
 //-----------------------------------------------------------------------------
 void AweD3DVertexCacheManager::Init(Microsoft::WRL::ComPtr<ID3D12Device2> pDevice, std::shared_ptr<AweD3DCommandQueue> pCommandQueue,
-	std::shared_ptr<AweD3DSkinManager> pSkinMan, std::shared_ptr<AweD3D> pAweD3D) :
-	m_pDevice(pDevice),
-	m_CommandQueue(pCommandQueue),
-	m_pSkinMan(pSkinMan),
-	m_pAweD3D(pAweD3D)
+	std::shared_ptr<AweD3DSkinManager> pSkinMan, std::shared_ptr<AweD3D> pAweD3D) 
 {
+	m_pDevice = pDevice;
+	m_pCommandQueue = pCommandQueue;
+	m_pSkinMan = pSkinMan;
+	m_pAweD3D = pAweD3D;
 }
 //-----------------------------------------------------------------------------
 // Name: CreateStaticBuffer(Manager)
 // Desc: Create a static vertex/index buffer for the given data and returns
 //		 a handle to that buffer for later rendering processes
 //-----------------------------------------------------------------------------
-HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(UINT nSkinID, UINT nVerts,
+HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(AWESOMEVERTEXID VertexID, UINT nSkinID, UINT nVerts,
 	UINT nIndis, const void* pVerts, const WORD* pIndis, UINT* pnID)
 {
 	HRESULT  hr;
-	void* pData;
-	//Log("usa shader %i", m_pYD3D->UsesShaders());
-	if (m_nNumSB >= (MAX_ID - 1)) return Y_OUTOFMEMORY;
+	AWESOMESTATICBUFFER awesomeStaticBuffer;
 
-	// Allocate memory for static buffers if needed
-	if ((m_nNumSB % 50) == 0)
-	{
-		int n = (m_nNumSB + 50) * sizeof(YSTATICBUFFER);
-		m_pSB = (YSTATICBUFFER*)realloc(m_pSB, n);
-		if (!m_pSB) return Y_OUTOFMEMORY;
-	}
-
-	m_pSB[m_nNumSB].nNumVerts = nVerts;
-	m_pSB[m_nNumSB].nNumIndis = nIndis;
-	m_pSB[m_nNumSB].nSkinID = nSkinID;
-	m_pSB[m_nNumSB].pIB = NULL;
-	m_pSB[m_nNumSB].pVB = NULL;
-	m_pSB[m_nNumSB].VID = VertexID;
+	awesomeStaticBuffer.nNumVerts = nVerts;
+	awesomeStaticBuffer.nNumIndis = nIndis;
+	awesomeStaticBuffer.nSkinID = nSkinID;
+	awesomeStaticBuffer.vertexIdType = VertexID;
 
 	// Get size and format of vertex
 	switch (VertexID) {
-	case VID_PS: {
-		m_pSB[m_nNumSB].nStride = sizeof(PVERTEX);
-	} break;
-	case VID_UU: {
-		m_pSB[m_nNumSB].nStride = sizeof(VERTEX);
-	} break;
-	case VID_UL: {
-		m_pSB[m_nNumSB].nStride = sizeof(LVERTEX);
-	} break;
-	case VID_CA: {
-		m_pSB[m_nNumSB].nStride = sizeof(CVERTEX);
-	} break;
-	case VID_3T: {
-		m_pSB[m_nNumSB].nStride = sizeof(VERTEX3T);
-	} break;
-	case VID_TV: {
-		m_pSB[m_nNumSB].nStride = sizeof(TVERTEX);
-	} break;
-
-	default: return Y_INVALIDID;
+		case VID_PS: {
+			awesomeStaticBuffer.nStride = sizeof(PVERTEX);
+		} break;
+		case VID_UU: {
+			awesomeStaticBuffer.nStride = sizeof(VERTEX);
+		} break;
+		case VID_UL: {
+			awesomeStaticBuffer.nStride = sizeof(LVERTEX);
+		} break;
+		default: return E_INVALIDARG;
 	}
+
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
 
 	// Create indexbuffer if needed
 	if (nIndis > 0)
 	{
-		m_pSB[m_nNumSB].bIndis = true;
-		m_pSB[m_nNumSB].nNumTris = int(nIndis / 3.0f);
-		hr = m_pDevice->CreateIndexBuffer(nIndis * sizeof(WORD), D3DUSAGE_WRITEONLY, D3DFMT_INDEX16,
-			D3DPOOL_DEFAULT, &m_pSB[m_nNumSB].pIB, NULL);
-		if (FAILED(hr))
-		{
-			if (g_bLF)Log("Error creating static index buffer");
-			return Y_CREATEBUFFER;
-		}
+		awesomeStaticBuffer.bIndis = true;
+		awesomeStaticBuffer.nNumTris = int(nIndis / 3.0f);
+	
+		// Upload index buffer data to GPU.
+		Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+		Microsoft::WRL::ComPtr<ID3D12Resource> intermediateIndexBuffer;
+		UpdateBufferResource(commandList,
+			&indexBuffer, &intermediateIndexBuffer,
+			nIndis, sizeof(WORD), pIndis);
 
-		// Fill the index buffer
-		if (SUCCEEDED(m_pSB[m_nNumSB].pIB->Lock(0, 0, (void**)(&pData), 0)))
-		{
-			memcpy(pData, pIndis, nIndis * sizeof(WORD));
-			m_pSB[m_nNumSB].pIB->Unlock();
-		}
-		else
-		{
-			if (g_bLF)Log("Error in lock call creating static index buffer");
-			return Y_BUFFERLOCK;
-		}
+		// Create index buffer view.
+		D3D12_INDEX_BUFFER_VIEW* indexBufferView = &awesomeStaticBuffer.indexBufferView;
+		indexBufferView->BufferLocation = indexBuffer->GetGPUVirtualAddress();
+		indexBufferView->Format = DXGI_FORMAT_R16_UINT;
+		indexBufferView->SizeInBytes = (unsigned int)(nIndis * sizeof(WORD));
+
+		awesomeStaticBuffer.indexBuffer = indexBuffer;
 	}
 	else
 	{
-		m_pSB[m_nNumSB].bIndis = false;
-		m_pSB[m_nNumSB].nNumTris = int(nVerts / 3.0f);
-		m_pSB[m_nNumSB].pIB = NULL;
+		awesomeStaticBuffer.bIndis = false;
+		awesomeStaticBuffer.nNumTris = int(nVerts / 3.0f);
 	}
 
-	// Create vertex buffer	
-	hr = m_pDevice->CreateVertexBuffer(nVerts * m_pSB[m_nNumSB].nStride, D3DUSAGE_WRITEONLY, 0,
-		D3DPOOL_DEFAULT, &m_pSB[m_nNumSB].pVB, NULL);
-	if (FAILED(hr))
-	{
-		if (g_bLF)Log("Error creating static vertex buffer");
-		return Y_CREATEBUFFER;
-	}
+	// Upload vertex buffer data to GPU.
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateVertexBuffer;
+	UpdateBufferResource(commandList,
+		&vertexBuffer, &intermediateVertexBuffer,
+		nVerts, awesomeStaticBuffer.nStride, pVerts);
 
-	// Fill the vertex buffer
-	if (SUCCEEDED(m_pSB[m_nNumSB].pVB->Lock(0, 0, (void**)(&pData), 0)))
-	{
-		memcpy(pData, pVerts, nVerts * m_pSB[m_nNumSB].nStride);
-		m_pSB[m_nNumSB].pVB->Unlock();
-	}
-	else
-	{
-		if (g_bLF)Log("Error in lock call creating static vertex buffer");
-		return Y_BUFFERLOCK;
-	}
+	// Create the vertex buffer view.
+	D3D12_VERTEX_BUFFER_VIEW* vertexBufferView = &awesomeStaticBuffer.vertexBufferView;
+	vertexBufferView->BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+	vertexBufferView->SizeInBytes = (unsigned int)(nVerts * awesomeStaticBuffer.nStride);
+	vertexBufferView->StrideInBytes = awesomeStaticBuffer.nStride;
 
-	if (pnID)(*pnID) = m_nNumSB;
-	m_nNumSB++;
-	return Y_OK;
+	awesomeStaticBuffer.vertexBuffer = vertexBuffer;
+
+	m_pSB.push_back(awesomeStaticBuffer);
+
+	m_pCommandQueue->ExecuteCommandList(commandList);
+	m_pCommandQueue->Flush();
+	return S_OK;
 }
 
-//-----------------------------------------------------------------------------
-// Name: SetVertexDeclaration
-// Desc: Sets the vertex declaration
-//-----------------------------------------------------------------------------
-HRESULT AweD3DVertexCacheManager::SetVertexDeclaration(DWORD VertexID)
+void AweD3DVertexCacheManager::UpdateBufferResource(
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
+	ID3D12Resource** pDestinationResource,
+	ID3D12Resource** pIntermediateResource,
+	size_t numElements, size_t elementSize, const void* bufferData)
 {
-	// check
-	if (m_dwActiveVertexDcl == VertexID)
-		return Y_OK;
-	else
-	{
-		// clear all vertex caches
-//	m_pVertexManager->ForcedFlushAll();
-////   m_pVertexMan->InvalidateStates();	
-	}
+	size_t bufferSize = numElements * elementSize;
 
-	switch (VertexID)
-	{
-	case VID_PS: {
-		if (FAILED(m_pDevice->SetVertexDeclaration(m_pYD3D->m_pDeclPVertex)))
-			return Y_FAIL;
-	} break;
-	case VID_UU: {
-		if (FAILED(m_pDevice->SetVertexDeclaration(m_pYD3D->m_pDeclVertex)))
-			return Y_FAIL;
-	} break;
-	case VID_UL: {
-		if (FAILED(m_pDevice->SetVertexDeclaration(m_pYD3D->m_pDeclLVertex)))
-			return Y_FAIL;
-	} break;
-	case VID_CA: {
-		if (FAILED(m_pDevice->SetVertexDeclaration(m_pYD3D->m_pDeclCVertex)))
-			return Y_FAIL;
-	} break;
-	case VID_3T: {
-		if (FAILED(m_pDevice->SetVertexDeclaration(m_pYD3D->m_pDecl3TVertex)))
-			return Y_FAIL;
-	} break;
-	case VID_TV: {
-		if (FAILED(m_pDevice->SetVertexDeclaration(m_pYD3D->m_pDeclTVertex)))
-			return Y_FAIL;
-	} break;
-	default: return Y_INVALIDID;
-	}
+	// Create a committed resource for the GPU resource in a default heap.
+	ThrowIfFailed(m_pDevice->CreateCommittedResource(
+		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE,
+		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS(pDestinationResource)));
 
-	// Set the currently used vertex declaration
-	m_dwActiveVertexDcl = VertexID;
-	return Y_OK;
+	// Create an committed resource for the upload.
+	if (bufferData)
+	{
+		ThrowIfFailed(m_pDevice->CreateCommittedResource(
+			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+			D3D12_HEAP_FLAG_NONE,
+			&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS(pIntermediateResource)));
+
+		D3D12_SUBRESOURCE_DATA subresourceData = {};
+		subresourceData.pData = bufferData;
+		subresourceData.RowPitch = bufferSize;
+		subresourceData.SlicePitch = subresourceData.RowPitch;
+
+		UpdateSubresources(commandList.Get(),
+			*pDestinationResource, *pIntermediateResource,
+			0, 0, 1, &subresourceData);
+	}
 }
+
 
 //-----------------------------------------------------------------------------
 // Name: Render(Manager)
@@ -353,4 +314,4 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 
 	return hr;
 
-}*/
+}

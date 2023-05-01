@@ -13,14 +13,6 @@
 #include <fstream>
 
 
-struct Vertex
-{
-	DirectX::XMFLOAT3 position;
-	DirectX::XMFLOAT4 color;
-	DirectX::XMFLOAT2 texture;
-	DirectX::XMFLOAT3 normal;
-};
-
 class AweMesh
 {
 public:
@@ -31,7 +23,7 @@ public:
 
 	void setDefaultVerticesColor(float red, float green, float blue, float alpha);
 
-	std::vector<Vertex> getVerteces();
+	std::vector<VERTEX> getVerteces();
 	std::vector<WORD> getIndex();
 
 	DirectX::XMMATRIX getModelMatrix();
@@ -50,9 +42,7 @@ private:
 	std::vector<std::string> GetTokens(std::string sLine, char c);
 
 	std::vector<WORD> m_index;
-	std::vector<Vertex> m_verteces;
-
-	DirectX::XMFLOAT4 m_defaultColor;
+	std::vector<VERTEX> m_verteces;
 
 	DirectX::XMMATRIX m_modelMatrix;
 

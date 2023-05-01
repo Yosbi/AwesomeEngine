@@ -161,8 +161,6 @@ private:
 	float					m_fNear;
 	float					m_fFar;
 
-
-
 	DirectX::XMMATRIX m_ViewMatrix;
 	DirectX::XMMATRIX m_ProjectionMatrix;
 

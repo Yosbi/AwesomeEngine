@@ -54,11 +54,18 @@ void AweMesh::loadOBJ(std::wstring sFileName)
 					{
 						std::vector<std::string> faceV = GetTokens(tokens[i], '/');
 
-						Vertex vertex;
-						vertex.position = vertices[std::stoi(faceV[0]) - 1];
-						vertex.color = m_defaultColor;
-						vertex.texture = textures[std::stoi(faceV[1]) - 1];
-						vertex.normal = normals[std::stoi(faceV[2]) - 1];
+						VERTEX vertex;
+						vertex.x = vertices[std::stoi(faceV[0]) - 1].x;
+						vertex.y = vertices[std::stoi(faceV[0]) - 1].y;
+						vertex.z = vertices[std::stoi(faceV[0]) - 1].z;
+
+						//vertex.color = m_defaultColor;
+						vertex.tu = textures[std::stoi(faceV[1]) - 1].x;
+						vertex.tu = textures[std::stoi(faceV[1]) - 1].y;
+
+						vertex.vcN[0] = normals[std::stoi(faceV[2]) - 1].x;
+						vertex.vcN[0] = normals[std::stoi(faceV[2]) - 1].y;
+						vertex.vcN[0] = normals[std::stoi(faceV[2]) - 1].z;
 
 						m_verteces.push_back(vertex);
 						m_index.push_back(std::stoi(faceV[0]) - 1);
@@ -77,12 +84,7 @@ void AweMesh::loadOBJ(std::wstring sFileName)
 	
 }
 
-void AweMesh::setDefaultVerticesColor(float red, float green, float blue, float alpha)
-{
-	m_defaultColor = DirectX::XMFLOAT4(red, green, blue, alpha);
-}
-
-std::vector<Vertex> AweMesh::getVerteces()
+std::vector<VERTEX> AweMesh::getVerteces()
 {
 	return m_verteces;
 }

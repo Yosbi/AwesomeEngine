@@ -202,47 +202,6 @@ ID3D12Resource* AweD3D::getCurrentBackBuffer() const
 	return m_SwapChainBuffer[m_nCurrBackBuffer].Get();
 }
 
-void AweD3D::UpdateBufferResource(
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList,
-	ID3D12Resource** pDestinationResource,
-	ID3D12Resource** pIntermediateResource,
-	size_t numElements, size_t elementSize, const void* bufferData)
-{
-	auto device = m_d3d12Device.Get();
-
-	size_t bufferSize = numElements * elementSize;
-
-	// Create a committed resource for the GPU resource in a default heap.
-	ThrowIfFailed(device->CreateCommittedResource(
-		&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE,
-		&CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE),
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		IID_PPV_ARGS(pDestinationResource)));
-
-	// Create an committed resource for the upload.
-	if (bufferData)
-	{
-		ThrowIfFailed(device->CreateCommittedResource(
-			&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-			D3D12_HEAP_FLAG_NONE,
-			&CD3DX12_RESOURCE_DESC::Buffer(bufferSize),
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(pIntermediateResource)));
-
-		D3D12_SUBRESOURCE_DATA subresourceData = {};
-		subresourceData.pData = bufferData;
-		subresourceData.RowPitch = bufferSize;
-		subresourceData.SlicePitch = subresourceData.RowPitch;
-
-		UpdateSubresources(commandList.Get(),
-			*pDestinationResource, *pIntermediateResource,
-			0, 0, 1, &subresourceData);
-	}
-}
-
 unsigned int AweD3D::LoadMesh(std::wstring sFileName) {
 	return LoadMesh(sFileName, 0.5f, 0.5f, 0.5f, 1.0f);
 }
@@ -271,13 +230,13 @@ void AweD3D::LoadMeshToGPU(unsigned int meshIndex)
 	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateVertexBuffer;
 	UpdateBufferResource(commandList,
 		&vertexBuffer, &intermediateVertexBuffer,
-		mesh->getVerteces().size(), sizeof(Vertex), mesh->getVerteces().data());
+		mesh->getVerteces().size(), sizeof(VERTEX), mesh->getVerteces().data());
 
 	// Create the vertex buffer view.
 	D3D12_VERTEX_BUFFER_VIEW* vertexBufferView = mesh->getVertexBufferView();
 	vertexBufferView->BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-	vertexBufferView->SizeInBytes = (unsigned int)(mesh->getVerteces().size() * sizeof(Vertex));
-	vertexBufferView->StrideInBytes = sizeof(Vertex);
+	vertexBufferView->SizeInBytes = (unsigned int)(mesh->getVerteces().size() * sizeof(VERTEX));
+	vertexBufferView->StrideInBytes = sizeof(VERTEX);
 
 	mesh->setVertexBuffer(vertexBuffer);
 
