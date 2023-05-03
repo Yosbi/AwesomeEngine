@@ -30,9 +30,6 @@
     <ClInclude Include="d3dx12.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AweMesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AweUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -54,9 +51,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AweD3D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="AweMesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AweD3DWorldViewProj.cpp">

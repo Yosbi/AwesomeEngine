@@ -11,6 +11,7 @@
 #pragma once
 
 #include <Windows.h>
+#include "../AwesomeMath/AwesomeMath.h"
 
 //----------------------------------------------------------------------
 // Name: AWESOMECOLOR
@@ -80,4 +81,14 @@ typedef struct LVERTEX_TYPE {
 	DWORD Color;
 	float tu, tv;
 } LVERTEX;
+
+
+typedef struct AWED3DENGINEVARIABLES_TYPE
+{
+	AWEMatrix	 mWVP;											// World view proj combo matrix;
+	AWESOMECOLOR cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };    // Duffuse light vector
+	AWESOMECOLOR cSpecularLight = { 0.7f, 0.7f, 0.7f, 1.0f };   // Specular light vector
+	AWEVector    vcLightVecW = AWEVector(0.0f, 1.0f, 1.0f);		// Global Light vector
+}
+AWED3DENGINEVARS;
 #endif

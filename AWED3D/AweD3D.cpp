@@ -17,6 +17,11 @@ AwesomeSkinManager* AweD3D::GetSkinManager()
 	return &m_SkinManager;
 }
 
+AwesomeVertexCacheManager* AweD3D::GetVertexManager()
+{
+	return &m_VertexManager;
+}
+
 HRESULT AweD3D::BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearStencil)
 {
 	m_bIsSceneRunning = true;
@@ -220,7 +225,7 @@ ID3D12Resource* AweD3D::getCurrentBackBuffer() const
 	return m_SwapChainBuffer[m_nCurrBackBuffer].Get();
 }
 
-unsigned int AweD3D::LoadMesh(std::wstring sFileName) {
+/*unsigned int AweD3D::LoadMesh(std::wstring sFileName) {
 	return LoadMesh(sFileName, 0.5f, 0.5f, 0.5f, 1.0f);
 }
 
@@ -229,13 +234,13 @@ unsigned int AweD3D::LoadMesh(std::wstring sFileName, float red, float green, fl
 	
 	// TODO: Thread safety
 	AweMesh aweMesh;
-	aweMesh.setDefaultVerticesColor(red, green, blue, alpha);
+	//aweMesh.setDefaultVerticesColor(red, green, blue, alpha);
 	aweMesh.loadOBJ(GetAssetFullPath(sFileName.c_str()));
 	m_meshes.push_back(aweMesh);
 	return (unsigned int)m_meshes.size() - 1;
-}
+}*/
 
-void AweD3D::LoadMeshToGPU(unsigned int meshIndex)
+/*void AweD3D::LoadMeshToGPU(unsigned int meshIndex)
 {
 	// TODO: handle out of bound error
 
@@ -313,4 +318,4 @@ void AweD3D::RenderMesh(unsigned int meshIndex)
 	//commandList->DrawIndexedInstanced((unsigned int)mesh->getIndex().size(), 1, 0, 0, 0);
 
 	m_pCommandQueue->ExecuteCommandList(commandList);
-}
+}*/

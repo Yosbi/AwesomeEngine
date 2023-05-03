@@ -10,25 +10,19 @@
 #ifndef AWE_H
 #define AWE_H
 #pragma once
-/*#ifndef WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif // !WIN32_LEAN_AND_MEAN*/
+
+#include <limits>
+#define MAX_ID UINT_MAX
+
 #include <Windows.h>
 #include <wrl/client.h>
 #include <stdio.h>
 #include <string>
 #include <comdef.h>
 
-////////////
-// Returns
-////////////
-#define AWE_OK                  S_OK		// everything went smooth
-#define AWE_CANCELED            0x82000000	// just reports no errors
-#define AWE_FAIL                0x82000001	// general error message
-
-
-
-
-#endif // !WIN32_LEAN_AND_MEAN*/
 #endif // !AWE_H
 
 

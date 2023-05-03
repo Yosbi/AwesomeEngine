@@ -44,6 +44,13 @@ AwesomeLinearInterpolation g_posLerp;
 AwesomeLinearInterpolation g_dirLerp;
 AwesomeLinearInterpolation g_upLerp;
 
+UINT g_sMesh = 0;
+
+VERTEX* g_Vertex = NULL;
+int g_nIndis = 0;
+int g_nVerts = 0;
+WORD* g_Index = NULL;
+
 /**
  * WinMain function to get the thing started.
  */
@@ -106,7 +113,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     ShowWindow(hWnd, SW_SHOW);
     
     // everything went smooth
-    g_pDevice->SetClearColor(1.0f, 1.0f, 1.0f);
+    g_pDevice->SetClearColor(0.0f, 1.0f, 1.0f);
 
     // main loop
     while (!g_bDone) {
@@ -337,24 +344,36 @@ HRESULT RendererStartup() {
     return S_OK;
 } 
 
+
 HRESULT LoadAssets() {
-    Terrain = g_pDevice->LoadMesh(L"terrain.obj", 0.54f, 0.32f, 0.07f, 1.0f);
-    g_pDevice->LoadMeshToGPU(Terrain);
+    //Terrain = g_pDevice->LoadMesh(L"terrain.obj", 0.54f, 0.32f, 0.07f, 1.0f);
+    //g_pDevice->LoadMeshToGPU(Terrain);
 
-    Chinesse = g_pDevice->LoadMesh(L"Chinesse.obj");
-    g_pDevice->LoadMeshToGPU(Chinesse);
+    //Chinesse = g_pDevice->LoadMesh(L"Chinesse.obj");
+    //g_pDevice->LoadMeshToGPU(Chinesse);
 
-    std::wstring textureTilesAddress = L"tiles.jpg";
+    /*std::wstring textureTilesAddress = L"tiles.jpg";
     std::wstring textureMirror = L"mirror.jpg";
     std::wstring textureCarusso = L"Texture_by_FE_Caruso.jpg";
 
-    AWESOMECOLOR diff = { 1.0f, 1.0f, 1.0f, 1.0f };
     AWESOMECOLOR ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
     AWESOMECOLOR spec = { 0.35f, 0.35f, 0.35f, 1.0f };
     g_nSkinTiles = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
     g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureTilesAddress, false, 1.0f);
     g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureMirror, false, 1.0f);
-    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureCarusso, false, 1.0f);
+    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureCarusso, false, 1.0f);*/
+
+    
+    GenGrid(50, 50, 1.0f, 1.0f, AWEVector(0.0f, 0.0f, 0.0f));
+
+    /*AwesomeOBJLoader loader;
+    loader.loadOBJ(L"terrain.obj");
+
+    AWESOMECOLOR diff = { 1.0f, 0.0f, 0.0f, 1.0f };
+    AWESOMECOLOR ambient = { 1.0f, 0.0f, 0.0f, 1.0f };
+    AWESOMECOLOR spec = { 0.35f, 0.35f, 0.35f, 1.0f };
+    g_nSkinTiles = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, g_nSkinTiles, loader.getVerteces().size(), 0, loader.getVerteces().data(), NULL, &g_sMesh);*/
 
 
     return S_OK;
@@ -401,12 +420,110 @@ HRESULT ProgramTick(void) {
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
 
-    g_pDevice->RenderMesh(Terrain);
+    g_pDevice->GetVertexManager()->Render(g_sMesh);
+    //g_pDevice->RenderMesh(Terrain);
 
-    g_pDevice->RenderMesh(Chinesse);
+    //g_pDevice->RenderMesh(Chinesse);
 
     // flip backbuffer to front
     g_pDevice->EndRendering();
 
     return S_OK;
 } 
+
+//-----------------------------------------------------------------------------
+// Name: GenGrid
+// Desc: Generates a grid
+//-----------------------------------------------------------------------------
+void GenGrid(int numVertRows, int numVertCols, float dx, float dz, const AWEVector& center)
+{
+    g_nVerts = numVertRows * numVertCols;
+    int numCellRows = numVertRows - 1;
+    int numCellCols = numVertCols - 1;
+
+    int numTris = numCellRows * numCellCols * 2;
+
+    float width = (float)numCellCols * dx;
+    float depth = (float)numCellRows * dz;
+
+    // Build vertices.	
+
+    g_Vertex = new VERTEX[g_nVerts];
+
+    // Offsets to translate grid from quadrant 4 to center of 
+    // coordinate system.
+    float xOffset = -width * 0.5f;
+    float zOffset = depth * 0.5f;
+
+    float texScale = 0.2f; // scale the texture cood
+    int k = 0;
+    for (float i = 0; i < numVertRows; ++i)
+    {
+        for (float j = 0; j < numVertCols; ++j)
+        {
+            // Negate the depth coordinate to put in quadrant four.  
+            // Then offset to center about coordinate system.
+            g_Vertex[k].x = j * dx + xOffset;
+            g_Vertex[k].z = -i * dz + zOffset;
+            g_Vertex[k].y = 0.0f;
+
+            // Translate so that the center of the grid is at the
+            // specified 'center' parameter.
+            AWEMatrix T;
+            T.SetTranslation(AWEVector(center.x, center.y, center.z), true);
+
+            AWEVector vc(g_Vertex[k].x, g_Vertex[k].y, g_Vertex[k].z);
+            vc = vc * T;
+
+            g_Vertex[k].x = vc.x;
+            g_Vertex[k].y = vc.y;
+            g_Vertex[k].z = vc.z;
+            g_Vertex[k].vcN[0] = g_Vertex[k].vcN[2] = 0.0f;
+            g_Vertex[k].vcN[1] = 1.0f;
+            g_Vertex[k].tu = i * texScale;
+            g_Vertex[k].tv = j * texScale;
+
+            ++k; // Next vertex
+        }
+    }
+
+    // Set the texture coord
+
+    // Build indices.
+    g_nIndis = numTris * 3;
+    g_Index = new WORD[g_nIndis];
+
+
+    // Generate indices for each quad.
+    k = 0;
+    for (WORD i = 0; i < (WORD)numCellRows; ++i)
+    {
+        for (WORD j = 0; j < (WORD)numCellCols; ++j)
+        {
+            g_Index[k] = i * numVertCols + j;
+            g_Index[k + 1] = i * numVertCols + j + 1;
+            g_Index[k + 2] = (i + 1) * numVertCols + j;
+
+            g_Index[k + 3] = (i + 1) * numVertCols + j;
+            g_Index[k + 4] = i * numVertCols + j + 1;
+            g_Index[k + 5] = (i + 1) * numVertCols + j + 1;
+
+            // next quad
+            k += 6;
+        }
+    }
+
+    AWESOMECOLOR diff = { 1.0f, 1.0f, 1.0f, 1.0f };
+    AWESOMECOLOR ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
+    AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
+    float fSpec = 8.0f;
+    UINT z = -99;
+    // Floor
+    z = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, fSpec);
+    //g_pDevice->GetSkinManager()->AddTexture(z, "wood-floorboards.dds", false, 0.0f, NULL, 0);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, z, g_nVerts, g_nIndis, g_Vertex, g_Index, &g_sMesh);
+
+    
+    //delete[] verts;
+    //delete[] indices;
+}

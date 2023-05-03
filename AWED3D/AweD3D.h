@@ -21,7 +21,6 @@
 //----------------------------------------------------------------------
 #include "../AwesomeRenderer/AwesomeRenderDevice.h"
 #include <initguid.h>
-#include <windows.h>
 #include <wrl/client.h>
 #include <dxgi.h>
 #include <dxgi1_4.h>
@@ -32,23 +31,21 @@
 #include <string>
 #include <comdef.h>
 #include "d3dx12.h"
-#include "../AwesomeMath/AwesomeMath.h"
 #include "AweD3DException.h"
 #include "AweD3DCommandQueue.h"
 #include "AweD3DSkinManager.h"
 #include "AweD3DVertexCache.h"
 #include "AweUtil.h"
-#include "AweMesh.h"
+#include "Awe.h"
 #include <vector>
-#include <limits>
 
-#define MAX_ID UINT_MAX
 
 
 //----------------------------------------------------------------------
 // Linking necessary d3d12 libraries
 //----------------------------------------------------------------------
 #pragma comment(lib, "AwesomeMath.lib")
+#pragma comment(lib, "AwesomeGeneral.lib")
 #pragma comment(lib, "D3D12.lib")
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "D3DCompiler.lib")
@@ -67,6 +64,8 @@ BOOL WINAPI	DllEntryPoint(HINSTANCE hDll, DWORD fdwReason, LPVOID lpvReserved);
 #define ReleaseCom(x) { if(x){ x->Release(); x = 0; } }
 #endif
 
+class AweD3DVertexCacheManager;
+class AweD3DSkinManager;
 
 class AweD3D : public AwesomeRenderDevice
 {
@@ -93,22 +92,33 @@ public:
 	D3D12_VIEWPORT* GetScreenViewPort();
 	D3D12_RECT*	   GetSissorRect();
 
+	//---------------------------
 	// Mesh things
-	unsigned int LoadMesh(std::wstring sFileName);
-	unsigned int LoadMesh(std::wstring sFileName, float red, float green, float blue, float alpha);
-	void LoadMeshToGPU(unsigned int meshIndex);
-	void RenderMesh(unsigned int meshIndex);
+	//---------------------------
+	//UINT LoadMesh(std::wstring sFileName);
+	//UINT LoadMesh(std::wstring sFileName, float red, float green, float blue, float alpha);
+	//void LoadMeshToGPU(unsigned int meshIndex);
+	//void RenderMesh(unsigned int meshIndex);
 
+	//---------------------------
 	// Projection things
+	//---------------------------
 	void setClippingPlanes(float near, float far);
 	void setFoV(float FoV);
 	void SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp);
 	void SetWorldTransformMatrix(const AWEMatrix& mWorld);
 
+	//---------------------------
 	// Skin manager
+	//---------------------------
 	AwesomeSkinManager* GetSkinManager();
 	UINT	GetActiveSkinID() { return m_nActiveSkin; }
 	void	SetActiveSkinID(UINT nID) { m_nActiveSkin = nID; }
+
+	//---------------------------
+	// Vertex Cache Manager stuff
+	//---------------------------
+	AwesomeVertexCacheManager* GetVertexManager();
 
 
 
@@ -130,6 +140,7 @@ private:
 	void CheckTearingSupport();
 	void InitDescriptorSizes();
 	void InitSkinManager();
+	void InitVertexManager();
 	bool InitDirect3D();
 	void CreateSwapChain();
 	void CreateRtvAndDsvDescriptorHeaps();
@@ -150,7 +161,7 @@ private:
 
 	// Camera and projection things
 	void SetProjMatrix();
-	DirectX::XMMATRIX GetMVPMatrix();
+	void ComputeMVPMatrix();
 
 
 private:
@@ -170,9 +181,9 @@ private:
 	bool					m_bIsSceneRunning;
 	UINT					m_nActiveSkin;
 
-	DirectX::XMMATRIX m_WorldMatrix;
-	DirectX::XMMATRIX m_ViewMatrix;
-	DirectX::XMMATRIX m_ProjectionMatrix;
+	AWEMatrix m_WorldMatrix;
+	AWEMatrix m_ViewMatrix;
+	AWEMatrix m_ProjectionMatrix;
 
 	Microsoft::WRL::ComPtr<IDXGIFactory4> m_dxgiFactory;
 	Microsoft::WRL::ComPtr<ID3D12Device2> m_d3d12Device;
@@ -219,9 +230,9 @@ private:
 	AweD3DSkinManager m_SkinManager;
 
 	// Meshes list
-	std::vector<AweMesh> m_meshes;
+	AweD3DVertexCacheManager m_VertexManager;
 
-	DirectX::XMMATRIX m_ModelMatrix;
+	AWED3DENGINEVARS m_EngineVariables;
 };
 
 #endif // !AWED3D_H

@@ -11,7 +11,7 @@
 #define AWESOMERENDERDEVICE_H
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN 
 #include <Windows.h>
 #include <string>
 #include <vector>
@@ -60,15 +60,15 @@ public:
 
 	// Section Mesh:
 	// Loads a new mesh
-	virtual unsigned int LoadMesh(std::wstring sFileName) = 0;
-	virtual unsigned int LoadMesh(std::wstring sFileName, float red, float green, float blue, float alpha) = 0;
+	//virtual unsigned int LoadMesh(std::wstring sFileName) = 0;
+	//virtual unsigned int LoadMesh(std::wstring sFileName, float red, float green, float blue, float alpha) = 0;
 
 	// Set a mesh to gpu memory
-	virtual void LoadMeshToGPU(unsigned int meshIndex) = 0;
+	//virtual void LoadMeshToGPU(unsigned int meshIndex) = 0;
 
 	// Render a mesh in gpu memory, if the mesh is not in gpu memory it will load it
 	// Note: it is better to use the SetMeshToGPUMemory in the loading stage
-	virtual void RenderMesh(unsigned int meshIndex) = 0;
+	//virtual void RenderMesh(unsigned int meshIndex) = 0;
 
 	// Section Camera-projection:
 	// View matrix form position, fix point, worldup
@@ -86,6 +86,12 @@ public:
 
 	// Skin manager
 	virtual AwesomeSkinManager* GetSkinManager() = 0;
+
+	//---------------------------
+	// Vertex Cache Manager stuff
+	//---------------------------
+	// Get vertex cache
+	virtual AwesomeVertexCacheManager* GetVertexManager() = 0;
 
 };
 typedef class AwesomeRenderDevice* LPAWERENDERDEVICE;

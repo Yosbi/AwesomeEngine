@@ -26,6 +26,7 @@ HRESULT   InputStartup();
 void      updateInput();
 void	  updateCamera(AWEVector deltaPos);
 void	  updateFPS();
+void GenGrid(int numVertRows, int numVertCols, float dx, float dz, const AWEVector& center);
 
 
 #endif

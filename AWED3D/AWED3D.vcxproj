@@ -26,7 +26,6 @@
     <ClInclude Include="AweD3DException.h" />
     <ClInclude Include="AweD3DSkinManager.h" />
     <ClInclude Include="AweD3DVertexCache.h" />
-    <ClInclude Include="AweMesh.h" />
     <ClInclude Include="AweUtil.h" />
     <ClInclude Include="d3dx12.h" />
   </ItemGroup>
@@ -38,7 +37,6 @@
     <ClCompile Include="AweD3DSkinManager.cpp" />
     <ClCompile Include="AweD3DVertexCache.cpp" />
     <ClCompile Include="AweD3DWorldViewProj.cpp" />
-    <ClCompile Include="AweMesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="AweD3D.def" />
@@ -50,14 +48,14 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.6</ShaderModel>
     </FxCompile>
     <FxCompile Include="DefaultVertexShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Vertex</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
-      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">5.1</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">6.6</ShaderModel>
     </FxCompile>
   </ItemGroup>
   <PropertyGroup Label="Globals">

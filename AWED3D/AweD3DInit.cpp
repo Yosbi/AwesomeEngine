@@ -89,9 +89,6 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 	m_fNear(0.1f),
 	m_fFar(100.0f),
 	m_nActiveSkin(MAX_ID),
-	m_ProjectionMatrix(DirectX::XMMatrixIdentity()),
-	m_ViewMatrix(DirectX::XMMatrixIdentity()),
-	m_WorldMatrix(DirectX::XMMatrixIdentity()),
 	m_ScissorRect({ 0, 0, m_nClientWidth, m_nClientHeight }),
 	m_ScreenViewport({/*TopLeftX*/ 0, /*TopLeftY*/ 0, 
 		/*Width*/ static_cast<float>(m_nClientWidth), 
@@ -195,6 +192,11 @@ void AweD3D::CreateDevice()
 			IID_PPV_ARGS(&m_d3d12Device)));
 	}
 
+	/*Microsoft::WRL::ComPtr<ID3D12Debug> spDebugController0;
+	Microsoft::WRL::ComPtr<ID3D12Debug1> spDebugController1;
+	D3D12GetDebugInterface(IID_PPV_ARGS(&spDebugController0));
+	spDebugController0->QueryInterface(IID_PPV_ARGS(&spDebugController1));
+	spDebugController1->SetEnableGPUBasedValidation(true);*/
 	/*/ Enable debug messages in debug mode.
 #if defined(_DEBUG)
 	ComPtr<ID3D12InfoQueue> pInfoQueue;
@@ -291,6 +293,7 @@ bool AweD3D::InitDirect3D()
 	CreateDefaultPipelineStateObject();
 
 	InitSkinManager();
+	InitVertexManager();
 
 	return true;
 }
@@ -298,6 +301,11 @@ bool AweD3D::InitDirect3D()
 void AweD3D::InitSkinManager() {
 	m_SkinManager.Init(m_d3d12Device, m_pCommandQueue);
 }
+
+void AweD3D::InitVertexManager() {
+	m_VertexManager.Init(m_d3d12Device, m_pCommandQueue, &m_SkinManager, this);
+}
+
 void AweD3D::CreateDefaultRootSignature() {
 	// Create a root signature.
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
@@ -312,12 +320,12 @@ void AweD3D::CreateDefaultRootSignature() {
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS ;
 
 	// A single 32-bit constant root parameter that is used by the vertex shader.
-	CD3DX12_ROOT_PARAMETER1 rootParameters[1];
-	rootParameters[0].InitAsConstants(sizeof(DirectX::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+	CD3DX12_ROOT_PARAMETER1 rootParameters[2];
+	rootParameters[0].InitAsConstants(sizeof(AWED3DENGINEVARS) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+	rootParameters[1].InitAsConstants(sizeof(AWESOMEMATERIAL) / 4, 1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
 	rootSignatureDescription.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
@@ -356,8 +364,9 @@ void AweD3D::CreateDefaultPipelineStateObject()
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		//{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
 		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+		{ "TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+
 	};
 
 	// Describe and create the graphics pipeline state object (PSO).

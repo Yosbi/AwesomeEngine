@@ -16,6 +16,7 @@
 #include "AwesomeTimer.h"
 #include "AwesomeBaseAnimation.h"
 #include "AwesomeLinearInterpolation.h"
+#include "AwesomeOBJLoader.h"
 
 #endif // !AWEGENERAL_H
 

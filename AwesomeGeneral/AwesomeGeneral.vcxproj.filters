@@ -31,6 +31,12 @@
     <Filter Include="Source Files\Timer">
       <UniqueIdentifier>{b6e914d4-176c-4db4-af3e-1f0aab860906}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\OBJLoader">
+      <UniqueIdentifier>{22543c78-52da-4411-8503-7d094bb4ea0b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\OBJLoader">
+      <UniqueIdentifier>{a968df56-6385-414c-9292-dfab97d69d8f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AweFreeCam.h">
@@ -54,6 +60,12 @@
     <ClInclude Include="AwesomeLinearInterpolation.h">
       <Filter>Header Files\Animation</Filter>
     </ClInclude>
+    <ClInclude Include="AwesomeOBJLoader.h">
+      <Filter>Header Files\OBJLoader</Filter>
+    </ClInclude>
+    <ClInclude Include="AwesomeUtility.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AwesomeTimer.cpp">
@@ -73,6 +85,9 @@
     </ClCompile>
     <ClCompile Include="AwesomeLinearInterpolation.cpp">
       <Filter>Source Files\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="AwesomeOBJLoader.cpp">
+      <Filter>Source Files\OBJLoader</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -14,7 +14,7 @@
 //----------------------------------------------------------------------
 // includes
 //----------------------------------------------------------------------
-#include "AweD3D.h"
+#include "Awe.h"
 #include "AweD3DSkinManager.h"
 
 //----------------------------------------------------------------------
@@ -39,6 +39,7 @@ typedef struct AWESTATICBUFFER_TYPE
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 } AWESOMESTATICBUFFER;
 
+class AweD3D; // Forward declaration
 //----------------------------------------------------------------------
 // Name: AweD3DVertexCacheManager
 // Desc: Class to manage static and dynamic vertex bunches, optionally
@@ -52,7 +53,7 @@ public:
 	~AweD3DVertexCacheManager();
 
 	void Init(Microsoft::WRL::ComPtr<ID3D12Device2> pDevice, std::shared_ptr<AweD3DCommandQueue> pCommandQueue, 
-		std::shared_ptr<AweD3DSkinManager> pSkinMan, std::shared_ptr<AweD3D> pAweD3D);
+		AweD3DSkinManager* pSkinMan, AweD3D* pAweD3D);
 
 	// Public functions
 	HRESULT		 CreateStaticBuffer(AWESOMEVERTEXID VertexID, UINT nSkinID, UINT nVerts, UINT nIdis, const void* pVerts,
@@ -68,10 +69,10 @@ private:
 		size_t numElements, size_t elementSize, const void* bufferData);
 
 	// Private member vars
-	Microsoft::WRL::ComPtr<ID3D12Device2> m_pDevice;	// Direct3d device
-	std::shared_ptr<AweD3DCommandQueue> m_pCommandQueue; // Command queue
-	std::shared_ptr<AweD3DSkinManager> m_pSkinMan;		// The skin manager
-	std::shared_ptr<AweD3D> m_pAweD3D;					// The AweD3D
+	Microsoft::WRL::ComPtr<ID3D12Device2> m_pDevice;		// Direct3d device
+	std::shared_ptr<AweD3DCommandQueue> m_pCommandQueue;	// Command queue
+	AweD3DSkinManager* m_pSkinMan;							// The skin manager
+	AweD3D* m_pAweD3D;										// The AweD3D
 
 	std::vector<AWESOMESTATICBUFFER> m_pSB;			// Array of Static vertex buffer
 	DWORD				 m_dwActiveSB;				// The currently active static buffer

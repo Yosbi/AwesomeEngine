@@ -8,6 +8,7 @@
 //----------------------------------------------------------------------
 
 #include <Windows.h>
+#include "AwesomeMiscDefinitions.h"
 class AwesomeVertexCacheManager
 {
 public:

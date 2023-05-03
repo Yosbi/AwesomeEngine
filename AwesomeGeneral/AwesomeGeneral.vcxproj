@@ -25,7 +25,9 @@
     <ClInclude Include="AwesomeFirstPersonCam.h" />
     <ClInclude Include="AwesomeGeneral.h" />
     <ClInclude Include="AwesomeLinearInterpolation.h" />
+    <ClInclude Include="AwesomeOBJLoader.h" />
     <ClInclude Include="AwesomeTimer.h" />
+    <ClInclude Include="AwesomeUtility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AwesomeBaseAnimation.cpp" />
@@ -33,6 +35,7 @@
     <ClCompile Include="AwesomeFirstPersonCam.cpp" />
     <ClCompile Include="AwesomeFreeCam.cpp" />
     <ClCompile Include="AwesomeLinearInterpolation.cpp" />
+    <ClCompile Include="AwesomeOBJLoader.cpp" />
     <ClCompile Include="AwesomeTimer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -14,7 +14,7 @@
 //----------------------------------------------------------------------
 #include "../AwesomeRenderer/AwesomeRenderDevice.h"
 #include "AweD3DCommandQueue.h"
-#include <Windows.h>
+#include "Awe.h"
 #include "d3dx12.h"
 #include <DirectXTex.h>
 #include <filesystem>
@@ -43,7 +43,7 @@ typedef struct AWETEXTURE_TYPE
 typedef struct AWESKIN_TYPE
 {
 	bool bAlpha;				// This skin uses transparency?
-	UINT nMaterial;				// The ordinal of the material in the array of materials
+	UINT nMaterial = MAX_ID;				// The ordinal of the material in the array of materials
 	std::vector<UINT> nTexture;	// Array of ordinals of texture referencing the array of textures
 } AWESOMESKIN;
 

@@ -10,7 +10,7 @@
 // includes
 //----------------------------------------------------------------------
 #include "AweD3DVertexCache.h" // Class definition
-
+#include "AweD3D.h"
 //-----------------------------------------------------------------------------
 // Name: Constructor(Manager)
 // Desc: Initializes all the variables
@@ -33,7 +33,7 @@ AweD3DVertexCacheManager::~AweD3DVertexCacheManager()
 // Desc: Crank up the Vertex Cache manager
 //-----------------------------------------------------------------------------
 void AweD3DVertexCacheManager::Init(Microsoft::WRL::ComPtr<ID3D12Device2> pDevice, std::shared_ptr<AweD3DCommandQueue> pCommandQueue,
-	std::shared_ptr<AweD3DSkinManager> pSkinMan, std::shared_ptr<AweD3D> pAweD3D) 
+	AweD3DSkinManager* pSkinMan, AweD3D* pAweD3D)
 {
 	m_pDevice = pDevice;
 	m_pCommandQueue = pCommandQueue;
@@ -73,14 +73,14 @@ HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(AWESOMEVERTEXID VertexID, U
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
 
 	// Create indexbuffer if needed
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateIndexBuffer;
 	if (nIndis > 0)
 	{
 		awesomeStaticBuffer.bIndis = true;
 		awesomeStaticBuffer.nNumTris = int(nIndis / 3.0f);
 	
 		// Upload index buffer data to GPU.
-		Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
-		Microsoft::WRL::ComPtr<ID3D12Resource> intermediateIndexBuffer;
 		UpdateBufferResource(commandList,
 			&indexBuffer, &intermediateIndexBuffer,
 			nIndis, sizeof(WORD), pIndis);
@@ -175,17 +175,16 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 		return E_FAIL;
 	}
 
-	//YRENDERSTATE sm = m_pYD3D->GetShadeMode();
-
-
 	if (nID >= m_pSB.size())
 	{
 		return E_INVALIDARG;
 	}
 
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
+
+	D3D12_VIEWPORT *viewPort = m_pAweD3D->GetScreenViewPort();
 	
-	commandList->RSSetViewports(1, m_pAweD3D->GetScreenViewPort());
+	commandList->RSSetViewports(1, viewPort);
 	commandList->RSSetScissorRects(1, m_pAweD3D->GetSissorRect());
 
 	// Specify the buffers we are going to render to.
@@ -196,14 +195,20 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// Setting the matrixes in the shader
+	// Setting the engine variables to the shader
+	m_pAweD3D->ComputeMVPMatrix();
+	commandList->SetGraphicsRoot32BitConstants(0, sizeof(AWED3DENGINEVARS) / 4, &m_pAweD3D->m_EngineVariables, 0);
 
-	DirectX::XMMATRIX mvpMatrix = m_pAweD3D->GetMVPMatrix();
-	commandList->SetGraphicsRoot32BitConstants(0, sizeof(DirectX::XMMATRIX) / 4, &mvpMatrix, 0);
+	// Setting the material variables to the shader
+	UINT materialIndex = m_pSkinMan->m_Skins[m_pSB[nID].nSkinID].nMaterial;
+	if (materialIndex < MAX_ID) {
+		AWESOMEMATERIAL* pMaterial = &m_pSkinMan->m_Materials[materialIndex];
+		commandList->SetGraphicsRoot32BitConstants(1, sizeof(AWESOMEMATERIAL) / 4, pMaterial, 0);
+	}
 
 	// Activate buffers if not already active
-	if (m_dwActiveSB != nID)
-	{
+	//if (m_dwActiveSB != nID)
+	//{
 		// Index buffer used?
 		if (m_pSB[nID].bIndis) 
 			commandList->IASetIndexBuffer(&m_pSB[nID].indexBufferView);
@@ -211,7 +216,7 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 		// Set the vertex buffer
 		commandList->IASetVertexBuffers(0, 1, &m_pSB[nID].vertexBufferView);
 		m_dwActiveSB = nID;
-	}
+	//}
 	
 	// Is the device already using this skin?   
 	if (m_pAweD3D->GetActiveSkinID() != m_pSB[nID].nSkinID)
@@ -224,7 +229,6 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 		// Skin will change now
 		m_pAweD3D->SetActiveSkinID(m_pSB[nID].nSkinID);
 	}
-
 	
 	// Finally draw
 	// Indexed primitive
@@ -237,7 +241,7 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 	{
 		commandList->DrawInstanced(m_pSB[nID].nNumVerts, 1, 0, 0);
 	}
-
+	m_pCommandQueue->ExecuteCommandList(commandList);
 	return hr;
 
 }
