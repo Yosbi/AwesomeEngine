@@ -68,9 +68,18 @@ void AweD3D::ComputeMVPMatrix()
 
 //-----------------------------------------------------------------------------
 // Name: SetWorldTransformMatrix
-// Desc: Sets the world transformation matrix
+// Desc: Sets the world transformation matrix, also computes the inverse 
+//		 transpose of the matrix 
 //-----------------------------------------------------------------------------
 void AweD3D::SetWorldTransformMatrix(const AWEMatrix& mWorld)
 {
 	m_WorldMatrix = mWorld;
+
+	// Calculating the inverse transpose taking advantage of the DirectX's SIMD 
+	DirectX::XMMATRIX xWorldInverseTranspose = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&m_WorldMatrix);
+	xWorldInverseTranspose = XMMatrixInverse(0, xWorldInverseTranspose);
+	xWorldInverseTranspose = XMMatrixTranspose(xWorldInverseTranspose);
+
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_EngineVariables.mWorldInverseTranspose, xWorldInverseTranspose);
+
 }

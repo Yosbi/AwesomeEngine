@@ -62,8 +62,8 @@ void AwesomeOBJLoader::loadOBJ(std::wstring sFileName)
 						vertex.tv = textures[std::stoi(faceV[1]) - 1].tv;
 
 						vertex.vcN[0] = normals[std::stoi(faceV[2]) - 1].x;
-						vertex.vcN[0] = normals[std::stoi(faceV[2]) - 1].y;
-						vertex.vcN[0] = normals[std::stoi(faceV[2]) - 1].z;
+						vertex.vcN[1] = normals[std::stoi(faceV[2]) - 1].y;
+						vertex.vcN[2] = normals[std::stoi(faceV[2]) - 1].z;
 
 						m_verteces.push_back(vertex);
 						m_index.push_back(std::stoi(faceV[0]) - 1);

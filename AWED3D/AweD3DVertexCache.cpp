@@ -114,6 +114,8 @@ HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(AWESOMEVERTEXID VertexID, U
 
 	awesomeStaticBuffer.vertexBuffer = vertexBuffer;
 
+	// TODO: thread safety
+	*pnID = m_pSB.size();
 	m_pSB.push_back(awesomeStaticBuffer);
 
 	m_pCommandQueue->ExecuteCommandList(commandList);

@@ -86,9 +86,12 @@ typedef struct LVERTEX_TYPE {
 typedef struct AWED3DENGINEVARIABLES_TYPE
 {
 	AWEMatrix	 mWVP;											// World view proj combo matrix;
-	AWESOMECOLOR cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };    // Duffuse light vector
+	AWEMatrix	 mWorldInverseTranspose;						// World matrix inversed and transposed
+
+	AWESOMECOLOR cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };    // Diffuse light vector
+	AWEVector    vcLightVecW = AWEVector(0.0f, 1.0f, 0.0f);		// Global Light vector
+
 	AWESOMECOLOR cSpecularLight = { 0.7f, 0.7f, 0.7f, 1.0f };   // Specular light vector
-	AWEVector    vcLightVecW = AWEVector(0.0f, 1.0f, 1.0f);		// Global Light vector
 }
 AWED3DENGINEVARS;
 #endif

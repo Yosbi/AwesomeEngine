@@ -45,6 +45,7 @@ AwesomeLinearInterpolation g_dirLerp;
 AwesomeLinearInterpolation g_upLerp;
 
 UINT g_sMesh = 0;
+UINT g_sMesh2 = 0;
 
 VERTEX* g_Vertex = NULL;
 int g_nIndis = 0;
@@ -113,7 +114,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     ShowWindow(hWnd, SW_SHOW);
     
     // everything went smooth
-    g_pDevice->SetClearColor(0.0f, 1.0f, 1.0f);
+    g_pDevice->SetClearColor(1.0f, 1.0f, 1.0f);
 
     // main loop
     while (!g_bDone) {
@@ -364,16 +365,26 @@ HRESULT LoadAssets() {
     g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureCarusso, false, 1.0f);*/
 
     
-    GenGrid(50, 50, 1.0f, 1.0f, AWEVector(0.0f, 0.0f, 0.0f));
+    //GenGrid(50, 50, 1.0f, 1.0f, AWEVector(0.0f, 0.0f, 0.0f));
 
-    /*AwesomeOBJLoader loader;
+    AwesomeOBJLoader loader;
     loader.loadOBJ(L"terrain.obj");
 
-    AWESOMECOLOR diff = { 1.0f, 0.0f, 0.0f, 1.0f };
-    AWESOMECOLOR ambient = { 1.0f, 0.0f, 0.0f, 1.0f };
-    AWESOMECOLOR spec = { 0.35f, 0.35f, 0.35f, 1.0f };
+    AWESOMECOLOR diff = { 0.454f, 0.4f, 0.231f, 1.0f };
+    AWESOMECOLOR ambient = { 1.0f, 1.0f,0.0f, 1.0f };
+    AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
     g_nSkinTiles = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, g_nSkinTiles, loader.getVerteces().size(), 0, loader.getVerteces().data(), NULL, &g_sMesh);*/
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, g_nSkinTiles, loader.getVerteces().size(), 0, loader.getVerteces().data(), NULL, &g_sMesh);
+
+
+    AwesomeOBJLoader loader2;
+    loader2.loadOBJ(L"Chinesse.obj");
+
+    AWESOMECOLOR diff2= { 0.5f, 0.5f, 0.5f, 1.0f };
+    AWESOMECOLOR ambient2 = { 1.0f, 1.0f,0.0f, 1.0f };
+    AWESOMECOLOR spec2 = { 0.4f, 0.4f, 0.4f, 1.0f };
+    UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient2, diff2, diff2, spec2, 8.0f);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, skin, loader2.getVerteces().size(), 0, loader2.getVerteces().data(), NULL, &g_sMesh2);
 
 
     return S_OK;
@@ -420,7 +431,13 @@ HRESULT ProgramTick(void) {
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
 
+    AWEMatrix world;
+    g_pDevice->SetWorldTransformMatrix(world);
     g_pDevice->GetVertexManager()->Render(g_sMesh);
+
+    world.Translate(0.0f, 10.0f, 0.0f);
+    g_pDevice->SetWorldTransformMatrix(world);
+    g_pDevice->GetVertexManager()->Render(g_sMesh2);
     //g_pDevice->RenderMesh(Terrain);
 
     //g_pDevice->RenderMesh(Chinesse);
@@ -513,8 +530,8 @@ void GenGrid(int numVertRows, int numVertCols, float dx, float dz, const AWEVect
         }
     }
 
-    AWESOMECOLOR diff = { 1.0f, 1.0f, 1.0f, 1.0f };
-    AWESOMECOLOR ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
+    AWESOMECOLOR diff = { 1.0f, 0.0f, 0.0f, 1.0f };
+    AWESOMECOLOR ambient = { 1.0f, 1.0f,0.0f, 1.0f };
     AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
     float fSpec = 8.0f;
     UINT z = -99;
@@ -524,6 +541,6 @@ void GenGrid(int numVertRows, int numVertCols, float dx, float dz, const AWEVect
     g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, z, g_nVerts, g_nIndis, g_Vertex, g_Index, &g_sMesh);
 
     
-    //delete[] verts;
-    //delete[] indices;
+    delete[] g_Vertex;
+    delete[] g_Index;
 }
