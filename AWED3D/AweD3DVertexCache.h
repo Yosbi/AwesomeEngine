@@ -17,6 +17,8 @@
 #include "Awe.h"
 #include "AweD3DSkinManager.h"
 
+class AweD3D; // Forward declaration
+
 //----------------------------------------------------------------------
 // Name: YSTATICBUFFER
 // Desc: Struct for static vertex/index data
@@ -39,7 +41,6 @@ typedef struct AWESTATICBUFFER_TYPE
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 } AWESOMESTATICBUFFER;
 
-class AweD3D; // Forward declaration
 //----------------------------------------------------------------------
 // Name: AweD3DVertexCacheManager
 // Desc: Class to manage static and dynamic vertex bunches, optionally
@@ -75,7 +76,6 @@ private:
 	AweD3D* m_pAweD3D;										// The AweD3D
 
 	std::vector<AWESOMESTATICBUFFER> m_pSB;			// Array of Static vertex buffer
-	DWORD				 m_dwActiveSB;				// The currently active static buffer
 };
 
 #endif

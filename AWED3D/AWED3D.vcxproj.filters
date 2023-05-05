@@ -39,6 +39,9 @@
     <ClInclude Include="AweD3DVertexCache.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AweD3DUploadBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AweD3DInit.cpp">
@@ -60,6 +63,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AweD3DVertexCache.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AweD3DUploadBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -17,7 +17,8 @@
 //-----------------------------------------------------------------------------
 AweD3DVertexCacheManager::AweD3DVertexCacheManager()
 {
-	m_dwActiveSB = MAX_ID;
+	m_pAweD3D = NULL;
+	m_pSkinMan = NULL;
 }
 
 //-----------------------------------------------------------------------------
@@ -208,17 +209,14 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 		commandList->SetGraphicsRoot32BitConstants(1, sizeof(AWESOMEMATERIAL) / 4, pMaterial, 0);
 	}
 
-	// Activate buffers if not already active
-	//if (m_dwActiveSB != nID)
-	//{
-		// Index buffer used?
-		if (m_pSB[nID].bIndis) 
-			commandList->IASetIndexBuffer(&m_pSB[nID].indexBufferView);
+	// Activate buffers
+	// Index buffer used?
+	if (m_pSB[nID].bIndis) 
+		commandList->IASetIndexBuffer(&m_pSB[nID].indexBufferView);
 
-		// Set the vertex buffer
-		commandList->IASetVertexBuffers(0, 1, &m_pSB[nID].vertexBufferView);
-		m_dwActiveSB = nID;
-	//}
+	// Set the vertex buffer
+	commandList->IASetVertexBuffers(0, 1, &m_pSB[nID].vertexBufferView);
+	
 	
 	// Is the device already using this skin?   
 	if (m_pAweD3D->GetActiveSkinID() != m_pSB[nID].nSkinID)
@@ -227,6 +225,7 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 		AWESOMESKIN* pSkin = &m_pSkinMan->m_Skins[m_pSB[nID].nSkinID];
 
 		// TODO: Set skin in shader
+		//	commandList->SetGraphicsRootDescriptorTable(0, m_srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 		
 		// Skin will change now
 		m_pAweD3D->SetActiveSkinID(m_pSB[nID].nSkinID);

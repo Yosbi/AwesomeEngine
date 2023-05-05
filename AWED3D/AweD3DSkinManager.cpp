@@ -363,8 +363,9 @@ void AweD3DSkinManager::UpdateTexturesDescriptorHeap()
 	// Create a new descriptor heap for SRVs with the desired number of descriptors
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 	srvHeapDesc.NumDescriptors = newNumDescriptors;
-	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	srvHeapDesc.NodeMask = 0;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> newHeap;
 	ThrowIfFailed(m_pDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&newHeap)));
 
@@ -377,6 +378,8 @@ void AweD3DSkinManager::UpdateTexturesDescriptorHeap()
 		m_pDevice->CopyDescriptorsSimple(oldNumDescriptors, newHeap->GetCPUDescriptorHandleForHeapStart(),
 			srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	}
+
+	m_srvDescriptorHeap.Reset();
 
 	// Replace the old descriptor heap with the new one
 	m_srvDescriptorHeap = newHeap;

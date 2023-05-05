@@ -88,10 +88,10 @@ typedef struct AWED3DENGINEVARIABLES_TYPE
 	AWEMatrix	 mWVP;											// World view proj combo matrix;
 	AWEMatrix	 mWorldInverseTranspose;						// World matrix inversed and transposed
 
-	AWESOMECOLOR cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };    // Diffuse light vector
-	AWEVector    vcLightVecW = AWEVector(0.0f, 1.0f, 0.0f);		// Global Light vector
-
-	AWESOMECOLOR cSpecularLight = { 0.7f, 0.7f, 0.7f, 1.0f };   // Specular light vector
+	AWESOMECOLOR cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };    // Diffuse light color
+	AWEVector    vcLightVecW = AWEVector(0.0f, 1.0f, 0.0f);		// Diffuse light vector
+	//AWESOMECOLOR cAmbientLight = { 0.6f, 0.6f, 0.6f, 1.0f };	// Ambient light color
+	AWESOMECOLOR cSpecularLight = { 0.7f, 0.7f, 0.7f, 1.0f };   // Specular light color
 }
 AWED3DENGINEVARS;
 #endif

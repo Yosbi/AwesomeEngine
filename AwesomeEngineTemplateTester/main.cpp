@@ -370,20 +370,24 @@ HRESULT LoadAssets() {
     AwesomeOBJLoader loader;
     loader.loadOBJ(L"terrain.obj");
 
+    std::wstring textureTilesAddress = L"tiles.jpg";
     AWESOMECOLOR diff = { 0.454f, 0.4f, 0.231f, 1.0f };
-    AWESOMECOLOR ambient = { 1.0f, 1.0f,0.0f, 1.0f };
+    AWESOMECOLOR ambient = { 0.3f, 0.3f,0.3f, 1.0f };
     AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
     g_nSkinTiles = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
+    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureTilesAddress, false, 1.0f);
     g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, g_nSkinTiles, loader.getVerteces().size(), 0, loader.getVerteces().data(), NULL, &g_sMesh);
 
 
     AwesomeOBJLoader loader2;
     loader2.loadOBJ(L"Chinesse.obj");
 
+    std::wstring textureMirror = L"mirror.jpg";
     AWESOMECOLOR diff2= { 0.5f, 0.5f, 0.5f, 1.0f };
-    AWESOMECOLOR ambient2 = { 1.0f, 1.0f,0.0f, 1.0f };
+    AWESOMECOLOR ambient2 = { 0.3f, 0.3f,0.3f, 1.0f };
     AWESOMECOLOR spec2 = { 0.4f, 0.4f, 0.4f, 1.0f };
     UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient2, diff2, diff2, spec2, 8.0f);
+    g_pDevice->GetSkinManager()->AddTexture(skin, textureMirror, false, 1.0f);
     g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, skin, loader2.getVerteces().size(), 0, loader2.getVerteces().data(), NULL, &g_sMesh2);
 
 
@@ -435,12 +439,10 @@ HRESULT ProgramTick(void) {
     g_pDevice->SetWorldTransformMatrix(world);
     g_pDevice->GetVertexManager()->Render(g_sMesh);
 
-    world.Translate(0.0f, 10.0f, 0.0f);
+    world.Translate(0.0f, 9.0f, 0.0f);
     g_pDevice->SetWorldTransformMatrix(world);
     g_pDevice->GetVertexManager()->Render(g_sMesh2);
-    //g_pDevice->RenderMesh(Terrain);
-
-    //g_pDevice->RenderMesh(Chinesse);
+    
 
     // flip backbuffer to front
     g_pDevice->EndRendering();
