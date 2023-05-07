@@ -19,8 +19,8 @@ public:
 
 	// Create a static buffer of vertexes, it returns in the parameter 
 	// pnID the index of the buffer you create
-	virtual HRESULT CreateStaticBuffer(AWESOMEVERTEXID VertexID, UINT nSkinID, UINT nVerts, UINT nIdis,
-		const void* pVerts, const WORD* pIndis, UINT* pnID) = 0;
+	virtual HRESULT CreateStaticBuffer(UINT nSkinID, UINT nVerts, int nVertsStride, const void* pVerts,
+		UINT nIndis, const WORD* pIndis, UINT* pnID) = 0;
 
 	// Render static buffers with the default given skin. Index buffers is optional.
 	virtual HRESULT Render(UINT nSBufferID) = 0;

@@ -37,6 +37,11 @@ HRESULT AweD3D::BeginRendering(bool bClearPixel, bool bClearDepth, bool bClearSt
 
 	m_pCommandQueue->ExecuteCommandList(commandList);
 
+	// As we are starting the pass, we still havent setted the pass variables
+	m_bSettedPassVariablesCB = false;
+
+	m_pCommandQueue->Flush();
+
 	return S_OK;
 }
 

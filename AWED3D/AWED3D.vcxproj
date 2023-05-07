@@ -36,7 +36,6 @@
     <ClCompile Include="AweD3DException.cpp" />
     <ClCompile Include="AweD3DInit.cpp" />
     <ClCompile Include="AweD3DSkinManager.cpp" />
-    <ClCompile Include="AweD3DUploadBuffer.cpp" />
     <ClCompile Include="AweD3DVertexCache.cpp" />
     <ClCompile Include="AweD3DWorldViewProj.cpp" />
   </ItemGroup>

@@ -37,9 +37,15 @@
     <Filter Include="Source Files\OBJLoader">
       <UniqueIdentifier>{a968df56-6385-414c-9292-dfab97d69d8f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GeometryGen">
+      <UniqueIdentifier>{725b933b-3b34-4463-9fc9-11cfc8875d2d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GeometryGen">
+      <UniqueIdentifier>{0f63e47e-1573-47d6-9261-30fe87140976}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AweFreeCam.h">
+    <ClInclude Include="AwesomeFreeCam.h">
       <Filter>Header Files\Camera</Filter>
     </ClInclude>
     <ClInclude Include="AwesomeBaseCam.h">
@@ -66,6 +72,9 @@
     <ClInclude Include="AwesomeUtility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AwesomeGeometryGenerator.h">
+      <Filter>Header Files\GeometryGen</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AwesomeTimer.cpp">
@@ -88,6 +97,9 @@
     </ClCompile>
     <ClCompile Include="AwesomeOBJLoader.cpp">
       <Filter>Source Files\OBJLoader</Filter>
+    </ClCompile>
+    <ClCompile Include="AwesomeGeometryGenerator.cpp">
+      <Filter>Source Files\GeometryGen</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -78,6 +78,7 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 	m_bWindowed(true),
 	m_bRunning(false),
 	m_bIsSceneRunning(false),
+	m_bSettedPassVariablesCB(false),
 	m_bStencil(false),
 	m_d3d12Device(nullptr),
 	m_dxgiFactory(nullptr),
@@ -287,6 +288,8 @@ bool AweD3D::InitDirect3D()
 	CreateSwapChain();
 	CreateRtvAndDsvDescriptorHeaps();
 
+	InitUploadBuffers();
+
 	// TODO: This will later will created dinamically, for now we use a default shader
 	CreateDefaultRootSignature();
 	LoadDefaultShaders();
@@ -307,8 +310,38 @@ void AweD3D::InitVertexManager() {
 }
 
 void AweD3D::CreateDefaultRootSignature() {
+
+	// Root parameter can be a table, root descriptor or root constants.
+	CD3DX12_ROOT_PARAMETER slotRootParameter[2];
+
+	// Create root CBV.
+	slotRootParameter[0].InitAsConstantBufferView(0);
+	slotRootParameter[1].InitAsConstantBufferView(1);
+
+	// A root signature is an array of root parameters.
+	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(2, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+	// create a root signature with a single slot which points to a descriptor range consisting of a single constant buffer
+	Microsoft::WRL::ComPtr<ID3DBlob> serializedRootSig = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+		serializedRootSig.GetAddressOf(), errorBlob.GetAddressOf());
+
+	if (errorBlob != nullptr)
+	{
+		::OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+	}
+	ThrowIfFailed(hr);
+
+	ThrowIfFailed(m_d3d12Device->CreateRootSignature(
+		0,
+		serializedRootSig->GetBufferPointer(),
+		serializedRootSig->GetBufferSize(),
+		IID_PPV_ARGS(m_rootSignature.GetAddressOf())));
+
+
 	// Create a root signature.
-	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+	/*D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
 	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
 	if (FAILED(m_d3d12Device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
 	{
@@ -324,8 +357,14 @@ void AweD3D::CreateDefaultRootSignature() {
 
 	// A single 32-bit constant root parameter that is used by the vertex shader.
 	CD3DX12_ROOT_PARAMETER1 rootParameters[2];
-	rootParameters[0].InitAsConstants(sizeof(AWED3DENGINEVARS) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-	rootParameters[1].InitAsConstants(sizeof(AWESOMEMATERIAL) / 4, 1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+
+	CD3DX12_DESCRIPTOR_RANGE1 cbvTable0;
+	cbvTable0.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+	CD3DX12_DESCRIPTOR_RANGE1 cbvTable1;
+	cbvTable1.Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+
+	rootParameters[0].InitAsDescriptorTable(1, &cbvTable0);
+	rootParameters[1].InitAsDescriptorTable(1, &cbvTable1);
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription;
 	rootSignatureDescription.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr, rootSignatureFlags);
@@ -337,7 +376,7 @@ void AweD3D::CreateDefaultRootSignature() {
 		featureData.HighestVersion, &rootSignatureBlob, &errorBlob));
 	// Create the root signature.
 	ThrowIfFailed(m_d3d12Device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(),
-		rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));
+		rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));*/
 }
 
 void AweD3D::LoadDefaultShaders() 
@@ -422,14 +461,15 @@ void AweD3D::CreateSwapChain()
 	ThrowIfFailed(m_dxgiFactory->MakeWindowAssociation(m_hWnd, DXGI_MWA_NO_ALT_ENTER));
 }
 
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> AweD3D::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors)
+Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> AweD3D::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, 
+	D3D12_DESCRIPTOR_HEAP_FLAGS flags, uint32_t numDescriptors)
 {
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap;
 
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 	desc.NumDescriptors = numDescriptors;
 	desc.Type = type;
-	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	desc.Flags = flags;
 	desc.NodeMask = 0;
 
 	ThrowIfFailed(m_d3d12Device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)));
@@ -439,6 +479,44 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> AweD3D::CreateDescriptorHeap(D3D12_
 
 void AweD3D::CreateRtvAndDsvDescriptorHeaps()
 {
-	m_RtvHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, sm_nSwapChainBufferCount);
-	m_DsvHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
+	m_RtvHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE,sm_nSwapChainBufferCount);
+	m_DsvHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 1);
+
+	m_CbvHeapPassVariables = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1);
+	m_CbvHeapPerObjectVariables = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1);
+}
+
+void AweD3D::InitUploadBuffers()
+{
+	// Per pass
+	m_CbUploadPassVariables = std::make_unique<AweD3DUploadBuffer<AWEPASSVARIABLES>>(m_d3d12Device.Get(), 1, true);
+
+	UINT objCBByteSize = CalcConstantBufferByteSize(sizeof(AWEPASSVARIABLES));
+
+	D3D12_GPU_VIRTUAL_ADDRESS cbAddress = m_CbUploadPassVariables->Resource()->GetGPUVirtualAddress();
+	
+	// Offset to the ith object constant buffer in the buffer.
+	// int boxCBufIndex = 0;
+	// cbAddress += boxCBufIndex * objCBByteSize;
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+	cbvDesc.BufferLocation = cbAddress;
+	cbvDesc.SizeInBytes = objCBByteSize;
+
+	m_d3d12Device->CreateConstantBufferView(&cbvDesc,
+		m_CbvHeapPassVariables->GetCPUDescriptorHandleForHeapStart());
+
+	// Per Object
+	m_CbUploadPerObjectVariables = std::make_unique<AweD3DUploadBuffer<AWEPEROBJECTVARIABLES>>(m_d3d12Device.Get(), 1, true);
+
+	objCBByteSize = CalcConstantBufferByteSize(sizeof(AWEPEROBJECTVARIABLES));
+
+	D3D12_GPU_VIRTUAL_ADDRESS cbAddress2 = m_CbUploadPerObjectVariables->Resource()->GetGPUVirtualAddress();
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc2;
+	cbvDesc2.BufferLocation = cbAddress2;
+	cbvDesc2.SizeInBytes = objCBByteSize;
+
+	m_d3d12Device->CreateConstantBufferView(&cbvDesc2,
+		m_CbvHeapPerObjectVariables->GetCPUDescriptorHandleForHeapStart());
 }

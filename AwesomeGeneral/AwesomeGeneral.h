@@ -11,12 +11,13 @@
 #pragma once
 
 #include "AwesomeBaseCam.h"
-#include "AweFreeCam.h"
+#include "AwesomeFreeCam.h"
 #include "AwesomeFirstPersonCam.h"
 #include "AwesomeTimer.h"
 #include "AwesomeBaseAnimation.h"
 #include "AwesomeLinearInterpolation.h"
 #include "AwesomeOBJLoader.h"
+#include "AwesomeGeometryGenerator.h"
 
 #endif // !AWEGENERAL_H
 

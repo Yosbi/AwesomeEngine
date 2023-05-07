@@ -19,11 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AweFreeCam.h" />
+    <ClInclude Include="AwesomeFreeCam.h" />
     <ClInclude Include="AwesomeBaseAnimation.h" />
     <ClInclude Include="AwesomeBaseCam.h" />
     <ClInclude Include="AwesomeFirstPersonCam.h" />
     <ClInclude Include="AwesomeGeneral.h" />
+    <ClInclude Include="AwesomeGeometryGenerator.h" />
     <ClInclude Include="AwesomeLinearInterpolation.h" />
     <ClInclude Include="AwesomeOBJLoader.h" />
     <ClInclude Include="AwesomeTimer.h" />
@@ -34,6 +35,7 @@
     <ClCompile Include="AwesomeBaseCam.cpp" />
     <ClCompile Include="AwesomeFirstPersonCam.cpp" />
     <ClCompile Include="AwesomeFreeCam.cpp" />
+    <ClCompile Include="AwesomeGeometryGenerator.cpp" />
     <ClCompile Include="AwesomeLinearInterpolation.cpp" />
     <ClCompile Include="AwesomeOBJLoader.cpp" />
     <ClCompile Include="AwesomeTimer.cpp" />

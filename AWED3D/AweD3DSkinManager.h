@@ -36,6 +36,16 @@ typedef struct AWETEXTURE_TYPE
 } AWESOMETEXTURE;
 
 //----------------------------------------------------------------------
+// Name: AWESOMED3DMATERIAL
+// Desc: Material structure
+//----------------------------------------------------------------------
+typedef struct AWED3DMATERIAL_TYPE
+{
+	AWESOMEMATERIAL material;
+
+} AWESOMED3DMATERIAL;
+
+//----------------------------------------------------------------------
 // Name: AWESOMESKIN
 // Desc: Skin estructure, it uses a type of material, and up to a 
 //		maximum of 8 textures
@@ -88,7 +98,8 @@ protected:
 	DWORD		MakeD3DColor(BYTE R, BYTE G, BYTE B, BYTE A);				// Transforms a YCOLOR to a color of D3D
 
 	void		UpdateTexturesDescriptorHeap();
-
+	void		UpdateMaterialsDescriptorHeap();
+	
 protected:
 
 	Microsoft::WRL::ComPtr<ID3D12Device2> m_pDevice;	// Direct3d device
@@ -98,10 +109,10 @@ protected:
 	std::vector<AWESOMETEXTURE>		m_Textures;		// Allocate textures here
 	std::vector<AWESOMEMATERIAL>	m_Materials;	// Allocate materials here	
 
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvDescriptorHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvHeapTexture;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_cbvHeapMaterial;
 
-	UINT m_nSrvDescriptorSize;
-
+	UINT m_CbvSrvUavDescriptorSize;
 };
 
 #endif // YD3D_SKINMANAGER

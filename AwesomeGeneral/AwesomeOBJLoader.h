@@ -19,6 +19,7 @@ public:
 
 	void loadOBJ(std::wstring sFileName);
 
+	int getVertexSize();
 	//void setDefaultVerticesColor(float red, float green, float blue, float alpha);
 
 	std::vector<VERTEX> getVerteces();

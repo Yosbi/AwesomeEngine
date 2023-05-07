@@ -46,6 +46,7 @@ AwesomeLinearInterpolation g_upLerp;
 
 UINT g_sMesh = 0;
 UINT g_sMesh2 = 0;
+UINT g_sMesh3 = 0;
 
 VERTEX* g_Vertex = NULL;
 int g_nIndis = 0;
@@ -376,7 +377,7 @@ HRESULT LoadAssets() {
     AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
     g_nSkinTiles = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
     g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureTilesAddress, false, 1.0f);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, g_nSkinTiles, loader.getVerteces().size(), 0, loader.getVerteces().data(), NULL, &g_sMesh);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(g_nSkinTiles, loader.getVerteces().size(), loader.getVertexSize(), loader.getVerteces().data(), 0, NULL, &g_sMesh);
 
 
     AwesomeOBJLoader loader2;
@@ -388,7 +389,15 @@ HRESULT LoadAssets() {
     AWESOMECOLOR spec2 = { 0.4f, 0.4f, 0.4f, 1.0f };
     UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient2, diff2, diff2, spec2, 8.0f);
     g_pDevice->GetSkinManager()->AddTexture(skin, textureMirror, false, 1.0f);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, skin, loader2.getVerteces().size(), 0, loader2.getVerteces().data(), NULL, &g_sMesh2);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, loader2.getVerteces().size(), loader2.getVertexSize(), loader2.getVerteces().data(), 0, NULL, &g_sMesh2);
+
+    AwesomeGeometryGenerator geometryGenerator;
+    AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateSphere(7.0f, 30, 30);
+    //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateCylinder(4.0f, 1.0f, 7.0f, 30, 40);
+    //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateGeosphere(7.0f, 5);
+    //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateBox(10.0f, 7.0f, 7.0f, 4);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, mesh.Vertices.size(), mesh.getVertexSize(), mesh.Vertices.data(), 
+        mesh.Indices32.size(), mesh.GetIndices16().data(), &g_sMesh3);
 
 
     return S_OK;
@@ -410,14 +419,21 @@ void updateFPS() {
     static double timeCount = 0.0f;
     timeCount += g_aweTimer.GetElapsed();
 
+    static int fps = 0;
+    fps += std::round(g_aweTimer.GetFPS());
+
+    static int passes = 0;
+    passes++;
+
     if (timeCount > 1.0f) {
-        int fps = std::round(g_aweTimer.GetFPS());
-        std::wstring newCaption = g_windowCaption + L" | " + std::to_wstring(fps);
+        std::wstring newCaption = g_windowCaption + L" | " + std::to_wstring(fps/passes);
 
         // Now set the new caption to the main window. 
         SetWindowText(g_hWnd, newCaption.c_str());
 
         timeCount = 0.0f;
+        fps = 0;
+        passes = 0;
     }
 }
 
@@ -439,10 +455,15 @@ HRESULT ProgramTick(void) {
     g_pDevice->SetWorldTransformMatrix(world);
     g_pDevice->GetVertexManager()->Render(g_sMesh);
 
-    world.Translate(0.0f, 9.0f, 0.0f);
+    world.RotaX(AWEPI);
+    world.Translate(9.0f, 9.0f, 0.0f);
     g_pDevice->SetWorldTransformMatrix(world);
     g_pDevice->GetVertexManager()->Render(g_sMesh2);
-    
+
+    world.Identity();
+    world.Translate(-9.0f, 9.0f, 0.0f);
+    g_pDevice->SetWorldTransformMatrix(world);
+    g_pDevice->GetVertexManager()->Render(g_sMesh3);
 
     // flip backbuffer to front
     g_pDevice->EndRendering();
@@ -540,7 +561,8 @@ void GenGrid(int numVertRows, int numVertCols, float dx, float dz, const AWEVect
     // Floor
     z = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, fSpec);
     //g_pDevice->GetSkinManager()->AddTexture(z, "wood-floorboards.dds", false, 0.0f, NULL, 0);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(VID_UU, z, g_nVerts, g_nIndis, g_Vertex, g_Index, &g_sMesh);
+
+    g_pDevice->GetVertexManager()->CreateStaticBuffer( z, g_nVerts, sizeof(VERTEX), g_Vertex, g_nIndis, g_Index, &g_sMesh);
 
     
     delete[] g_Vertex;

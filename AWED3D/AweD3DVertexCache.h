@@ -32,13 +32,20 @@ typedef struct AWESTATICBUFFER_TYPE
 	int			nNumIndis;
 	int			nNumTris;
 
-	AWESOMEVERTEXID VID;
-
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
-
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBufferGPU = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexBufferGPU = nullptr;
+
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexBufferUploader = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexBufferUploader = nullptr;
+
+	// System memory copies.  Use Blobs because the vertex/index format can be generic.
+	// It is up to the client to cast appropriately.  
+	Microsoft::WRL::ComPtr<ID3DBlob> vertexBufferCPU = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> indexBufferCPU = nullptr;
+
 } AWESOMESTATICBUFFER;
 
 //----------------------------------------------------------------------
@@ -57,8 +64,8 @@ public:
 		AweD3DSkinManager* pSkinMan, AweD3D* pAweD3D);
 
 	// Public functions
-	HRESULT		 CreateStaticBuffer(AWESOMEVERTEXID VertexID, UINT nSkinID, UINT nVerts, UINT nIdis, const void* pVerts,
-		const WORD* pIndis, UINT* pnID);
+	HRESULT		 CreateStaticBuffer(UINT nSkinID, UINT nVerts, int nVertsStride, const void* pVerts,
+		UINT nIndis, const WORD* pIndis, UINT* pnID);
 	HRESULT		 Render(UINT nSBufferID);
 
 private:

@@ -35,6 +35,7 @@
 #include "AweD3DCommandQueue.h"
 #include "AweD3DSkinManager.h"
 #include "AweD3DVertexCache.h"
+#include "AweD3DUploadBuffer.h"
 #include "AweUtil.h"
 #include "Awe.h"
 #include <vector>
@@ -147,9 +148,11 @@ private:
 	void ResizeSwapChain();
 	void UpdateRenderTargetView();
 	void UpdateDepthStencilView();
+	void InitUploadBuffers();
 	
 	
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t numDescriptors);
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, 
+		uint32_t numDescriptors);
 		
 
 	void OnResize();
@@ -161,7 +164,8 @@ private:
 
 	// Camera and projection things
 	void SetProjMatrix();
-	void ComputeMVPMatrix();
+	void UpdateMainPassVariablesCB();
+	void UpdatePerObjectVariablesCB();
 
 
 private:
@@ -179,9 +183,10 @@ private:
 	float					m_fNear;
 	float					m_fFar;
 	bool					m_bIsSceneRunning;
+	bool					m_bSettedPassVariablesCB;
 	UINT					m_nActiveSkin;
 
-	AWEMatrix m_WorldMatrix;
+	//AWEMatrix m_WorldMatrix;
 	AWEMatrix m_ViewMatrix;
 	AWEMatrix m_ProjectionMatrix;
 
@@ -232,7 +237,15 @@ private:
 	// Meshes list
 	AweD3DVertexCacheManager m_VertexManager;
 
-	AWED3DENGINEVARS m_EngineVariables;
+	// Per pass variables sent to the shader
+	std::unique_ptr<AweD3DUploadBuffer<AWEPASSVARIABLES>> m_CbUploadPassVariables = nullptr; // Upload constant buffer
+	AWEPASSVARIABLES m_PassVariables;														 // The actual variable
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_CbvHeapPassVariables = nullptr;			 // The heap
+
+	// Per object variables sent to the shader
+	std::unique_ptr<AweD3DUploadBuffer<AWEPEROBJECTVARIABLES>> m_CbUploadPerObjectVariables = nullptr;	// Upload constant buffer
+	AWEPEROBJECTVARIABLES m_PerObjectVariables;															// The actual variable
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_CbvHeapPerObjectVariables = nullptr;					// The heap
 };
 
 #endif // !AWED3D_H

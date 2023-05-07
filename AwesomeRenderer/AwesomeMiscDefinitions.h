@@ -70,6 +70,17 @@ typedef struct PVERTEX_TYPE {
 
 // Untransformed unlit vertex
 typedef struct VERTEX_TYPE {
+	VERTEX_TYPE(){}
+	VERTEX_TYPE(
+		float px, float py, float pz,
+		float nx, float ny, float nz,
+		float u, float v) :
+		x(px), y(py), z(pz),
+		tu(u), tv(v)
+	{
+		vcN[0] = nx; vcN[1] = ny; vcN[2] = nz;
+	};
+	
 	float x, y, z;
 	float vcN[3];
 	float tu, tv;
@@ -83,15 +94,30 @@ typedef struct LVERTEX_TYPE {
 } LVERTEX;
 
 
-typedef struct AWED3DENGINEVARIABLES_TYPE
+typedef struct AWEPERPASSVARIABLES_TYPE
 {
-	AWEMatrix	 mWVP;											// World view proj combo matrix;
-	AWEMatrix	 mWorldInverseTranspose;						// World matrix inversed and transposed
+	//AWEMatrix	 mWVP;											// World view proj combo matrix;
+	//AWEMatrix	 mWorldInverseTranspose;						// World matrix inversed and transposed
+	AWEMatrix mView;
+	AWEMatrix mInvView;
+	AWEMatrix mProj;
+	AWEMatrix mInvProj;
+	AWEMatrix mViewProj;
+	AWEMatrix mInvViewProj;
+	AWEVector vcEyePosW;
 
 	AWESOMECOLOR cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };    // Diffuse light color
 	AWEVector    vcLightVecW = AWEVector(0.0f, 1.0f, 0.0f);		// Diffuse light vector
-	//AWESOMECOLOR cAmbientLight = { 0.6f, 0.6f, 0.6f, 1.0f };	// Ambient light color
+	AWESOMECOLOR cAmbientLight = { 0.6f, 0.6f, 0.6f, 1.0f };	// Ambient light color
 	AWESOMECOLOR cSpecularLight = { 0.7f, 0.7f, 0.7f, 1.0f };   // Specular light color
 }
-AWED3DENGINEVARS;
+AWEPASSVARIABLES;
+
+typedef struct AWEPEROBJECTVARIABLES_TYPE
+{
+	AWEMatrix	 mWorld;											// World view proj combo matrix;
+	AWEMatrix	 mWorldInverseTranspose;						// World matrix inversed and transposed
+	AWESOMEMATERIAL material;
+}
+AWEPEROBJECTVARIABLES;
 #endif

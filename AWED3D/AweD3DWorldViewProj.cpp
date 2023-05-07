@@ -34,6 +34,9 @@ void AweD3D::SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, con
 
 	DirectX::XMMATRIX xMatrixLookTo = DirectX::XMMatrixLookToLH(xeyePosition, xfocusPoint, xupDirection);
 	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*) &m_ViewMatrix, xMatrixLookTo);
+
+	// Updating the pass variables CB
+	m_PassVariables.vcEyePosW = vcPos;
 }
 
 //-----------------------------------------------------------------------------
@@ -49,12 +52,30 @@ void AweD3D::SetProjMatrix()
 }
 
 //-----------------------------------------------------------------------------
-// Name: ComputeMVPMatrix
-// Desc: Computes model(world)-view-projection matrix and updates the 
-//		 AWED3DENGINEVARS register
+// Name: UpdateMainPassVariablesCB
+// Desc: Computes the main pass variables
 //-----------------------------------------------------------------------------
-void AweD3D::ComputeMVPMatrix()
+void AweD3D::UpdateMainPassVariablesCB()
 {
+	DirectX::XMMATRIX view = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&m_ViewMatrix);
+	DirectX::XMMATRIX proj = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&m_ProjectionMatrix);
+	DirectX::XMMATRIX viewProj = DirectX::XMMatrixMultiply(view, proj);
+	DirectX::XMMATRIX invView = DirectX::XMMatrixInverse(&XMMatrixDeterminant(view), view);
+	DirectX::XMMATRIX invProj = DirectX::XMMatrixInverse(&XMMatrixDeterminant(proj), proj);
+	DirectX::XMMATRIX invViewProj = DirectX::XMMatrixInverse(&XMMatrixDeterminant(viewProj), viewProj);
+
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mView, DirectX::XMMatrixTranspose(view));
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mInvView, DirectX::XMMatrixTranspose(invView));
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mProj, DirectX::XMMatrixTranspose(proj));
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mInvProj, DirectX::XMMatrixTranspose(invProj));
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mViewProj, DirectX::XMMatrixTranspose(viewProj));
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mInvViewProj, DirectX::XMMatrixTranspose(invViewProj));
+
+	m_CbUploadPassVariables->CopyData(0, m_PassVariables);
+
+
+	/*
+
 	DirectX::XMMATRIX xWorldMatrix = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&m_WorldMatrix);
 	DirectX::XMMATRIX xViewMatrix  = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&m_ViewMatrix);
 	DirectX::XMMATRIX xProjMatrix  = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&m_ProjectionMatrix);
@@ -63,7 +84,16 @@ void AweD3D::ComputeMVPMatrix()
 	xmvpMatrix = XMMatrixMultiply(xmvpMatrix, xProjMatrix);
 	xmvpMatrix = XMMatrixTranspose(xmvpMatrix);
 
-	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_EngineVariables.mWVP, xmvpMatrix);
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_EngineVariables.mWVP, xmvpMatrix);*/
+}
+
+//-----------------------------------------------------------------------------
+// Name: UpdatePerObjectVariablesCB
+// Desc: Computes the main per object variables
+//-----------------------------------------------------------------------------
+void AweD3D::UpdatePerObjectVariablesCB()
+{
+	m_CbUploadPerObjectVariables->CopyData(0, m_PerObjectVariables);
 }
 
 //-----------------------------------------------------------------------------
@@ -73,13 +103,15 @@ void AweD3D::ComputeMVPMatrix()
 //-----------------------------------------------------------------------------
 void AweD3D::SetWorldTransformMatrix(const AWEMatrix& mWorld)
 {
-	m_WorldMatrix = mWorld;
+	m_PerObjectVariables.mWorld = mWorld;
+	DirectX::XMMATRIX world = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&m_PerObjectVariables.mWorld);
+	XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PerObjectVariables.mWorld, XMMatrixTranspose(world));
 
 	// Calculating the inverse transpose taking advantage of the DirectX's SIMD 
-	DirectX::XMMATRIX xWorldInverseTranspose = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&m_WorldMatrix);
+	DirectX::XMMATRIX xWorldInverseTranspose = DirectX::XMLoadFloat4x4((DirectX::XMFLOAT4X4*)&mWorld);
 	xWorldInverseTranspose = XMMatrixInverse(0, xWorldInverseTranspose);
 	xWorldInverseTranspose = XMMatrixTranspose(xWorldInverseTranspose);
 
-	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_EngineVariables.mWorldInverseTranspose, xWorldInverseTranspose);
+	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PerObjectVariables.mWorldInverseTranspose, xWorldInverseTranspose);
 
 }

@@ -46,8 +46,8 @@ void AweD3DVertexCacheManager::Init(Microsoft::WRL::ComPtr<ID3D12Device2> pDevic
 // Desc: Create a static vertex/index buffer for the given data and returns
 //		 a handle to that buffer for later rendering processes
 //-----------------------------------------------------------------------------
-HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(AWESOMEVERTEXID VertexID, UINT nSkinID, UINT nVerts,
-	UINT nIndis, const void* pVerts, const WORD* pIndis, UINT* pnID)
+HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(UINT nSkinID, UINT nVerts, int nVertsStride, const void* pVerts,
+	UINT nIndis, const WORD* pIndis, UINT* pnID)
 {
 	HRESULT  hr;
 	AWESOMESTATICBUFFER awesomeStaticBuffer;
@@ -55,21 +55,7 @@ HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(AWESOMEVERTEXID VertexID, U
 	awesomeStaticBuffer.nNumVerts = nVerts;
 	awesomeStaticBuffer.nNumIndis = nIndis;
 	awesomeStaticBuffer.nSkinID = nSkinID;
-	awesomeStaticBuffer.VID = VertexID;
-
-	// Get size and format of vertex
-	switch (VertexID) {
-		case VID_PS: {
-			awesomeStaticBuffer.nStride = sizeof(PVERTEX);
-		} break;
-		case VID_UU: {
-			awesomeStaticBuffer.nStride = sizeof(VERTEX);
-		} break;
-		case VID_UL: {
-			awesomeStaticBuffer.nStride = sizeof(LVERTEX);
-		} break;
-		default: return E_INVALIDARG;
-	}
+	awesomeStaticBuffer.nStride = nVertsStride;
 
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
 
@@ -92,7 +78,13 @@ HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(AWESOMEVERTEXID VertexID, U
 		indexBufferView->Format = DXGI_FORMAT_R16_UINT;
 		indexBufferView->SizeInBytes = (unsigned int)(nIndis * sizeof(WORD));
 
-		awesomeStaticBuffer.indexBuffer = indexBuffer;
+		awesomeStaticBuffer.indexBufferGPU = indexBuffer;
+		awesomeStaticBuffer.indexBufferUploader = intermediateIndexBuffer;
+
+		UINT indexBufferByteSize = nIndis * sizeof(WORD);
+
+		ThrowIfFailed(D3DCreateBlob(indexBufferByteSize, &awesomeStaticBuffer.indexBufferCPU));
+		CopyMemory(awesomeStaticBuffer.indexBufferCPU->GetBufferPointer(), pIndis, indexBufferByteSize);
 	}
 	else
 	{
@@ -113,7 +105,12 @@ HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(AWESOMEVERTEXID VertexID, U
 	vertexBufferView->SizeInBytes = (unsigned int)(nVerts * awesomeStaticBuffer.nStride);
 	vertexBufferView->StrideInBytes = awesomeStaticBuffer.nStride;
 
-	awesomeStaticBuffer.vertexBuffer = vertexBuffer;
+	awesomeStaticBuffer.vertexBufferGPU = vertexBuffer;
+	awesomeStaticBuffer.vertexBufferUploader = intermediateVertexBuffer;
+
+	UINT vertexBufferByteSize = nVertsStride * nVerts;
+	ThrowIfFailed(D3DCreateBlob(vertexBufferByteSize, &awesomeStaticBuffer.vertexBufferCPU));
+	CopyMemory(awesomeStaticBuffer.vertexBufferCPU->GetBufferPointer(), pVerts, vertexBufferByteSize);
 
 	// TODO: thread safety
 	*pnID = m_pSB.size();
@@ -198,16 +195,26 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	// Setting the engine variables to the shader
-	m_pAweD3D->ComputeMVPMatrix();
-	commandList->SetGraphicsRoot32BitConstants(0, sizeof(AWED3DENGINEVARS) / 4, &m_pAweD3D->m_EngineVariables, 0);
+	// Update the per pass CB 
+	// TODO: update to only set once per pass
+	//if (!m_pAweD3D->m_bSettedPassVariablesCB) {
+		// Setting the engine variables to the shader
+		ID3D12DescriptorHeap* descriptorHeaps[] = { m_pAweD3D->m_CbvHeapPassVariables.Get() };
+		commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
-	// Setting the material variables to the shader
+		m_pAweD3D->UpdateMainPassVariablesCB();
+		commandList->SetGraphicsRootConstantBufferView(1, m_pAweD3D->m_CbUploadPassVariables->Resource()->GetGPUVirtualAddress());
+		m_pAweD3D->m_bSettedPassVariablesCB = true;
+	//}
+
+	// Setting the per object variables to the shader
 	UINT materialIndex = m_pSkinMan->m_Skins[m_pSB[nID].nSkinID].nMaterial;
 	if (materialIndex < MAX_ID) {
-		AWESOMEMATERIAL* pMaterial = &m_pSkinMan->m_Materials[materialIndex];
-		commandList->SetGraphicsRoot32BitConstants(1, sizeof(AWESOMEMATERIAL) / 4, pMaterial, 0);
+		m_pAweD3D->m_PerObjectVariables.material = m_pSkinMan->m_Materials[materialIndex];
 	}
+	m_pAweD3D->UpdatePerObjectVariablesCB();
+	commandList->SetGraphicsRootConstantBufferView(0, m_pAweD3D->m_CbUploadPerObjectVariables->Resource()->GetGPUVirtualAddress());
+	
 
 	// Activate buffers
 	// Index buffer used?
@@ -243,6 +250,7 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 		commandList->DrawInstanced(m_pSB[nID].nNumVerts, 1, 0, 0);
 	}
 	m_pCommandQueue->ExecuteCommandList(commandList);
+	m_pCommandQueue->Flush();
 	return hr;
 
 }

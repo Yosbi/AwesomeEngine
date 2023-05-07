@@ -8,6 +8,11 @@ AwesomeOBJLoader::AwesomeOBJLoader()
 
 AwesomeOBJLoader::~AwesomeOBJLoader() {}
 
+int AwesomeOBJLoader::getVertexSize()
+{
+	return sizeof(VERTEX);
+}
+
 void AwesomeOBJLoader::loadOBJ(std::wstring sFileName)
 {
 	std::ifstream inFile(GetAssetFullPath(sFileName.c_str()));
