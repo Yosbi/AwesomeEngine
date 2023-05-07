@@ -1,4 +1,4 @@
-#include "main.h"         // prototypes and stuff
+#include "Pillars.h"         // prototypes and stuff
 
 //include our library
 #pragma comment(lib, "AwesomeInput.lib")
@@ -11,7 +11,7 @@
 HWND      g_hWnd = NULL;
 HINSTANCE g_hInst = NULL;
 TCHAR     g_szAppClass[] = TEXT("FrameWorktest");
-std::wstring g_windowCaption = L"Awesome Engine v0.1 - By Yosbi Alves Saenz";
+std::wstring g_windowCaption = L"Pillars - Awesome Engine v0.1 - By Yosbi Alves Saenz";
 
 // application stuff
 BOOL g_bIsActive = FALSE;
@@ -86,8 +86,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         g_windowCaption.c_str(),
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU |
         WS_MINIMIZEBOX | WS_VISIBLE,
-        GetSystemMetrics(SM_CXSCREEN) / 2 - (1280/2),
-        GetSystemMetrics(SM_CYSCREEN) / 2 - (720/2),
+        GetSystemMetrics(SM_CXSCREEN) / 2 - (1280 / 2),
+        GetSystemMetrics(SM_CYSCREEN) / 2 - (720 / 2),
         1280, 720, NULL, NULL, hInst, NULL)))
         return 0;
 
@@ -99,7 +99,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
 
     // try to start the engine
-    if (FAILED(hr = RendererStartup())) 
+    if (FAILED(hr = RendererStartup()))
         return E_ABORT;
 
     // Try to start the input module
@@ -114,7 +114,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     initCamera();
 
     ShowWindow(hWnd, SW_SHOW);
-    
+
     // everything went smooth
     g_pDevice->SetClearColor(1.0f, 1.0f, 1.0f);
 
@@ -127,7 +127,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
             DispatchMessage(&msg);
         }
         // do one frame
-        if (g_bIsActive) 
+        if (g_bIsActive)
             ProgramTick();
     }
 
@@ -138,14 +138,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
     // return back to windows
     return (int)msg.wParam;
-} 
+}
 
 void initCamera() {
     AWEVector pos = AWEVector(0, 30, -30);
-    AwesomeFreeCam *freeCam1 = new AwesomeFreeCam();
+    AwesomeFreeCam* freeCam1 = new AwesomeFreeCam();
     freeCam1->SetPos(pos);
-    freeCam1->SetRotation(( 45 * AWEPI) / 180.0f, 0.0f, 0.0f);
-       
+    freeCam1->SetRotation((45 * AWEPI) / 180.0f, 0.0f, 0.0f);
+
     pos = AWEVector(0, 10, 30);
     AwesomeFreeCam* freeCam2 = new AwesomeFreeCam();
     freeCam2->SetPos(pos);
@@ -239,7 +239,7 @@ void updateInput()
     {
         thrust2 = 5.0f;
     }
-    
+
     // if there is no animation we can update
     if (g_dirLerp.GetAnimationFinished())
     {
@@ -256,9 +256,9 @@ void updateInput()
             ((AwesomeFirstPersonCam*)(cam))->SetSlideSpeed(thrust2);
         }
     }
-    
+
     updateCamera(g_aweTimer.GetElapsed());
-   
+
 }
 
 /**
@@ -266,57 +266,57 @@ void updateInput()
  */
 LRESULT WINAPI MsgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-    
+
         // our app has the focus
-        case WM_ACTIVATE: {
-            g_bIsActive = (BOOL)wParam;
-        } break;
-    
+    case WM_ACTIVATE: {
+        g_bIsActive = (BOOL)wParam;
+    } break;
+
         // User press the x so we are ordered to suicide
-        case WM_DESTROY: {
+    case WM_DESTROY: {
+        g_bDone = true;
+        PostQuitMessage(0);
+        return 1;
+    }
+
+                   // key was pressed
+    case WM_KEYDOWN: {
+        switch (wParam) {
+        case VK_ESCAPE: {
             g_bDone = true;
-            PostQuitMessage(0);
-            return 1;
-        }
+            PostMessage(hWnd, WM_CLOSE, 0, 0);
+            return 0;
+        case 'C':
+            if (g_posLerp.GetAnimationFinished()) {
+                AwesomeBaseCam* oldCam = g_vcCameras.at(g_nSelectedCamera);
+                AWEVector oldPos = oldCam->GetPos();
+                AWEVector oldDir = oldCam->GetDir();
+                AWEVector oldUp = oldCam->GetUp();
 
-            // key was pressed
-        case WM_KEYDOWN: {
-            switch (wParam) {
-                case VK_ESCAPE: {
-                    g_bDone = true;
-                    PostMessage(hWnd, WM_CLOSE, 0, 0);
-                    return 0;
-                case 'C':
-                    if (g_posLerp.GetAnimationFinished()) {
-                        AwesomeBaseCam* oldCam = g_vcCameras.at(g_nSelectedCamera);
-                        AWEVector oldPos = oldCam->GetPos();
-                        AWEVector oldDir = oldCam->GetDir();
-                        AWEVector oldUp = oldCam->GetUp();
+                g_nSelectedCamera++;
+                if (g_nSelectedCamera % g_vcCameras.size() == 0)
+                    g_nSelectedCamera = 0;
 
-                        g_nSelectedCamera++;
-                        if (g_nSelectedCamera % g_vcCameras.size() == 0)
-                            g_nSelectedCamera = 0;
+                AwesomeBaseCam* newCam = g_vcCameras.at(g_nSelectedCamera);
+                AWEVector newPos = newCam->GetPos();
+                AWEVector newDir = newCam->GetDir();
+                AWEVector newUp = newCam->GetUp();
 
-                        AwesomeBaseCam* newCam = g_vcCameras.at(g_nSelectedCamera);
-                        AWEVector newPos = newCam->GetPos();
-                        AWEVector newDir = newCam->GetDir();
-                        AWEVector newUp = newCam->GetUp();
-
-                        g_posLerp.Set(oldPos, newPos);
-                        g_dirLerp.Set(oldDir, newDir);
-                        g_upLerp.Set(oldUp, newUp);
-                    }
-                    
-
-                    //g_positionLerp
-                    break;
-                    
-                } break;
-
+                g_posLerp.Set(oldPos, newPos);
+                g_dirLerp.Set(oldDir, newDir);
+                g_upLerp.Set(oldUp, newUp);
             }
+
+
+            //g_positionLerp
+            break;
+
         } break;
 
-        default: break;
+        }
+    } break;
+
+    default: break;
     }
 
     return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -331,12 +331,12 @@ HRESULT RendererStartup() {
     g_pRenderer = new AwesomeRenderer(g_hInst);
 
     // create a device for the chosen api
-    if (FAILED(g_pRenderer->CreateDevice())) 
+    if (FAILED(g_pRenderer->CreateDevice()))
         return E_FAIL;
 
     // get a pointer on that device
     g_pDevice = g_pRenderer->GetDevice();
-    if (g_pDevice == nullptr) 
+    if (g_pDevice == nullptr)
         return E_FAIL;
 
     // init render device
@@ -345,7 +345,7 @@ HRESULT RendererStartup() {
     }
 
     return S_OK;
-} 
+}
 
 
 HRESULT LoadAssets() {
@@ -368,7 +368,7 @@ HRESULT LoadAssets() {
     g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureMirror, false, 1.0f);
     g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureCarusso, false, 1.0f);*/
 
-    
+
     //GenGrid(50, 50, 1.0f, 1.0f, AWEVector(0.0f, 0.0f, 0.0f));
     //-------------------------------------------------------------------------------------------------------------
     /*
@@ -400,9 +400,9 @@ HRESULT LoadAssets() {
     //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateCylinder(4.0f, 1.0f, 7.0f, 30, 40);
     //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateGeosphere(7.0f, 5);
     //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateBox(10.0f, 7.0f, 7.0f, 4);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, mesh.Vertices.size(), mesh.getVertexSize(), mesh.Vertices.data(), 
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, mesh.Vertices.size(), mesh.getVertexSize(), mesh.Vertices.data(),
         mesh.Indices32.size(), mesh.GetIndices16().data(), &g_sMesh3);*/
-    //-------------------------------------------------------------------------------------------------------------
+        //-------------------------------------------------------------------------------------------------------------
 
     AWESOMECOLOR terrainDiff = { 0.454f, 0.4f, 0.231f, 1.0f };
     AWESOMECOLOR terrainAmbient = { 0.3f, 0.3f,0.3f, 1.0f };
@@ -446,7 +446,7 @@ HRESULT ProgramCleanup(void) {
     }
 
     return S_OK;
-} 
+}
 
 void updateFPS() {
 
@@ -460,7 +460,7 @@ void updateFPS() {
     passes++;
 
     if (timeCount > 1.0f) {
-        std::wstring newCaption = g_windowCaption + L" | " + std::to_wstring(fps/passes);
+        std::wstring newCaption = g_windowCaption + L" | " + std::to_wstring(fps / passes);
 
         // Now set the new caption to the main window. 
         SetWindowText(g_hWnd, newCaption.c_str());
@@ -475,7 +475,7 @@ void updateFPS() {
  * Do one frame.
  */
 HRESULT ProgramTick(void) {
-   
+
     g_aweTimer.Update();
 
     updateFPS();
@@ -484,7 +484,7 @@ HRESULT ProgramTick(void) {
 
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
-    
+
     AWEMatrix mWorld;
     mWorld.Translate(0.0f, 0.5f, 0.0f);
     AWEMatrix mScaling;
@@ -528,4 +528,4 @@ HRESULT ProgramTick(void) {
     g_pDevice->EndRendering();
 
     return S_OK;
-} 
+}
