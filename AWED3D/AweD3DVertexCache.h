@@ -16,21 +16,35 @@
 //----------------------------------------------------------------------
 #include "Awe.h"
 #include "AweD3DSkinManager.h"
+#include <memory>
+
 
 class AweD3D; // Forward declaration
 
-//----------------------------------------------------------------------
-// Name: YSTATICBUFFER
-// Desc: Struct for static vertex/index data
-//----------------------------------------------------------------------
-typedef struct AWESTATICBUFFER_TYPE
+
+enum AWEBUFFERTYPE
 {
+	DYNAMIC = 0,
+	STATIC = 1
+
+};
+
+//----------------------------------------------------------------------
+// Name: AWESTATICBUFFER
+// Desc: Struct for static vertex/index data
+// TODO: Encapsulate better this in class with its own methods for the
+// static and dynamic buffers
+//----------------------------------------------------------------------
+class AWESOMESTATICBUFFER
+{
+public:
 	int			nStride;
 	UINT		nSkinID;
 	bool		bIndis;
 	int			nNumVerts;
 	int			nNumIndis;
 	int			nNumTris;
+	AWEBUFFERTYPE BufferType;
 
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
@@ -46,7 +60,11 @@ typedef struct AWESTATICBUFFER_TYPE
 	Microsoft::WRL::ComPtr<ID3DBlob> vertexBufferCPU = nullptr;
 	Microsoft::WRL::ComPtr<ID3DBlob> indexBufferCPU = nullptr;
 
-} AWESOMESTATICBUFFER;
+	// If we have a dynamic buffer we upload it here
+	// TODO: Allow flexibility on the vertex type here
+	std::shared_ptr<AweD3DUploadBuffer<VERTEX>> m_DynamicVertexUploadBuffer = nullptr;	// Upload buffer
+
+} ;
 
 //----------------------------------------------------------------------
 // Name: AweD3DVertexCacheManager
@@ -66,7 +84,10 @@ public:
 	// Public functions
 	HRESULT		 CreateStaticBuffer(UINT nSkinID, UINT nVerts, int nVertsStride, const void* pVerts,
 		UINT nIndis, const WORD* pIndis, UINT* pnID);
-	HRESULT		 Render(UINT nSBufferID);
+	HRESULT		 CreateDynamicBuffer(UINT nSkinID, UINT nVerts, VERTEX* pVerts,
+		UINT nIndis, const WORD* pIndis, UINT* pnID);
+	HRESULT		UpdateDynamicBuffer(UINT nSBufferID, VERTEX* pVerts);
+	HRESULT		Render(UINT nSBufferID);
 
 private:
 	// Private functions	
@@ -82,7 +103,7 @@ private:
 	AweD3DSkinManager* m_pSkinMan;							// The skin manager
 	AweD3D* m_pAweD3D;										// The AweD3D
 
-	std::vector<AWESOMESTATICBUFFER> m_pSB;			// Array of Static vertex buffer
+	std::vector<AWESOMESTATICBUFFER> m_pSB;					// Array of Static vertex buffer
 };
 
 #endif

@@ -58,18 +58,6 @@ public:
 	// Change background color
 	virtual void	SetClearColor(float fRed, float fGreen, float fBlue) = 0;
 
-	// Section Mesh:
-	// Loads a new mesh
-	//virtual unsigned int LoadMesh(std::wstring sFileName) = 0;
-	//virtual unsigned int LoadMesh(std::wstring sFileName, float red, float green, float blue, float alpha) = 0;
-
-	// Set a mesh to gpu memory
-	//virtual void LoadMeshToGPU(unsigned int meshIndex) = 0;
-
-	// Render a mesh in gpu memory, if the mesh is not in gpu memory it will load it
-	// Note: it is better to use the SetMeshToGPUMemory in the loading stage
-	//virtual void RenderMesh(unsigned int meshIndex) = 0;
-
 	// Section Camera-projection:
 	// View matrix form position, fix point, worldup
 	virtual void SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp) = 0;
@@ -83,7 +71,17 @@ public:
 	// Set FoV
 	virtual void setFoV(float FoV) = 0;
 
-
+	//---------------------------
+	// Lightning stuff
+	//---------------------------
+	virtual void SetAmbientLight(AWESOMECOLOR color) = 0;
+	virtual void SetDiffuseLight(AWESOMECOLOR color) = 0;
+	virtual void SetSpecularLight(AWESOMECOLOR color) = 0;
+	virtual void SetLightDirection(AWEVector vcDir) = 0;
+	
+	//---------------------------
+	// Skin Manager stuff
+	//---------------------------
 	// Skin manager
 	virtual AwesomeSkinManager* GetSkinManager() = 0;
 

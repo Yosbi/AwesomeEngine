@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <string>
 #include <comdef.h>
+//#include <memory>
 #include "AweUtil.h"
 #include "AweD3DException.h"
 #include "AweD3DUploadBuffer.h"

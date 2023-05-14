@@ -1,4 +1,4 @@
-#include "Pillars.h"         // prototypes and stuff
+#include "main.h"         // prototypes and stuff
 
 //include our library
 #pragma comment(lib, "AwesomeInput.lib")
@@ -44,11 +44,14 @@ AwesomeLinearInterpolation g_posLerp;
 AwesomeLinearInterpolation g_dirLerp;
 AwesomeLinearInterpolation g_upLerp;
 
-UINT g_sMeshBox = 0;
-UINT g_sMeshGrid = 0;
-UINT g_sMeshSphere = 0;
-UINT g_sMeshCylinder = 0;
+UINT g_sMeshTerrain = 0;
+UINT g_sMeshWaves = 0;
+//UINT g_sMeshGrid = 0;
+//UINT g_sMeshSphere = 0;
+//UINT g_sMeshCylinder = 0;
 
+AwesomeGeometryGenerator::AwesomeMeshData g_cpuWaves;
+Waves g_waves(160, 160, 1.0f, 0.03f, 4.0f, 0.2f);
 //VERTEX* g_Vertex = NULL;
 //int g_nIndis = 0;
 //int g_nVerts = 0;
@@ -111,12 +114,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     if (FAILED(hr = LoadAssets()))
         return E_ABORT;
 
+    initScene();
+
     initCamera();
 
     ShowWindow(hWnd, SW_SHOW);
 
     // everything went smooth
-    g_pDevice->SetClearColor(1.0f, 1.0f, 1.0f);
+   
 
     // main loop
     while (!g_bDone) {
@@ -138,6 +143,24 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
     // return back to windows
     return (int)msg.wParam;
+}
+
+
+void initScene() {
+    g_pDevice->SetClearColor(0.690196097f, 0.768627524f, 0.870588303f); // A light sky blue
+
+    AWESOMECOLOR ambient = { 0.6f, 0.6f, 0.6f, 1.0f};
+    g_pDevice->SetAmbientLight(ambient);
+
+    AWESOMECOLOR diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_pDevice->SetDiffuseLight(diffuse);
+
+    AWESOMECOLOR specular = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_pDevice->SetSpecularLight(specular);
+
+    AWEVector vcLight = AWEVector(0.0f, 1.0f, -1.0f);
+    g_pDevice->SetLightDirection(vcLight);
+
 }
 
 void initCamera() {
@@ -224,20 +247,20 @@ void updateInput()
 
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_W))
     {
-        thrust = 5;
+        thrust = 20;
     }
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_S))
     {
-        thrust -= 5;
+        thrust -= 20;
     }
     //float Thrust = 0.0f;
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_A))
     {
-        thrust2 = -5.0f;
+        thrust2 = -20.0f;
     }
     if (g_pYInputDevice->IsPressed(IDV_KEYBOARD, AWEVK_D))
     {
-        thrust2 = 5.0f;
+        thrust2 = 20.0f;
     }
 
     // if there is no animation we can update
@@ -347,91 +370,103 @@ HRESULT RendererStartup() {
     return S_OK;
 }
 
+void UpdateWaves()
+{
+    // Every quarter second, generate a random wave.
+    static float t_base = 0.0f;
+    static float t_passed = 0.0f;
+    t_passed += g_aweTimer.GetElapsed();
+    
+    if ((t_passed - t_base) >= 0.25f)
+    {
+        t_base += 0.25f;
+
+        int i = Rand(4, g_waves.RowCount() - 5);
+        int j = Rand(4, g_waves.ColumnCount() - 5);
+
+        float r = RandF(0.2f, 0.5f);
+
+        g_waves.Disturb(i, j, r);
+    }
+
+    // Update the wave simulation.
+    g_waves.Update(g_aweTimer.GetElapsed());
+
+    UINT count = g_waves.VertexCount();
+    UINT size = g_cpuWaves.Vertices.size();
+    // Update the wave vertex buffer with the new solution.
+    for (int i = 0; i < g_waves.VertexCount(); ++i)
+    {
+        AWEVector v = g_waves.Position(i);
+        g_cpuWaves.Vertices[i].x = v.x;
+        g_cpuWaves.Vertices[i].y = v.y;
+        g_cpuWaves.Vertices[i].z = v.z;
+
+        AWEVector n = g_waves.Normal(i);
+        g_cpuWaves.Vertices[i].vcN[0] = n.x;
+        g_cpuWaves.Vertices[i].vcN[1] = n.y;
+        g_cpuWaves.Vertices[i].vcN[2] = n.z;
+
+    }
+
+    g_pDevice->GetVertexManager()->UpdateDynamicBuffer(g_sMeshWaves, g_cpuWaves.Vertices.data());
+
+}
+
+
+float GetHillsHeight(float x, float z)
+{
+    return 0.3f * (z * sinf(0.1f * x) + x * cosf(0.1f * z));
+}
+
+AWEVector GetHillsNormal(float x, float z)
+{
+    // n = (-df/dx, 1, -df/dz)
+    AWEVector n(
+        -0.03f * z * cosf(0.1f * x) - 0.3f * cosf(0.1f * z),
+        1.0f,
+        -0.3f * sinf(0.1f * x) + 0.03f * x * sinf(0.1f * z));
+    
+    n.Normalize();
+
+    return n;
+}
 
 HRESULT LoadAssets() {
-
-    //-------------------------------------------------------------------------------------------------------------
-    //Terrain = g_pDevice->LoadMesh(L"terrain.obj", 0.54f, 0.32f, 0.07f, 1.0f);
-    //g_pDevice->LoadMeshToGPU(Terrain);
-
-    //Chinesse = g_pDevice->LoadMesh(L"Chinesse.obj");
-    //g_pDevice->LoadMeshToGPU(Chinesse);
-
-    /*std::wstring textureTilesAddress = L"tiles.jpg";
-    std::wstring textureMirror = L"mirror.jpg";
-    std::wstring textureCarusso = L"Texture_by_FE_Caruso.jpg";
-
-    AWESOMECOLOR ambient = { 1.0f, 1.0f, 1.0f, 1.0f };
-    AWESOMECOLOR spec = { 0.35f, 0.35f, 0.35f, 1.0f };
-    g_nSkinTiles = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
-    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureTilesAddress, false, 1.0f);
-    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureMirror, false, 1.0f);
-    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureCarusso, false, 1.0f);*/
-
-
-    //GenGrid(50, 50, 1.0f, 1.0f, AWEVector(0.0f, 0.0f, 0.0f));
-    //-------------------------------------------------------------------------------------------------------------
-    /*
-    AwesomeOBJLoader loader;
-    loader.loadOBJ(L"terrain.obj");
-
-    std::wstring textureTilesAddress = L"tiles.jpg";
-    AWESOMECOLOR diff = { 0.454f, 0.4f, 0.231f, 1.0f };
-    AWESOMECOLOR ambient = { 0.3f, 0.3f,0.3f, 1.0f };
-    AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
-    g_nSkinTiles = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
-    g_pDevice->GetSkinManager()->AddTexture(g_nSkinTiles, textureTilesAddress, false, 1.0f);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(g_nSkinTiles, loader.getVerteces().size(), loader.getVertexSize(), loader.getVerteces().data(), 0, NULL, &g_sMesh);
-
-
-    AwesomeOBJLoader loader2;
-    loader2.loadOBJ(L"Chinesse.obj");
-
-    std::wstring textureMirror = L"mirror.jpg";
-    AWESOMECOLOR diff2= { 0.5f, 0.5f, 0.5f, 1.0f };
-    AWESOMECOLOR ambient2 = { 0.3f, 0.3f,0.3f, 1.0f };
-    AWESOMECOLOR spec2 = { 0.4f, 0.4f, 0.4f, 1.0f };
-    UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient2, diff2, diff2, spec2, 8.0f);
-    g_pDevice->GetSkinManager()->AddTexture(skin, textureMirror, false, 1.0f);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, loader2.getVerteces().size(), loader2.getVertexSize(), loader2.getVerteces().data(), 0, NULL, &g_sMesh2);
-
-    AwesomeGeometryGenerator geometryGenerator;
-    AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateSphere(7.0f, 30, 30);
-    //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateCylinder(4.0f, 1.0f, 7.0f, 30, 40);
-    //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateGeosphere(7.0f, 5);
-    //AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateBox(10.0f, 7.0f, 7.0f, 4);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, mesh.Vertices.size(), mesh.getVertexSize(), mesh.Vertices.data(),
-        mesh.Indices32.size(), mesh.GetIndices16().data(), &g_sMesh3);*/
-        //-------------------------------------------------------------------------------------------------------------
 
     AWESOMECOLOR terrainDiff = { 0.454f, 0.4f, 0.231f, 1.0f };
     AWESOMECOLOR terrainAmbient = { 0.3f, 0.3f,0.3f, 1.0f };
     AWESOMECOLOR terrainSpec = { 0.4f, 0.4f, 0.4f, 1.0f };
     UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(terrainAmbient, terrainDiff, terrainDiff, terrainSpec, 8.0f);
 
-    AWESOMECOLOR diff = { 0.5f, 0.5f, 0.5f, 1.0f };
+    AWESOMECOLOR diff = { 0.0f, 0.0f, 0.7f, 1.0f };
     AWESOMECOLOR ambient = { 0.3f, 0.3f,0.3f, 1.0f };
     AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
-    UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
+    UINT sea = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
 
+    // Generating terrain
     AwesomeGeometryGenerator geoGen;
-    AwesomeGeometryGenerator::AwesomeMeshData box = geoGen.CreateBox(1.5f, 0.5f, 1.5f, 3);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, box.Vertices.size(), box.getVertexSize(), box.Vertices.data(),
-        box.Indices32.size(), box.GetIndices16().data(), &g_sMeshBox);
+    AwesomeGeometryGenerator::AwesomeMeshData grid = geoGen.CreateGrid(160.0f, 160.0f, 50, 50);
+    std::vector<VERTEX> vertices(grid.Vertices.size());
+    for (size_t i = 0; i < grid.Vertices.size(); ++i)
+    {
+        grid.Vertices[i].y = GetHillsHeight(grid.Vertices[i].x, grid.Vertices[i].z);
+        
+        AWEVector normal = GetHillsNormal(grid.Vertices[i].x, grid.Vertices[i].z);
+        grid.Vertices[i].vcN[0] = normal.x;
+        grid.Vertices[i].vcN[1] = normal.y;
+        grid.Vertices[i].vcN[2] = normal.z;
 
-    AwesomeGeometryGenerator::AwesomeMeshData grid = geoGen.CreateGrid(20.0f, 30.0f, 60, 40);
+    }
     g_pDevice->GetVertexManager()->CreateStaticBuffer(terrainSkin, grid.Vertices.size(), grid.getVertexSize(), grid.Vertices.data(),
-        grid.Indices32.size(), grid.GetIndices16().data(), &g_sMeshGrid);
+        grid.Indices32.size(), grid.GetIndices16().data(), &g_sMeshTerrain);
 
 
-    AwesomeGeometryGenerator::AwesomeMeshData sphere = geoGen.CreateSphere(0.5f, 20, 20);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, sphere.Vertices.size(), sphere.getVertexSize(), sphere.Vertices.data(),
-        sphere.Indices32.size(), sphere.GetIndices16().data(), &g_sMeshSphere);
-
-
-    AwesomeGeometryGenerator::AwesomeMeshData cylinder = geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, cylinder.Vertices.size(), cylinder.getVertexSize(), cylinder.Vertices.data(),
-        cylinder.Indices32.size(), cylinder.GetIndices16().data(), &g_sMeshCylinder);
+    //
+    // Loading waves
+    g_cpuWaves = geoGen.CreateGrid(160.0f, 160.0f, 160.0f, 160.0f);
+    g_pDevice->GetVertexManager()->CreateDynamicBuffer(sea, g_cpuWaves.Vertices.size(), g_cpuWaves.Vertices.data(),
+        g_cpuWaves.Indices32.size(), g_cpuWaves.GetIndices16().data(), &g_sMeshWaves);
 
 
     return S_OK;
@@ -482,48 +517,22 @@ HRESULT ProgramTick(void) {
 
     updateInput();
 
+    UpdateWaves();
+
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
 
     AWEMatrix mWorld;
-    mWorld.Translate(0.0f, 0.5f, 0.0f);
-    AWEMatrix mScaling;
-    mScaling._11 = mScaling._22 = mScaling._33 = 2.0f;
-    g_pDevice->SetWorldTransformMatrix(mScaling * mWorld);
-    g_pDevice->GetVertexManager()->Render(g_sMeshBox);
+    mWorld.Identity();
+    g_pDevice->SetWorldTransformMatrix(mWorld);
+    g_pDevice->GetVertexManager()->Render(g_sMeshTerrain);
 
     mWorld.Identity();
     g_pDevice->SetWorldTransformMatrix(mWorld);
-    g_pDevice->GetVertexManager()->Render(g_sMeshGrid);
+    g_pDevice->GetVertexManager()->Render(g_sMeshWaves);
 
-    // Rendering the spheres and columns
-    for (int i = 0; i < 5; ++i)
-    {
-        AWEMatrix leftCylWorld;
-        leftCylWorld.Translate(-5.0f, 1.5f, -10.0f + i * 5.0f);
 
-        AWEMatrix rightCylWorld;
-        rightCylWorld.Translate(+5.0f, 1.5f, -10.0f + i * 5.0f);
-
-        AWEMatrix leftSphereWorld;
-        leftSphereWorld.Translate(-5.0f, 3.5f, -10.0f + i * 5.0f);
-
-        AWEMatrix rightSphereWorld;
-        rightSphereWorld.Translate(+5.0f, 3.5f, -10.0f + i * 5.0f);
-
-        g_pDevice->SetWorldTransformMatrix(leftCylWorld);
-        g_pDevice->GetVertexManager()->Render(g_sMeshCylinder);
-
-        g_pDevice->SetWorldTransformMatrix(rightCylWorld);
-        g_pDevice->GetVertexManager()->Render(g_sMeshCylinder);
-
-        g_pDevice->SetWorldTransformMatrix(leftSphereWorld);
-        g_pDevice->GetVertexManager()->Render(g_sMeshSphere);
-
-        g_pDevice->SetWorldTransformMatrix(rightSphereWorld);
-        g_pDevice->GetVertexManager()->Render(g_sMeshSphere);
-    }
-
+  
     // flip backbuffer to front
     g_pDevice->EndRendering();
 

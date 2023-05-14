@@ -41,6 +41,116 @@ void AweD3DVertexCacheManager::Init(Microsoft::WRL::ComPtr<ID3D12Device2> pDevic
 	m_pSkinMan = pSkinMan;
 	m_pAweD3D = pAweD3D;
 }
+
+//-----------------------------------------------------------------------------
+// Name: UpdateDynamicBuffer(Manager)
+// Desc: Udate the dynamic buffer with the new data, care!!
+//-----------------------------------------------------------------------------
+HRESULT AweD3DVertexCacheManager::UpdateDynamicBuffer(UINT nSBufferID, VERTEX* pVerts)
+{
+	if (nSBufferID >= m_pSB.size())
+	{
+		return E_INVALIDARG;
+	}
+
+	if (m_pSB[nSBufferID].BufferType != DYNAMIC)
+	{
+		return E_INVALIDARG;
+	}
+
+	for (UINT i = 0; i < m_pSB[nSBufferID].nNumVerts; i++) {
+		m_pSB[nSBufferID].m_DynamicVertexUploadBuffer->CopyData(i, pVerts[i]);
+	}
+
+	//m_pSB[nSBufferID].indexBufferGPU = m_pSB[nSBufferID].m_DynamicVertexUploadBuffer->Resource();
+
+	
+	return S_OK;
+}
+
+
+//-----------------------------------------------------------------------------
+// Name: CreateDynamicBuffer(Manager)
+// Desc: Create a dunamic vertex buffer with a static index buffer for the given 
+// data and returns a handle to that buffer for later rendering processes
+//-----------------------------------------------------------------------------
+HRESULT	AweD3DVertexCacheManager::CreateDynamicBuffer(UINT nSkinID, UINT nVerts, VERTEX* pVerts,
+	UINT nIndis, const WORD* pIndis, UINT* pnID)
+{
+	HRESULT  hr;
+	AWESOMESTATICBUFFER awesomeStaticBuffer;
+
+	awesomeStaticBuffer.nNumVerts = nVerts;
+	awesomeStaticBuffer.nNumIndis = nIndis;
+	awesomeStaticBuffer.nSkinID = nSkinID;
+	awesomeStaticBuffer.nStride = sizeof(VERTEX);
+	awesomeStaticBuffer.BufferType = AWEBUFFERTYPE::DYNAMIC;
+
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
+
+	// Create indexbuffer if needed
+	Microsoft::WRL::ComPtr<ID3D12Resource> indexBuffer;
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateIndexBuffer;
+	if (nIndis > 0)
+	{
+		awesomeStaticBuffer.bIndis = true;
+		awesomeStaticBuffer.nNumTris = int(nIndis / 3.0f);
+
+		// Upload index buffer data to GPU.
+		UpdateBufferResource(commandList,
+			&indexBuffer, &intermediateIndexBuffer,
+			nIndis, sizeof(WORD), pIndis);
+
+		// Create index buffer view.
+		D3D12_INDEX_BUFFER_VIEW* indexBufferView = &awesomeStaticBuffer.indexBufferView;
+		indexBufferView->BufferLocation = indexBuffer->GetGPUVirtualAddress();
+		indexBufferView->Format = DXGI_FORMAT_R16_UINT;
+		indexBufferView->SizeInBytes = (unsigned int)(nIndis * sizeof(WORD));
+
+		awesomeStaticBuffer.indexBufferGPU = indexBuffer;
+		awesomeStaticBuffer.indexBufferUploader = intermediateIndexBuffer;
+
+		UINT indexBufferByteSize = nIndis * sizeof(WORD);
+
+		ThrowIfFailed(D3DCreateBlob(indexBufferByteSize, &awesomeStaticBuffer.indexBufferCPU));
+		CopyMemory(awesomeStaticBuffer.indexBufferCPU->GetBufferPointer(), pIndis, indexBufferByteSize);
+	}
+	else
+	{
+		awesomeStaticBuffer.bIndis = false;
+		awesomeStaticBuffer.nNumTris = int(nVerts / 3.0f);
+	}
+
+
+	// Upload vertex buffer data to GPU.
+	awesomeStaticBuffer.m_DynamicVertexUploadBuffer = std::make_shared<AweD3DUploadBuffer<VERTEX>>(m_pDevice.Get(), nVerts, false);
+
+	for (UINT i = 0; i < nVerts; i++) {
+			awesomeStaticBuffer.m_DynamicVertexUploadBuffer->CopyData(i, pVerts[i]);
+	}
+
+	awesomeStaticBuffer.vertexBufferGPU = awesomeStaticBuffer.m_DynamicVertexUploadBuffer->Resource();
+
+	// Create the vertex buffer view.
+	D3D12_VERTEX_BUFFER_VIEW* vertexBufferView = &awesomeStaticBuffer.vertexBufferView;
+	vertexBufferView->BufferLocation = awesomeStaticBuffer.vertexBufferGPU->GetGPUVirtualAddress();
+	vertexBufferView->SizeInBytes = (unsigned int)(nVerts * awesomeStaticBuffer.nStride);
+	vertexBufferView->StrideInBytes = awesomeStaticBuffer.nStride;
+
+	UINT vertexBufferByteSize = sizeof(VERTEX) * nVerts;
+	ThrowIfFailed(D3DCreateBlob(vertexBufferByteSize, &awesomeStaticBuffer.vertexBufferCPU));
+	CopyMemory(awesomeStaticBuffer.vertexBufferCPU->GetBufferPointer(), pVerts, vertexBufferByteSize);
+
+	// TODO: thread safety
+	*pnID = m_pSB.size();
+	m_pSB.push_back(awesomeStaticBuffer);
+
+	m_pCommandQueue->ExecuteCommandList(commandList);
+	m_pCommandQueue->Flush();
+	return S_OK;
+}
+
+
 //-----------------------------------------------------------------------------
 // Name: CreateStaticBuffer(Manager)
 // Desc: Create a static vertex/index buffer for the given data and returns
@@ -56,6 +166,7 @@ HRESULT AweD3DVertexCacheManager::CreateStaticBuffer(UINT nSkinID, UINT nVerts, 
 	awesomeStaticBuffer.nNumIndis = nIndis;
 	awesomeStaticBuffer.nSkinID = nSkinID;
 	awesomeStaticBuffer.nStride = nVertsStride;
+	awesomeStaticBuffer.BufferType = AWEBUFFERTYPE::STATIC;
 
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList2> commandList = m_pCommandQueue->GetCommandList();
 
@@ -199,8 +310,8 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 	// TODO: update to only set once per pass
 	//if (!m_pAweD3D->m_bSettedPassVariablesCB) {
 		// Setting the engine variables to the shader
-		ID3D12DescriptorHeap* descriptorHeaps[] = { m_pAweD3D->m_CbvHeapPassVariables.Get() };
-		commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
+		///ID3D12DescriptorHeap* descriptorHeaps[] = { m_pAweD3D->m_CbvHeapPassVariables.Get() };
+		//commandList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 		m_pAweD3D->UpdateMainPassVariablesCB();
 		commandList->SetGraphicsRootConstantBufferView(1, m_pAweD3D->m_CbUploadPassVariables->Resource()->GetGPUVirtualAddress());

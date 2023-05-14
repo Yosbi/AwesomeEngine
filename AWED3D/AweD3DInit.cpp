@@ -483,8 +483,8 @@ void AweD3D::CreateRtvAndDsvDescriptorHeaps()
 	m_RtvHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE,sm_nSwapChainBufferCount);
 	m_DsvHeap = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, D3D12_DESCRIPTOR_HEAP_FLAG_NONE, 1);
 
-	m_CbvHeapPassVariables = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1);
-	m_CbvHeapPerObjectVariables = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1);
+	//m_CbvHeapPassVariables = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1);
+	//m_CbvHeapPerObjectVariables = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE, 1);
 }
 
 void AweD3D::InitUploadBuffers()
@@ -504,8 +504,8 @@ void AweD3D::InitUploadBuffers()
 	cbvDesc.BufferLocation = cbAddress;
 	cbvDesc.SizeInBytes = objCBByteSize;
 
-	m_d3d12Device->CreateConstantBufferView(&cbvDesc,
-		m_CbvHeapPassVariables->GetCPUDescriptorHandleForHeapStart());
+	////m_d3d12Device->CreateConstantBufferView(&cbvDesc,
+		//m_CbvHeapPassVariables->GetCPUDescriptorHandleForHeapStart());
 
 	// Per Object
 	m_CbUploadPerObjectVariables = std::make_unique<AweD3DUploadBuffer<AWEPEROBJECTVARIABLES>>(m_d3d12Device.Get(), 1, true);
@@ -518,6 +518,6 @@ void AweD3D::InitUploadBuffers()
 	cbvDesc2.BufferLocation = cbAddress2;
 	cbvDesc2.SizeInBytes = objCBByteSize;
 
-	m_d3d12Device->CreateConstantBufferView(&cbvDesc2,
-		m_CbvHeapPerObjectVariables->GetCPUDescriptorHandleForHeapStart());
+	//m_d3d12Device->CreateConstantBufferView(&cbvDesc2,
+		//m_CbvHeapPerObjectVariables->GetCPUDescriptorHandleForHeapStart());
 }

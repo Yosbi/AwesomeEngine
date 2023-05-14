@@ -35,7 +35,6 @@
 #include "AweD3DCommandQueue.h"
 #include "AweD3DSkinManager.h"
 #include "AweD3DVertexCache.h"
-#include "AweD3DUploadBuffer.h"
 #include "AweUtil.h"
 #include "Awe.h"
 #include <vector>
@@ -108,6 +107,14 @@ public:
 	void setFoV(float FoV);
 	void SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp);
 	void SetWorldTransformMatrix(const AWEMatrix& mWorld);
+
+	//---------------------------
+	// Lightning stuff
+	//---------------------------
+	void SetAmbientLight(AWESOMECOLOR color);
+	void SetDiffuseLight(AWESOMECOLOR color);
+	void SetSpecularLight(AWESOMECOLOR color);
+	void SetLightDirection(AWEVector vcDir);
 
 	//---------------------------
 	// Skin manager
@@ -240,12 +247,12 @@ private:
 	// Per pass variables sent to the shader
 	std::unique_ptr<AweD3DUploadBuffer<AWEPASSVARIABLES>> m_CbUploadPassVariables = nullptr; // Upload constant buffer
 	AWEPASSVARIABLES m_PassVariables;														 // The actual variable
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_CbvHeapPassVariables = nullptr;			 // The heap
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_CbvHeapPassVariables = nullptr;			 // The heap
 
 	// Per object variables sent to the shader
 	std::unique_ptr<AweD3DUploadBuffer<AWEPEROBJECTVARIABLES>> m_CbUploadPerObjectVariables = nullptr;	// Upload constant buffer
 	AWEPEROBJECTVARIABLES m_PerObjectVariables;															// The actual variable
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_CbvHeapPerObjectVariables = nullptr;					// The heap
+	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_CbvHeapPerObjectVariables = nullptr;					// The heap
 };
 
 #endif // !AWED3D_H

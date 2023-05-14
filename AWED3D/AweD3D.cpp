@@ -229,3 +229,20 @@ ID3D12Resource* AweD3D::getCurrentBackBuffer() const
 {
 	return m_SwapChainBuffer[m_nCurrBackBuffer].Get();
 }
+
+void AweD3D::SetAmbientLight(AWESOMECOLOR color)
+{
+	m_PassVariables.cAmbientLight = color;
+}
+void AweD3D::SetDiffuseLight(AWESOMECOLOR color)
+{
+	m_PassVariables.cDiffuseLight = color;
+}
+void AweD3D::SetSpecularLight(AWESOMECOLOR color)
+{
+	m_PassVariables.cSpecularLight = color;
+}
+void AweD3D::SetLightDirection(AWEVector vcDir)
+{
+	m_PassVariables.vcLightVecW = vcDir;
+}
