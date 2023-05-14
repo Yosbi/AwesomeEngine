@@ -26,6 +26,7 @@ HRESULT   InputStartup();
 void      updateInput();
 void	  updateCamera(AWEVector deltaPos);
 void	  updateFPS();
+void	  initScene();
 
 
 #endif

@@ -46,6 +46,13 @@ typedef struct AWEMATERIAL_TYPE
 	float  fPower;			// Specular power
 } AWESOMEMATERIAL;
 
+/*typedef struct AWEMATERIAL_TYPE
+{
+	AWESOMECOLOR cDiffuseAlbedo = { 1.0f, 1.0f, 1.0f, 1.0f };  // RGBA diffuse light
+	AWESOMECOLOR FresnelR0 = { 0.01f, 0.01f, 0.01f };
+	float Roughness = 0.25f;
+} AWESOMEMATERIAL;*/
+
 //-----------------------------------------------------------------------
 // Vertex types
 //-----------------------------------------------------------------------

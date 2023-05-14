@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="AweD3D.def" />
+    <None Include="DefaultHeaderInput.hlsli" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

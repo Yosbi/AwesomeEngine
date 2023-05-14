@@ -1,3 +1,5 @@
+#include "DefaultHeaderInput.hlsli"
+
 struct PixelShaderInput
 {
 	float4 Color    : COLOR;
