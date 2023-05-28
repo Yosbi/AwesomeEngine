@@ -426,13 +426,14 @@ HRESULT LoadAssets() {
     AWESOMECOLOR terrainDiff = { 0.454f, 0.4f, 0.231f, 1.0f };
     AWESOMECOLOR terrainAmbient = { 0.3f, 0.3f,0.3f, 1.0f };
     AWESOMECOLOR terrainSpec = { 0.4f, 0.4f, 0.4f, 1.0f };
-    UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(terrainAmbient, terrainDiff, terrainDiff, terrainSpec, 8.0f);
+    AWESOMECOLOR black = { 0.0f, 0.0f, 0.0f, 0.0f };
+    UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(terrainAmbient, terrainDiff, black, terrainSpec, 8.0f);
 
 
     AWESOMECOLOR diff = { 0.5f, 0.5f, 0.5f, 1.0f };
     AWESOMECOLOR ambient = { 0.3f, 0.3f,0.3f, 1.0f };
     AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
-    UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
+    UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, black, spec, 8.0f);
 
     AwesomeGeometryGenerator geoGen;
     AwesomeGeometryGenerator::AwesomeMeshData box = geoGen.CreateBox(1.5f, 0.5f, 1.5f, 3);
