@@ -234,7 +234,7 @@ void AweD3D::SetAmbientLight(AWESOMECOLOR color)
 {
 	m_PassVariables.cAmbientLight = color;
 }
-void AweD3D::SetDiffuseLight(AWESOMECOLOR color)
+/*void AweD3D::SetDiffuseLight(AWESOMECOLOR color)
 {
 	m_PassVariables.cDiffuseLight = color;
 }
@@ -245,4 +245,53 @@ void AweD3D::SetSpecularLight(AWESOMECOLOR color)
 void AweD3D::SetLightDirection(AWEVector vcDir)
 {
 	m_PassVariables.vcLightVecW = vcDir;
+}*/
+
+HRESULT AweD3D::AddLight(AWELIGHT& pLight, UINT& nID) {
+	// Search for an index to add the light
+	for (int i = 0; i < MAX_LIGHTS; i++) {
+		if (m_PassVariables.light[i].Type == AWE_NOTSET_LIGHT)
+		{
+			m_PassVariables.light[i].cDiffuseLight = pLight.cDiffuseLight;
+			m_PassVariables.light[i].cSpecularLight = pLight.cSpecularLight;
+			m_PassVariables.light[i].vcPositionW = pLight.vcPositionW;
+			m_PassVariables.light[i].vcDirectionW = pLight.vcDirectionW;
+			m_PassVariables.light[i].fRange = pLight.fRange;
+			m_PassVariables.light[i].fTheta = pLight.fTheta;
+			m_PassVariables.light[i].fPhi = pLight.fPhi;
+			m_PassVariables.light[i].fAttenuation0 = pLight.fAttenuation0;
+			m_PassVariables.light[i].fAttenuation1 = pLight.fAttenuation1;
+			m_PassVariables.light[i].fAttenuation2 = pLight.fAttenuation2;
+			m_PassVariables.light[i].Type = pLight.Type;
+
+			//memcpy(&m_PassVariables.light[i], &pLight, sizeof(AWELIGHT));
+			nID = i;
+			return S_OK;
+		}
+	}
+	//memcpy(&m_PassVariables.light, &pLight, sizeof(AWELIGHT));
+
+	return E_OUTOFMEMORY;
+}
+HRESULT AweD3D::UpdateLight(UINT nID, AWELIGHT& pLight) {
+	if (nID >= MAX_LIGHTS)
+		return E_ABORT;
+
+	m_PassVariables.light[nID].cDiffuseLight = pLight.cDiffuseLight;
+	m_PassVariables.light[nID].cSpecularLight = pLight.cSpecularLight;
+	m_PassVariables.light[nID].vcPositionW = pLight.vcPositionW;
+	m_PassVariables.light[nID].vcDirectionW = pLight.vcDirectionW;
+	m_PassVariables.light[nID].fRange = pLight.fRange;
+	m_PassVariables.light[nID].fTheta = pLight.fTheta;
+	m_PassVariables.light[nID].fPhi = pLight.fPhi;
+	m_PassVariables.light[nID].fAttenuation0 = pLight.fAttenuation0;
+	m_PassVariables.light[nID].fAttenuation1 = pLight.fAttenuation1;
+	m_PassVariables.light[nID].fAttenuation2 = pLight.fAttenuation2;
+	m_PassVariables.light[nID].Type = pLight.Type;
+	//memcpy(&m_PassVariables.light, &pLight, sizeof(AWELIGHT));
+	return S_OK;
+}
+
+void AweD3D::UpdateDeltaTime(float fDTime) {
+	m_PassVariables.time += fDTime;
 }

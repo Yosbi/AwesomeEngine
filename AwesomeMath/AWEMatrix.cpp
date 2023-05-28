@@ -299,6 +299,15 @@ inline void AWEMatrix::TransposeOf(const AWEMatrix& m) {
 }
 
 //--------------------------------------------------------------------
+// Name: Scale()
+// Desc: Make a scale matrix to the d factors
+//--------------------------------------------------------------------
+inline void AWEMatrix::Scale(float dx, float dy, float dz)
+{
+	_11 = dx; _22 = dy; _33 = dz; _44 = 1.0f;
+}
+
+//--------------------------------------------------------------------
 // Name: InverseOf()
 // Desc: invert the matrix, use of intel's SSE code is incredibly slow here.
 //--------------------------------------------------------------------

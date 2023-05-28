@@ -75,9 +75,11 @@ public:
 	// Lightning stuff
 	//---------------------------
 	virtual void SetAmbientLight(AWESOMECOLOR color) = 0;
-	virtual void SetDiffuseLight(AWESOMECOLOR color) = 0;
+	/*virtual void SetDiffuseLight(AWESOMECOLOR color) = 0;
 	virtual void SetSpecularLight(AWESOMECOLOR color) = 0;
-	virtual void SetLightDirection(AWEVector vcDir) = 0;
+	virtual void SetLightDirection(AWEVector vcDir) = 0;*/
+	virtual HRESULT AddLight(AWELIGHT& pLight, UINT &nID) = 0;
+	virtual HRESULT UpdateLight(UINT nID, AWELIGHT& pLight) = 0;
 	
 	//---------------------------
 	// Skin Manager stuff
@@ -90,6 +92,17 @@ public:
 	//---------------------------
 	// Get vertex cache
 	virtual AwesomeVertexCacheManager* GetVertexManager() = 0;
+
+	//---------------------------
+	// Shader stuff
+	//---------------------------
+	virtual HRESULT CreatePipelineStateObject(std::wstring sVertexShader, std::wstring sPixelShader, bool bWireframe, UINT &nID) = 0;
+	virtual HRESULT SetActivePipelineStateObject(UINT nID) = 0;
+
+	//---------------------------
+	// Time stuff
+	//---------------------------
+	virtual void UpdateDeltaTime(float fDTime) = 0;
 
 };
 typedef class AwesomeRenderDevice* LPAWERENDERDEVICE;

@@ -13,6 +13,8 @@
 #include <Windows.h>
 #include "../AwesomeMath/AwesomeMath.h"
 
+#define MAX_LIGHTS 16
+
 //----------------------------------------------------------------------
 // Name: AWESOMECOLOR
 // Desc: Basic color structure
@@ -100,11 +102,46 @@ typedef struct LVERTEX_TYPE {
 	float tu, tv;
 } LVERTEX;
 
+//----------------------------------------------------------------------
+// Name: AWELIGHTID
+// Desc: Definition of the types of light
+//----------------------------------------------------------------------
+typedef enum AWELIGHTID_TYPE
+{
+	AWE_NOTSET_LIGHT = 0,		// Light not set
+	AWE_DIRECTIONAL_LIGHT = 1,  // Directional light source
+	AWE_POINT_LIGHT = 2,        // Point light source
+	AWE_SPOT_LIGHT = 3,         // Spot light source
+
+} AWELIGHTID;
+
+//----------------------------------------------------------------------
+// Name: AWELIGHT
+// Desc: Definition of a light
+//----------------------------------------------------------------------
+typedef struct AWELIGHT_TYPE
+{
+
+	AWESOMECOLOR cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };    // Diffuse light color
+	AWESOMECOLOR cSpecularLight = { 0.7f, 0.7f, 0.7f, 1.0f };   // Specular light color
+
+	AWEVector    vcPositionW = AWEVector(0.0f, 0.0f, 0.0f);		// Diffuse light vector
+	AWEVector	 vcDirectionW = AWEVector(0.0f, 0.0f, 0.0f);	// Light direction
+
+	float      fRange = 0.0f;         // Range of light
+	float      fTheta = 0.0f;         // Angle of spot light inner cone
+	float      fPhi = 0.0f;           // Angle of spot light outer cone
+	float      fAttenuation0 = 0.0f;  // Change of intensity over distance
+	float      fAttenuation1 = 0.0f;  // Change of intensity over distance
+	float	   fAttenuation2 = 0.0f;  // Change of intensity over distance
+
+	int   Type = AWE_NOTSET_LIGHT; // Type of light, not set by default
+	float notUsed = 0.0f;
+
+} AWELIGHT;
 
 typedef struct AWEPERPASSVARIABLES_TYPE
 {
-	//AWEMatrix	 mWVP;											// World view proj combo matrix;
-	//AWEMatrix	 mWorldInverseTranspose;						// World matrix inversed and transposed
 	AWEMatrix mView;
 	AWEMatrix mInvView;
 	AWEMatrix mProj;
@@ -112,11 +149,9 @@ typedef struct AWEPERPASSVARIABLES_TYPE
 	AWEMatrix mViewProj;
 	AWEMatrix mInvViewProj;
 	AWEVector vcEyePosW;
-
-	AWESOMECOLOR cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };    // Diffuse light color
-	AWEVector    vcLightVecW = AWEVector(0.0f, 1.0f, 0.0f);		// Diffuse light vector
 	AWESOMECOLOR cAmbientLight = { 0.6f, 0.6f, 0.6f, 1.0f };	// Ambient light color
-	AWESOMECOLOR cSpecularLight = { 0.7f, 0.7f, 0.7f, 1.0f };   // Specular light color
+	AWELIGHT light[MAX_LIGHTS];
+	float time; // delta time passed 
 }
 AWEPASSVARIABLES;
 

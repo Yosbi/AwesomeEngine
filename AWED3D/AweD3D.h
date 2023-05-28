@@ -20,6 +20,7 @@
 // includes
 //----------------------------------------------------------------------
 #include "../AwesomeRenderer/AwesomeRenderDevice.h"
+#include "../AwesomeGeneral/AwesomeTimer.h"
 #include <initguid.h>
 #include <wrl/client.h>
 #include <dxgi.h>
@@ -112,9 +113,11 @@ public:
 	// Lightning stuff
 	//---------------------------
 	void SetAmbientLight(AWESOMECOLOR color);
-	void SetDiffuseLight(AWESOMECOLOR color);
+	/*void SetDiffuseLight(AWESOMECOLOR color);
 	void SetSpecularLight(AWESOMECOLOR color);
-	void SetLightDirection(AWEVector vcDir);
+	void SetLightDirection(AWEVector vcDir);*/
+	HRESULT AddLight(AWELIGHT& pLight, UINT& nID);
+	HRESULT UpdateLight(UINT nID, AWELIGHT& pLight);
 
 	//---------------------------
 	// Skin manager
@@ -128,6 +131,16 @@ public:
 	//---------------------------
 	AwesomeVertexCacheManager* GetVertexManager();
 
+	//---------------------------
+	// Shader stuff
+	//---------------------------
+	HRESULT CreatePipelineStateObject(std::wstring sVertexShader, std::wstring sPixelShader, bool bWireframe, UINT& nID);
+	HRESULT SetActivePipelineStateObject(UINT nID);
+
+	//---------------------------
+	// time stuff
+	//---------------------------
+	void UpdateDeltaTime(float fDTime);
 
 
 private:
@@ -143,7 +156,6 @@ private:
 	void CreateDevice();
 	void CreateCommandQueue();
 	void CreateDefaultRootSignature();
-	void LoadDefaultShaders();
 	void CreateDefaultPipelineStateObject();
 	void CheckTearingSupport();
 	void InitDescriptorSizes();
@@ -156,6 +168,10 @@ private:
 	void UpdateRenderTargetView();
 	void UpdateDepthStencilView();
 	void InitUploadBuffers();
+	
+	HRESULT CreatePipelineStateObject(Microsoft::WRL::ComPtr<ID3DBlob> vertexShader, Microsoft::WRL::ComPtr<ID3DBlob> pixelShader, bool bWireframe);
+	ID3D12PipelineState* GetActivePipelineStateObject();
+
 	
 	
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, D3D12_DESCRIPTOR_HEAP_FLAGS flags, 
@@ -192,6 +208,7 @@ private:
 	bool					m_bIsSceneRunning;
 	bool					m_bSettedPassVariablesCB;
 	UINT					m_nActiveSkin;
+
 
 	//AWEMatrix m_WorldMatrix;
 	AWEMatrix m_ViewMatrix;
@@ -234,9 +251,14 @@ private:
 	// Default root signature and pipeline state and shader
 	// TODO: do this dinamically later
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature;
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState;
-	Microsoft::WRL::ComPtr<ID3DBlob> m_vertexShader;
-	Microsoft::WRL::ComPtr<ID3DBlob> m_pixelShader;
+	//Microsoft::WRL::ComPtr<ID3DBlob> m_vertexShader;
+	//Microsoft::WRL::ComPtr<ID3DBlob> m_pixelShader;
+
+
+	// Pipeline state
+	std::vector< Microsoft::WRL::ComPtr<ID3D12PipelineState>> m_vcPipelineState;
+	UINT m_nPipelineStateIndex;
+
 
 	// Modules of the engine
 	AweD3DSkinManager m_SkinManager;

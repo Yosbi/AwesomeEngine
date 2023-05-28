@@ -160,10 +160,9 @@ void Waves::Disturb(int i, int j, float magnitude)
 	float halfMag = 0.5f * magnitude;
 
 	// Disturb the ijth vertex height and its neighbors.
-	mCurrSolution[i * mNumCols + j].y += magnitude;
+	mCurrSolution[i * mNumCols + j].y -= magnitude;
 	mCurrSolution[i * mNumCols + j + 1].y += halfMag;
 	mCurrSolution[i * mNumCols + j - 1].y += halfMag;
 	mCurrSolution[(i + 1) * mNumCols + j].y += halfMag;
 	mCurrSolution[(i - 1) * mNumCols + j].y += halfMag;
 }
-

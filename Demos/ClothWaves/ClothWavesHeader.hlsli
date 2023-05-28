@@ -63,3 +63,48 @@ struct VertexShaderOutput
     float3 NormalH : NORMAL;
     float4 PositionH : SV_Position;
 };
+
+// Specific code for this shader
+
+// Amplitudes
+static float a[3] = { 0.8f, 0.2f, 0.08f };
+	
+// Angular wave numbers.
+static float k[3] = { 1.0, 0.8f, 2.0f };
+	
+// Angular frequency.
+static float w[3] = { 1.0f, 8.0f, 10.0f };
+	
+// Phase shifts.
+static float p[3] = { 0.0f, 1.0f, 1.0f };
+
+float SumOfRadialSineWaves(float x, float z)
+{
+	// Distance of vertex from source of waves (which we set
+	// as the origin of the local space).
+    float d = sqrt(x * x + z * z);
+	//float d = sqrt (z);
+	
+	// Sum the waves.
+    float sum = 0.0f;
+    for (int i = 0; i < 2; ++i)
+        sum += a[i] * sin(k[i] * d - gTime * w[i] + p[i]);
+		
+    return sum;
+}
+
+void Partials(float x, float z, out float dhOverdx, out float dhOverdz)
+{
+    // Distance of vertex from source of waves (which we set
+    // as the origin of the local space).
+    float d = sqrt(x * x + z * z);
+
+    // Derivative of a sum of functions is the sum of the derivatives.
+    dhOverdx = 0.0f;
+    dhOverdz = 0.0f;
+    for (int i = 0; i < 2; ++i)
+    {
+        dhOverdx += (a[i] * k[i] * x * cos(k[i] * d - gTime * w[i] + p[i])) / d;
+        dhOverdz += (a[i] * k[i] * z * cos(k[i] * d - gTime * w[i] + p[i])) / d;
+    }
+}

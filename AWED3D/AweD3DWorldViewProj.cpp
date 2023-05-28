@@ -70,8 +70,10 @@ void AweD3D::UpdateMainPassVariablesCB()
 	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mInvProj, DirectX::XMMatrixTranspose(invProj));
 	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mViewProj, DirectX::XMMatrixTranspose(viewProj));
 	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*)&m_PassVariables.mInvViewProj, DirectX::XMMatrixTranspose(invViewProj));
-
+	
 	m_CbUploadPassVariables->CopyData(0, m_PassVariables);
+
+	
 
 
 	/*

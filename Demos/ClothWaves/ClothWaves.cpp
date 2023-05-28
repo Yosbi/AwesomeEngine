@@ -1,4 +1,4 @@
-#include "main.h"         // prototypes and stuff
+#include "ClothWaves.h"         // prototypes and stuff
 
 //include our library
 #pragma comment(lib, "AwesomeInput.lib")
@@ -17,9 +17,6 @@ std::wstring g_windowCaption = L"Pillars - Awesome Engine v0.1 - By Yosbi Alves 
 BOOL g_bIsActive = FALSE;
 bool g_bDone = false;
 
-UINT Chinesse = 0;
-UINT Terrain = 0;
-
 // renderer object
 LPAWERENDERER     g_pRenderer = NULL;
 LPAWERENDERDEVICE g_pDevice = NULL;
@@ -34,7 +31,6 @@ USHORT g_nSelectedCamera = 0;
 
 // Skin manager
 AwesomeSkinManager* g_pAwesomeSkinManager;
-UINT g_nSkinTiles;
 
 // Timer
 AwesomeTimer g_aweTimer(0, 0);
@@ -44,18 +40,9 @@ AwesomeLinearInterpolation g_posLerp;
 AwesomeLinearInterpolation g_dirLerp;
 AwesomeLinearInterpolation g_upLerp;
 
-UINT g_sMeshTerrain = 0;
 UINT g_sMeshWaves = 0;
-//UINT g_sMeshGrid = 0;
-//UINT g_sMeshSphere = 0;
-//UINT g_sMeshCylinder = 0;
 
-AwesomeGeometryGenerator::AwesomeMeshData g_cpuWaves;
-Waves g_waves(250, 250, 1.0f, 0.03f, 4.0f, 0.2f);
-//VERTEX* g_Vertex = NULL;
-//int g_nIndis = 0;
-//int g_nVerts = 0;
-//WORD* g_Index = NULL;
+UINT g_nWavesShader = 0;
 
 /**
  * WinMain function to get the thing started.
@@ -111,6 +98,9 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         return E_ABORT;
     }
 
+    if (FAILED(initShaders()))
+        return E_ABORT;
+
     if (FAILED(hr = LoadAssets()))
         return E_ABORT;
 
@@ -121,7 +111,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     ShowWindow(hWnd, SW_SHOW);
 
     // everything went smooth
-   
+
 
     // main loop
     while (!g_bDone) {
@@ -147,7 +137,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
 
 void initScene() {
-    g_pDevice->SetClearColor(0.690196097f, 0.768627524f, 0.870588303f); // A light sky blue
+    g_pDevice->SetClearColor(1, 1, 1); 
 
     AWESOMECOLOR ambient = { 0.6f, 0.6f, 0.6f, 1.0f };
     g_pDevice->SetAmbientLight(ambient);
@@ -158,12 +148,17 @@ void initScene() {
     globalDirectionalLight.cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };
     globalDirectionalLight.cSpecularLight = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    globalDirectionalLight.vcDirectionW.Set(0.0f, 1.0f, -1.0f);
+    globalDirectionalLight.vcDirectionW.Set(0.0f, 0.0f, -1.0f);
     globalDirectionalLight.vcDirectionW.Normalize();
 
     g_pDevice->AddLight(globalDirectionalLight, nGlobalDirectionalLight);
 
 }
+
+HRESULT initShaders() {
+    return g_pDevice->CreatePipelineStateObject(L"ClothWavesVertexShader.cso", L"ClothWavesPixelShader.cso", false, g_nWavesShader);
+}
+
 
 void initCamera() {
     AWEVector pos = AWEVector(0, 30, -30);
@@ -372,48 +367,6 @@ HRESULT RendererStartup() {
     return S_OK;
 }
 
-void UpdateWaves()
-{
-    // Every quarter second, generate a random wave.
-    static float t_base = 0.0f;
-    static float t_passed = 0.0f;
-    t_passed += g_aweTimer.GetElapsed();
-    
-    if ((t_passed - t_base) >= 0.1f)
-    {
-        t_base += 0.1f;
-
-        int i = Rand(4, g_waves.RowCount() - 5);
-        int j = Rand(4, g_waves.ColumnCount() - 5);
-
-        float r = RandF(0.2f, 0.5f);
-
-        g_waves.Disturb(i, j, r);
-    }
-
-    // Update the wave simulation.
-    g_waves.Update(g_aweTimer.GetElapsed());
-
-    UINT count = g_waves.VertexCount();
-    UINT size = g_cpuWaves.Vertices.size();
-    // Update the wave vertex buffer with the new solution.
-    for (int i = 0; i < g_waves.VertexCount(); ++i)
-    {
-        AWEVector v = g_waves.Position(i);
-        //g_cpuWaves.Vertices[i].x = v.x;
-        g_cpuWaves.Vertices[i].y = v.y;
-        //g_cpuWaves.Vertices[i].z = v.z;
-
-        AWEVector n = g_waves.Normal(i);
-        g_cpuWaves.Vertices[i].vcN[0] = n.x;
-        g_cpuWaves.Vertices[i].vcN[1] = n.y;
-        g_cpuWaves.Vertices[i].vcN[2] = n.z;
-
-    }
-
-    g_pDevice->GetVertexManager()->UpdateDynamicBuffer(g_sMeshWaves, g_cpuWaves.Vertices.data());
-
-}
 
 
 float GetHillsHeight(float x, float z)
@@ -428,7 +381,7 @@ AWEVector GetHillsNormal(float x, float z)
         -0.03f * z * cosf(0.1f * x) - 0.3f * cosf(0.1f * z),
         1.0f,
         -0.3f * sinf(0.1f * x) + 0.03f * x * sinf(0.1f * z));
-    
+
     n.Normalize();
 
     return n;
@@ -436,43 +389,16 @@ AWEVector GetHillsNormal(float x, float z)
 
 HRESULT LoadAssets() {
 
-    AWESOMECOLOR terrainDiff = { 0.454f, 0.4f, 0.231f, 1.0f };
-    AWESOMECOLOR terrainAmbient = { 0.3f, 0.3f,0.3f, 1.0f };
-    AWESOMECOLOR terrainSpec = { 0.4f, 0.4f, 0.4f, 1.0f };
-    UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(terrainAmbient, terrainDiff, terrainDiff, terrainSpec, 8.0f);
-
-    AWESOMECOLOR diff = { 0.0f, 0.2f, 0.6f, 1.0f };
-    AWESOMECOLOR ambient = { 0.5f, 0.5f,0.5f, 1.0f };
+    AWESOMECOLOR diff = { 0.0f, 0.0f, 1.0f, 1.0f };
+    AWESOMECOLOR ambient = { 0.0f, 0.0f, 1.0f, 1.0f };
     AWESOMECOLOR spec = { 1.0f, 1.0f, 1.0f, 1.0f };
     UINT sea = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 16.0f);
 
-    // Generating terrain
-    AwesomeGeometryGenerator geoGen;
-    AwesomeGeometryGenerator::AwesomeMeshData grid = geoGen.CreateGrid(160.0f, 160.0f, 50, 50);
-    std::vector<VERTEX> vertices(grid.Vertices.size());
-    for (size_t i = 0; i < grid.Vertices.size(); ++i)
-    {
-        grid.Vertices[i].y = GetHillsHeight(grid.Vertices[i].x, grid.Vertices[i].z);
-        
-        AWEVector normal = GetHillsNormal(grid.Vertices[i].x, grid.Vertices[i].z);
-        grid.Vertices[i].vcN[0] = normal.x;
-        grid.Vertices[i].vcN[1] = normal.y;
-        grid.Vertices[i].vcN[2] = normal.z;
-
-    }
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(terrainSkin, grid.Vertices.size(), grid.getVertexSize(), grid.Vertices.data(),
-        grid.Indices32.size(), grid.GetIndices16().data(), &g_sMeshTerrain);
-
-    /*AwesomeOBJLoader loader;
-    loader.loadOBJ(L"Chinesse.obj");
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(terrainSkin, loader.getVerteces().size(), loader.getVertexSize(), loader.getVerteces().data(),
-        loader.getIndex().size(), loader.getIndex().data(), &g_sMeshTerrain);*/
-
-    
     // Loading waves
-    g_cpuWaves = geoGen.CreateGrid(160.0f, 160.0f, 250, 250);
-    g_pDevice->GetVertexManager()->CreateDynamicBuffer(sea, g_cpuWaves.Vertices.size(), g_cpuWaves.Vertices.data(),
-        g_cpuWaves.Indices32.size(), g_cpuWaves.GetIndices16().data(), &g_sMeshWaves);
+    AwesomeGeometryGenerator geoGen;
+    AwesomeGeometryGenerator::AwesomeMeshData cpuWaves = geoGen.CreateGrid(50.0f, 50.0f, 200, 200);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(sea, cpuWaves.Vertices.size(), cpuWaves.getVertexSize(), cpuWaves.Vertices.data(),
+        cpuWaves.Indices32.size(), cpuWaves.GetIndices16().data(), &g_sMeshWaves);
 
 
     return S_OK;
@@ -519,27 +445,31 @@ HRESULT ProgramTick(void) {
 
     g_aweTimer.Update();
 
+    g_pDevice->UpdateDeltaTime(g_aweTimer.GetElapsed());
+
     updateFPS();
 
     updateInput();
 
-    UpdateWaves();
-
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
 
+    /*AWESOMECOLOR  cLight = {1.0f, 1.0f, 1.0f, 1.0f};
+    AWEVector vcLight = AWEVector(0.0f, 0.0f, -1.0f);
+    vcLight.Normalize();
+    g_pDevice->SetLightDirection(vcLight);
+    g_pDevice->SetDiffuseLight(cLight);
+    g_pDevice->SetSpecularLight(cLight);*/
+
     AWEMatrix mWorld;
     mWorld.Identity();
-    //mWorld.Translate(0.0f, 20.0f, 0.0f);
+    mWorld.RotaY(-0.4f);
     g_pDevice->SetWorldTransformMatrix(mWorld);
-    g_pDevice->GetVertexManager()->Render(g_sMeshTerrain);
-
-    mWorld.Identity();
-    g_pDevice->SetWorldTransformMatrix(mWorld);
+    g_pDevice->SetActivePipelineStateObject(g_nWavesShader);
     g_pDevice->GetVertexManager()->Render(g_sMeshWaves);
 
 
-  
+
     // flip backbuffer to front
     g_pDevice->EndRendering();
 

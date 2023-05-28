@@ -301,7 +301,7 @@ HRESULT AweD3DVertexCacheManager::Render(UINT nID)
 	// Specify the buffers we are going to render to.
 	commandList->OMSetRenderTargets(1, &m_pAweD3D->getCurrentBackBufferView(), true, &m_pAweD3D->getDepthStencilView());
 
-	commandList->SetPipelineState(m_pAweD3D->m_pipelineState.Get());
+	commandList->SetPipelineState(m_pAweD3D->GetActivePipelineStateObject());
 	commandList->SetGraphicsRootSignature(m_pAweD3D->m_rootSignature.Get());
 
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);

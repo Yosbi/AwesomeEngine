@@ -1,4 +1,4 @@
-#include "DefaultHeaderInput.hlsli"
+#include "ClothWavesHeader.hlsli"
 
 
 VertexShaderOutput main(VertexPosNormalTex IN)
@@ -12,8 +12,11 @@ VertexShaderOutput main(VertexPosNormalTex IN)
     // Transform position to world
     OUT.PositionW = mul(float4(IN.Position, 1.0f), gWorld);
     
+    //// find the Y coord
+    OUT.PositionW.y = SumOfRadialSineWaves(OUT.PositionW.x, OUT.PositionW.z);
+    
     //  Transform position to homogeneus clip space
-    OUT.PositionH = mul(OUT.PositionW, gViewProj);   
+    OUT.PositionH = mul(OUT.PositionW, gViewProj);
 
     return OUT;
 }

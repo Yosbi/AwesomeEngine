@@ -48,6 +48,7 @@ UINT g_sMeshBox = 0;
 UINT g_sMeshGrid = 0;
 UINT g_sMeshSphere = 0;
 UINT g_sMeshCylinder = 0;
+UINT g_sMeshChinesse = 0;
 
 //VERTEX* g_Vertex = NULL;
 //int g_nIndis = 0;
@@ -118,8 +119,6 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 
     ShowWindow(hWnd, SW_SHOW);
 
-    // everything went smooth
-    g_pDevice->SetClearColor(1.0f, 1.0f, 1.0f);
 
     // main loop
     while (!g_bDone) {
@@ -146,18 +145,19 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 void initScene() {
     g_pDevice->SetClearColor(0.690196097f, 0.768627524f, 0.870588303f); // A light sky blue
 
-    AWESOMECOLOR ambient = { 0.35f,0.35f,0.35f, 1.0f };
+    AWESOMECOLOR ambient = {0.6f, 0.6f, 0.6f, 1.0f};
     g_pDevice->SetAmbientLight(ambient);
 
-    AWESOMECOLOR diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
-    g_pDevice->SetDiffuseLight(diffuse);
+    UINT nGlobalDirectionalLight = 0;
+    AWELIGHT globalDirectionalLight;
+    globalDirectionalLight.Type = AWE_DIRECTIONAL_LIGHT;
+    globalDirectionalLight.cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };
+    globalDirectionalLight.cSpecularLight = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    AWESOMECOLOR specular = { 1.0f, 1.0f, 1.0f, 1.0f };
-    g_pDevice->SetSpecularLight(specular);
+    globalDirectionalLight.vcDirectionW.Set(0.0f, 1.0f, -1.0f);
+    globalDirectionalLight.vcDirectionW.Normalize();
 
-    AWEVector vcLight = AWEVector(0.0f, 1.0f, -1.0f);
-    g_pDevice->SetLightDirection(vcLight);
-
+    g_pDevice->AddLight(globalDirectionalLight, nGlobalDirectionalLight);
 }
 
 void initCamera() {
@@ -413,7 +413,6 @@ HRESULT LoadAssets() {
     AWESOMECOLOR spec2 = { 0.4f, 0.4f, 0.4f, 1.0f };
     UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient2, diff2, diff2, spec2, 8.0f);
     g_pDevice->GetSkinManager()->AddTexture(skin, textureMirror, false, 1.0f);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, loader2.getVerteces().size(), loader2.getVertexSize(), loader2.getVerteces().data(), 0, NULL, &g_sMesh2);
 
     AwesomeGeometryGenerator geometryGenerator;
     AwesomeGeometryGenerator::AwesomeMeshData mesh = geometryGenerator.CreateSphere(7.0f, 30, 30);
@@ -427,12 +426,13 @@ HRESULT LoadAssets() {
     AWESOMECOLOR terrainDiff = { 0.454f, 0.4f, 0.231f, 1.0f };
     AWESOMECOLOR terrainAmbient = { 0.3f, 0.3f,0.3f, 1.0f };
     AWESOMECOLOR terrainSpec = { 0.4f, 0.4f, 0.4f, 1.0f };
-    UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(terrainAmbient, terrainDiff, terrainDiff, terrainSpec, 16.0f);
+    UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(terrainAmbient, terrainDiff, terrainDiff, terrainSpec, 8.0f);
+
 
     AWESOMECOLOR diff = { 0.5f, 0.5f, 0.5f, 1.0f };
     AWESOMECOLOR ambient = { 0.3f, 0.3f,0.3f, 1.0f };
     AWESOMECOLOR spec = { 0.4f, 0.4f, 0.4f, 1.0f };
-    UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 16.0f);
+    UINT skin = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, diff, spec, 8.0f);
 
     AwesomeGeometryGenerator geoGen;
     AwesomeGeometryGenerator::AwesomeMeshData box = geoGen.CreateBox(1.5f, 0.5f, 1.5f, 3);
@@ -444,14 +444,19 @@ HRESULT LoadAssets() {
         grid.Indices32.size(), grid.GetIndices16().data(), &g_sMeshGrid);
 
 
-    AwesomeGeometryGenerator::AwesomeMeshData sphere = geoGen.CreateSphere(0.5f, 20, 20);
+    AwesomeGeometryGenerator::AwesomeMeshData sphere = geoGen.CreateSphere(0.5f, 100, 200);
     g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, sphere.Vertices.size(), sphere.getVertexSize(), sphere.Vertices.data(),
         sphere.Indices32.size(), sphere.GetIndices16().data(), &g_sMeshSphere);
 
 
-    AwesomeGeometryGenerator::AwesomeMeshData cylinder = geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 20, 20);
+    AwesomeGeometryGenerator::AwesomeMeshData cylinder = geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 200, 200);
     g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, cylinder.Vertices.size(), cylinder.getVertexSize(), cylinder.Vertices.data(),
         cylinder.Indices32.size(), cylinder.GetIndices16().data(), &g_sMeshCylinder);
+
+
+    AwesomeOBJLoader loader2;
+    loader2.loadOBJ(L"Chinesse.obj");
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, loader2.getVerteces().size(), loader2.getVertexSize(), loader2.getVerteces().data(), 0, NULL, &g_sMeshChinesse);
 
 
     return S_OK;
@@ -515,6 +520,11 @@ HRESULT ProgramTick(void) {
     mWorld.Identity();
     g_pDevice->SetWorldTransformMatrix(mWorld);
     g_pDevice->GetVertexManager()->Render(g_sMeshGrid);
+
+    mWorld.Identity();
+    mWorld.Translate(0, 10, 0);
+    g_pDevice->SetWorldTransformMatrix(mWorld);
+    g_pDevice->GetVertexManager()->Render(g_sMeshChinesse);
 
     // Rendering the spheres and columns
     for (int i = 0; i < 5; ++i)

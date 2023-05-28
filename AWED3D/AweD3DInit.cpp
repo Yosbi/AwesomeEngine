@@ -90,12 +90,14 @@ AweD3D::AweD3D(HINSTANCE hDll) :
 	m_fNear(0.1f),
 	m_fFar(100.0f),
 	m_nActiveSkin(MAX_ID),
+	m_nPipelineStateIndex(0),
 	m_ScissorRect({ 0, 0, m_nClientWidth, m_nClientHeight }),
 	m_ScreenViewport({/*TopLeftX*/ 0, /*TopLeftY*/ 0, 
 		/*Width*/ static_cast<float>(m_nClientWidth), 
 		/*Height*/ static_cast<float>(m_nClientHeight) , 
 		/*MinDepth*/ 0.0f, /*MaxDepth*/ 1.0f})
 {
+	
 	SetProjMatrix();
 
 	//SetViewMatrix(AWEVector(0, 0, -30), AWEVector(0, 0, 0), AWEVector(0, 1, 0));
@@ -292,7 +294,6 @@ bool AweD3D::InitDirect3D()
 
 	// TODO: This will later will created dinamically, for now we use a default shader
 	CreateDefaultRootSignature();
-	LoadDefaultShaders();
 	CreateDefaultPipelineStateObject();
 
 	InitSkinManager();
@@ -317,6 +318,8 @@ void AweD3D::CreateDefaultRootSignature() {
 	// Create root CBV.
 	slotRootParameter[0].InitAsConstantBufferView(0);
 	slotRootParameter[1].InitAsConstantBufferView(1);
+	//slotRootParameter[2].InitAsConstantBufferView(2);
+
 
 	// A root signature is an array of root parameters.
 	CD3DX12_ROOT_SIGNATURE_DESC rootSigDesc(2, slotRootParameter, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -379,9 +382,9 @@ void AweD3D::CreateDefaultRootSignature() {
 		rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&m_rootSignature)));*/
 }
 
-void AweD3D::LoadDefaultShaders() 
+void AweD3D::CreateDefaultPipelineStateObject()
 {
-#if defined(_DEBUG)
+/*#if defined(_DEBUG)
 	// Enable better shader debugging with the graphics debugging tools.
 	UINT compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #else
@@ -393,39 +396,11 @@ void AweD3D::LoadDefaultShaders()
 	ThrowIfFailed(D3DReadFileToBlob(GetAssetFullPath(L"DefaultVertexShader.cso").c_str(), &m_vertexShader));
 
 	// Load the pixel shader.
-	ThrowIfFailed(D3DReadFileToBlob(GetAssetFullPath(L"DefaultPixelShader.cso").c_str(), &m_pixelShader));
+	ThrowIfFailed(D3DReadFileToBlob(GetAssetFullPath(L"DefaultPixelShader.cso").c_str(), &m_pixelShader));*/
+
+	CreatePipelineStateObject(L"DefaultVertexShader.cso", L"DefaultPixelShader.cso", false, m_nPipelineStateIndex);
 }
 
-void AweD3D::CreateDefaultPipelineStateObject()
-{
-	// Define the vertex input layout.
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-	{
-		{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		//{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-		{ "TEXTURE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-
-	};
-
-	// Describe and create the graphics pipeline state object (PSO).
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) };
-	psoDesc.pRootSignature = m_rootSignature.Get();
-	psoDesc.VS = CD3DX12_SHADER_BYTECODE(m_vertexShader.Get());
-	psoDesc.PS = CD3DX12_SHADER_BYTECODE(m_pixelShader.Get());
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	//psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_WIREFRAME;
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	psoDesc.DSVFormat = m_DepthStencilFormat;
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.SampleDesc.Count = 1;
-	ThrowIfFailed(m_d3d12Device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
-}
 
 void AweD3D::CreateSwapChain()
 {

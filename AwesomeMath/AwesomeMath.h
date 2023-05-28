@@ -108,6 +108,8 @@ public:
     inline void Translate(float dx, float dy, float dz);				// Translate a certain distance
     inline void SetTranslation(AWEVector vc, bool EraseContent = false);// Set translation values
     inline AWEVector GetTranslation(void);								// Get the translation value
+    inline void Scale(float dx, float dy, float dz);                    // Make a scale matrix to the d factors
+
 
     inline void LookAt(AWEVector vcPos, AWEVector vcLookAt,
         AWEVector vcWorldUp = AWEVector(0, 1, 0));

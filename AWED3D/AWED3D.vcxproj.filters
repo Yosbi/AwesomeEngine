@@ -65,15 +65,16 @@
     <ClCompile Include="AweD3DVertexCache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="AweD3DShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="AweD3D.def">
       <Filter>Source Files</Filter>
     </None>
     <None Include="packages.config" />
-    <None Include="DefaultHeaderInput.hlsli">
-      <Filter>Source Files</Filter>
-    </None>
+    <None Include="DefaultHeaderInput.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="DefaultPixelShader.hlsl" />
