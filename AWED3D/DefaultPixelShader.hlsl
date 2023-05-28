@@ -76,7 +76,7 @@ float4 main(VertexShaderOutput IN) : SV_Target
     // Them ambient color
     float3 ambient = gAmbientMtrl.rgb * gAmbientLight.rgb;
     
-    return float4((ambient + light), gDiffuseMtrl.a);
+    return float4((ambient + light + gEmissiveMtrl.rgb), gDiffuseMtrl.a);
 
 	
 	//====================================================

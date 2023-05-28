@@ -49,6 +49,9 @@ UINT g_sMeshGrid = 0;
 UINT g_sMeshSphere = 0;
 UINT g_sMeshCylinder = 0;
 UINT g_sMeshChinesse = 0;
+UINT g_sMeshHada = 0;
+
+AWEVector g_vcHadaPos;
 
 //VERTEX* g_Vertex = NULL;
 //int g_nIndis = 0;
@@ -60,6 +63,7 @@ AWESOMECOLOR g_blackColor = {0.0f, 0.0f, 0.0f, 1.0f };
 AWESOMECOLOR g_redColor = { 1.0f, 0.0f, 0.0f, 1.0f };
 AWESOMECOLOR g_greenColor = { 0.0f, 1.0f, 0.0f, 1.0f };
 AWESOMECOLOR g_blueColor = { 0.0f, 0.0f, 1.0f, 1.0f };
+AWESOMECOLOR g_yellowColor = { 0.0f, 1.0f, 1.0f, 1.0f };
 
 AWELIGHT g_globalDirectionalLight;
 UINT g_nGlobalDirectionalLight = 0;
@@ -158,10 +162,10 @@ void initScene() {
     g_pDevice->SetAmbientLight(ambientLight);
 
     g_globalDirectionalLight.Type = AWE_POINT_LIGHT;
-    g_globalDirectionalLight.cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };
-    g_globalDirectionalLight.cSpecularLight = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_globalDirectionalLight.cDiffuseLight = { 0.5f, 1.0f, 1.0f, 1.0f };
+    g_globalDirectionalLight.cSpecularLight = { 0.5f, 1.0f, 1.0f, 1.0f };
 
-    g_globalDirectionalLight.vcPositionW.Set(0.0f, 3.0f, -1.0f);
+    g_globalDirectionalLight.vcPositionW.Set(0.0f, 3.0f, 0.0f);
     g_globalDirectionalLight.vcPositionW.Normalize();
     g_globalDirectionalLight.fAttenuation0 = 1.0f;
     
@@ -402,10 +406,13 @@ HRESULT RendererStartup() {
 
 
 HRESULT LoadAssets() {
+
+    AWESOMECOLOR emissiveWhite = { -0.5f, 1.0f, 1.0f, 1.0f };
     
-    UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(g_blueColor, g_blueColor, g_whiteColor, g_whiteColor, 16.0f);
-    UINT cylSkin = g_pDevice->GetSkinManager()->AddSkin(g_redColor, g_redColor, g_whiteColor, g_whiteColor, 8.0f);
-    UINT spheSkin = g_pDevice->GetSkinManager()->AddSkin(g_greenColor, g_greenColor, g_whiteColor, g_whiteColor, 8.0f);
+    UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(g_blueColor, g_blueColor, g_blackColor, g_whiteColor, 16.0f);
+    UINT cylSkin = g_pDevice->GetSkinManager()->AddSkin(g_redColor, g_redColor, g_blackColor, g_whiteColor, 8.0f);
+    UINT spheSkin = g_pDevice->GetSkinManager()->AddSkin(g_greenColor, g_greenColor, g_blackColor, g_whiteColor, 8.0f);
+    UINT hadaSkin = g_pDevice->GetSkinManager()->AddSkin(g_yellowColor, g_yellowColor, emissiveWhite, g_yellowColor, 8.0f);
 
     AwesomeGeometryGenerator geoGen;
     AwesomeGeometryGenerator::AwesomeMeshData grid = geoGen.CreateGrid(20.0f, 30.0f, 60, 40);
@@ -430,6 +437,9 @@ HRESULT LoadAssets() {
     loader2.loadOBJ(L"Chinesse.obj");
     g_pDevice->GetVertexManager()->CreateStaticBuffer(spheSkin, loader2.getVerteces().size(), loader2.getVertexSize(), loader2.getVerteces().data(), 0, NULL, &g_sMeshChinesse);
 
+    AwesomeGeometryGenerator::AwesomeMeshData hada = geoGen.CreateSphere(0.2f, 100, 200);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(hadaSkin, hada.Vertices.size(), hada.getVertexSize(), hada.Vertices.data(),
+        hada.Indices32.size(), hada.GetIndices16().data(), &g_sMeshHada);
 
     return S_OK;
 }
@@ -477,6 +487,8 @@ void updateLight() {
         theta = 0.0f;
     g_globalDirectionalLight.vcPositionW.z = 15.0f * sinf(theta);
 
+    g_vcHadaPos.Set(0.0f, 1.0f, g_globalDirectionalLight.vcPositionW.z);
+
     g_pDevice->UpdateLight(g_nGlobalDirectionalLight, g_globalDirectionalLight);
 }
 /**
@@ -501,6 +513,11 @@ HRESULT ProgramTick(void) {
     mScaling._11 = mScaling._22 = mScaling._33 = 2.0f;
     g_pDevice->SetWorldTransformMatrix(mScaling * mWorld);
     g_pDevice->GetVertexManager()->Render(g_sMeshBox);*/
+
+    mWorld.Identity();
+    mWorld.Translate(g_vcHadaPos.x, g_vcHadaPos.y, g_vcHadaPos.z);
+    g_pDevice->SetWorldTransformMatrix(mWorld);
+    g_pDevice->GetVertexManager()->Render(g_sMeshHada);
 
     mWorld.Identity();
     g_pDevice->SetWorldTransformMatrix(mWorld);
