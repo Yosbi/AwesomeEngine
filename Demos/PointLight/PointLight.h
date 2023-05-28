@@ -27,6 +27,7 @@ void      updateInput();
 void	  updateCamera(AWEVector deltaPos);
 void	  updateFPS();
 void	  initScene();
+void	  updateLight();
 
 
 #endif

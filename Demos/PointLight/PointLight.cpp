@@ -61,6 +61,8 @@ AWESOMECOLOR g_redColor = { 1.0f, 0.0f, 0.0f, 1.0f };
 AWESOMECOLOR g_greenColor = { 0.0f, 1.0f, 0.0f, 1.0f };
 AWESOMECOLOR g_blueColor = { 0.0f, 0.0f, 1.0f, 1.0f };
 
+AWELIGHT g_globalDirectionalLight;
+UINT g_nGlobalDirectionalLight = 0;
 
 /**
  * WinMain function to get the thing started.
@@ -152,22 +154,21 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
 void initScene() {
     g_pDevice->SetClearColor(0.690196097f, 0.768627524f, 0.870588303f); // A light sky blue
 
-    AWESOMECOLOR ambientLight = {0.6f, 0.6f, 0.6f, 1.0f};
+    AWESOMECOLOR ambientLight = { 0.20f,0.20f,0.20f };
     g_pDevice->SetAmbientLight(ambientLight);
 
-    UINT nGlobalDirectionalLight = 0;
-    AWELIGHT globalDirectionalLight;
-    globalDirectionalLight.Type = AWE_DIRECTIONAL_LIGHT;
-    globalDirectionalLight.cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };
-    globalDirectionalLight.cSpecularLight = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_globalDirectionalLight.Type = AWE_POINT_LIGHT;
+    g_globalDirectionalLight.cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_globalDirectionalLight.cSpecularLight = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    globalDirectionalLight.vcDirectionW.Set(0.0f, 1.0f, -1.0f);
-    globalDirectionalLight.vcDirectionW.Normalize();
+    g_globalDirectionalLight.vcPositionW.Set(0.0f, 3.0f, -1.0f);
+    g_globalDirectionalLight.vcPositionW.Normalize();
+    g_globalDirectionalLight.fAttenuation0 = 1.0f;
     
-    g_pDevice->AddLight(globalDirectionalLight, nGlobalDirectionalLight);
+    g_pDevice->AddLight(g_globalDirectionalLight, g_nGlobalDirectionalLight);
 
 
-    UINT nGlobalDirectionalLight2 = 0;
+   /* UINT nGlobalDirectionalLight2 = 0;
     AWELIGHT globalDirectionalLight2;
     globalDirectionalLight2.Type = AWE_DIRECTIONAL_LIGHT;
     globalDirectionalLight2.cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -176,7 +177,7 @@ void initScene() {
     globalDirectionalLight2.vcDirectionW.Set(0.0f, 1.0f, 1.0f);
     globalDirectionalLight2.vcDirectionW.Normalize();
 
-    g_pDevice->AddLight(globalDirectionalLight2, nGlobalDirectionalLight2);
+    g_pDevice->AddLight(globalDirectionalLight2, nGlobalDirectionalLight2);*/
    
     /*AWESOMECOLOR ambient = {0.6f, 0.6f, 0.6f, 1.0f};
     g_pDevice->SetAmbientLight(ambient);
@@ -467,6 +468,17 @@ void updateFPS() {
     }
 }
 
+void updateLight() {
+    
+    // switching the light position
+    static float theta = 0.0f;
+    theta += g_aweTimer.GetElapsed();
+    if (theta >= 2.0f * 3.1416f)
+        theta = 0.0f;
+    g_globalDirectionalLight.vcPositionW.z = 15.0f * sinf(theta);
+
+    g_pDevice->UpdateLight(g_nGlobalDirectionalLight, g_globalDirectionalLight);
+}
 /**
  * Do one frame.
  */
@@ -477,6 +489,8 @@ HRESULT ProgramTick(void) {
     updateFPS();
 
     updateInput();
+
+    updateLight();
 
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
