@@ -11,6 +11,12 @@
 #include "..\..\AwesomeMath\AwesomeMath.h"
 #include "..\..\AwesomeInput\AwesomeInput.h"
 #include "..\..\AwesomeGeneral\AwesomeGeneral.h"
+#include "Particles.h"
+#include <ppl.h>
+#include <algorithm>
+#include <vector>
+#include <cassert>
+
 // D E F I N E S ///////////////////////////////////////////////////
 
 
@@ -28,6 +34,7 @@ void	  updateCamera(AWEVector deltaPos);
 void	  updateFPS();
 void	  initScene();
 void	  updateLight();
+void	  Render();
 
 
 #endif

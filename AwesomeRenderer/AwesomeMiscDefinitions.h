@@ -13,7 +13,7 @@
 #include <Windows.h>
 #include "../AwesomeMath/AwesomeMath.h"
 
-#define MAX_LIGHTS 16
+#define MAX_LIGHTS 128
 
 //----------------------------------------------------------------------
 // Name: AWESOMECOLOR
@@ -135,7 +135,7 @@ typedef struct AWELIGHT_TYPE
 	float      fAttenuation1 = 0.0f;  // Change of intensity over distance
 	float	   fAttenuation2 = 0.0f;  // Change of intensity over distance
 
-	int   Type = AWE_NOTSET_LIGHT; // Type of light, not set by default
+	AWELIGHTID   Type = AWE_NOTSET_LIGHT; // Type of light, not set by default
 	float notUsed = 0.0f;
 
 } AWELIGHT;

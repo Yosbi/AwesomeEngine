@@ -130,9 +130,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Particles.h" />
     <ClInclude Include="PointLight.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Particles.cpp" />
     <ClCompile Include="PointLight.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

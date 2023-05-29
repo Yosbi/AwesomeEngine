@@ -49,7 +49,8 @@ UINT g_sMeshGrid = 0;
 UINT g_sMeshSphere = 0;
 UINT g_sMeshCylinder = 0;
 UINT g_sMeshChinesse = 0;
-UINT g_sMeshHada = 0;
+UINT g_sMeshHada = 0; 
+UINT g_sMeshSpark = 0;
 
 AWEVector g_vcHadaPos;
 
@@ -71,7 +72,9 @@ UINT g_nGlobalDirectionalLight = 0;
 AwesomeBezier g_bezier;
 std::vector<AWEVector> g_bezierVectors0;
 std::vector<AWEVector> g_bezierVectors1;
-int bezierAnimIndex = 0;
+int g_nbezierAnimIndex = 0;
+
+ParticleSystemSparks g_fairySparks;
 
 
 /**
@@ -415,9 +418,13 @@ HRESULT LoadAssets() {
     loader2.loadOBJ(L"Chinesse.obj");
     g_pDevice->GetVertexManager()->CreateStaticBuffer(spheSkin, loader2.getVerteces().size(), loader2.getVertexSize(), loader2.getVerteces().data(), 0, NULL, &g_sMeshChinesse);
 
-    AwesomeGeometryGenerator::AwesomeMeshData hada = geoGen.CreateSphere(0.2f, 100, 200);
+    AwesomeGeometryGenerator::AwesomeMeshData hada = geoGen.CreateSphere(0.2f, 20, 20);
     g_pDevice->GetVertexManager()->CreateStaticBuffer(hadaSkin, hada.Vertices.size(), hada.getVertexSize(), hada.Vertices.data(),
         hada.Indices32.size(), hada.GetIndices16().data(), &g_sMeshHada);
+
+    AwesomeGeometryGenerator::AwesomeMeshData sparks = geoGen.CreateSphere(0.1f, 5, 5);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(hadaSkin, sparks.Vertices.size(), sparks.getVertexSize(), sparks.Vertices.data(),
+        sparks.Indices32.size(), sparks.GetIndices16().data(), &g_sMeshSpark);
 
     return S_OK;
 }
@@ -458,41 +465,46 @@ void updateFPS() {
 
 void updateLight() {
     
+    // Updating / Setting animation
     if (g_bezier.GetAnimationFinished())
     {
-        bezierAnimIndex++;
-        if (bezierAnimIndex == 1)
+        g_nbezierAnimIndex++;
+        if (g_nbezierAnimIndex == 1)
         {
             g_bezier.Set(g_bezierVectors1);
-            bezierAnimIndex = -1;
+            g_nbezierAnimIndex = -1;
         }
            
 
-        if (bezierAnimIndex == 0)
+        if (g_nbezierAnimIndex == 0)
         {
             g_bezier.Set(g_bezierVectors0);
         }
     }
     AWEVector v = g_bezier.Update(g_aweTimer.GetElapsed());
+    //OutputDebugStringA(("X: " + std::to_string(v.x) + ", Y: " + std::to_string(v.y) +", Z: " + std::to_string(v.z) + "\n").c_str());
 
 
-    // switching the light position
-    /*static float theta = 0.0f;
-    theta += g_aweTimer.GetElapsed();
-    if (theta >= 2.0f * 3.1416f)
-        theta = 0.0f;
-    g_globalDirectionalLight.vcPositionW.z = 15.0f * sinf(theta);*/
-
+    // Updating the light position
     g_globalDirectionalLight.vcPositionW.x = v.x;
     g_globalDirectionalLight.vcPositionW.y = v.y;
     g_globalDirectionalLight.vcPositionW.z = v.z;
+    g_pDevice->UpdateLight(g_nGlobalDirectionalLight, g_globalDirectionalLight);
 
-    OutputDebugStringA(("X: " + std::to_string(v.x) + ", Y: " + std::to_string(v.y) +", Z: " + std::to_string(v.z) + "\n").c_str());
-    
-
+    // Updating the fairy position
     g_vcHadaPos.Set(g_globalDirectionalLight.vcPositionW.x, g_globalDirectionalLight.vcPositionW.y, g_globalDirectionalLight.vcPositionW.z);
 
-    g_pDevice->UpdateLight(g_nGlobalDirectionalLight, g_globalDirectionalLight);
+
+    static float time = 0.0f;
+    time += g_aweTimer.GetElapsed();
+
+    if (time >= 0.05f) {
+        g_fairySparks.EmitSpark(g_globalDirectionalLight.vcPositionW);
+        time = 0.0f;
+    }
+    g_fairySparks.Update(g_aweTimer.GetElapsed());
+    OutputDebugStringA(("Num particles: " + std::to_string(g_fairySparks.particles.size()) + "\n").c_str());
+
 }
 /**
  * Do one frame.
@@ -507,6 +519,14 @@ HRESULT ProgramTick(void) {
 
     updateLight();
 
+    Render();
+
+    return S_OK;
+}
+
+
+void Render()
+{
     // clear buffers and start scene
     g_pDevice->BeginRendering(true, true, true);
 
@@ -558,7 +578,7 @@ HRESULT ProgramTick(void) {
             g_pDevice->GetVertexManager()->Render(g_sMeshChinesse);
         }
         else
-        { 
+        {
             leftSphereWorld.Translate(-5.0f, 3.5f, -10.0f + i * 5.0f);
             rightSphereWorld.Translate(+5.0f, 3.5f, -10.0f + i * 5.0f);
 
@@ -570,8 +590,38 @@ HRESULT ProgramTick(void) {
         }
     }
 
+    // Rendering particles
+    int i = 1;
+    for ( const Particle &particle : g_fairySparks.particles) 
+    {
+        AWEMatrix particleWorld;
+        particleWorld.Identity();
+        particleWorld.Scale(particle.m_scale, particle.m_scale, particle.m_scale);
+        particleWorld.Translate(particle.m_vcPosition.x, particle.m_vcPosition.y, particle.m_vcPosition.z);
+
+        AWELIGHT sparkLight;
+        sparkLight.Type = AWE_POINT_LIGHT;
+        sparkLight.cDiffuseLight = { 0.3f, 1.0f, 1.0f, 1.0f };
+        sparkLight.cSpecularLight = { 0.3f, 1.0f, 1.0f, 1.0f };
+
+        sparkLight.fAttenuation0 = 2 - particle.m_lifetime;
+        sparkLight.fAttenuation1 = 2 - particle.m_lifetime;
+        sparkLight.fAttenuation2 = 2 - particle.m_lifetime;
+        sparkLight.vcPositionW = particle.m_vcPosition;
+        g_pDevice->UpdateLight(i, sparkLight);
+
+        g_pDevice->SetWorldTransformMatrix(particleWorld);
+        g_pDevice->GetVertexManager()->Render(g_sMeshSpark);
+        i++;
+    }
+
+    for (i; i < MAX_LIGHTS; i++)
+    {
+        AWELIGHT lightOff;
+        lightOff.Type = AWE_NOTSET_LIGHT;
+        g_pDevice->UpdateLight(i, lightOff);
+    }
+
     // flip backbuffer to front
     g_pDevice->EndRendering();
-
-    return S_OK;
 }
