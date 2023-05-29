@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AwesomeBezier.h" />
     <ClInclude Include="AwesomeFreeCam.h" />
     <ClInclude Include="AwesomeBaseAnimation.h" />
     <ClInclude Include="AwesomeBaseCam.h" />
@@ -33,6 +34,7 @@
   <ItemGroup>
     <ClCompile Include="AwesomeBaseAnimation.cpp" />
     <ClCompile Include="AwesomeBaseCam.cpp" />
+    <ClCompile Include="AwesomeBezier.cpp" />
     <ClCompile Include="AwesomeFirstPersonCam.cpp" />
     <ClCompile Include="AwesomeFreeCam.cpp" />
     <ClCompile Include="AwesomeGeometryGenerator.cpp" />

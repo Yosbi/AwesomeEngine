@@ -16,6 +16,7 @@
 #include "AwesomeTimer.h"
 #include "AwesomeBaseAnimation.h"
 #include "AwesomeLinearInterpolation.h"
+#include "AwesomeBezier.h"
 #include "AwesomeOBJLoader.h"
 #include "AwesomeGeometryGenerator.h"
 

@@ -68,6 +68,12 @@ AWESOMECOLOR g_yellowColor = { 0.0f, 1.0f, 1.0f, 1.0f };
 AWELIGHT g_globalDirectionalLight;
 UINT g_nGlobalDirectionalLight = 0;
 
+AwesomeBezier g_bezier;
+std::vector<AWEVector> g_bezierVectors0;
+std::vector<AWEVector> g_bezierVectors1;
+int bezierAnimIndex = 0;
+
+
 /**
  * WinMain function to get the thing started.
  */
@@ -172,55 +178,27 @@ void initScene() {
     g_pDevice->AddLight(g_globalDirectionalLight, g_nGlobalDirectionalLight);
 
 
-   /* UINT nGlobalDirectionalLight2 = 0;
-    AWELIGHT globalDirectionalLight2;
-    globalDirectionalLight2.Type = AWE_DIRECTIONAL_LIGHT;
-    globalDirectionalLight2.cDiffuseLight = { 1.0f, 1.0f, 1.0f, 1.0f };
-    globalDirectionalLight2.cSpecularLight = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_bezierVectors0.push_back(AWEVector(0, 0.5f, -10.0f));
+    g_bezierVectors0.push_back(AWEVector(0, 6, -5));
+    g_bezierVectors0.push_back(AWEVector(0, 12, 0));
+    g_bezierVectors0.push_back(AWEVector(0, 6, 5));
+    g_bezierVectors0.push_back(AWEVector(0, 0.5f, 10.0f));
+    g_bezier.Set(g_bezierVectors0);
 
-    globalDirectionalLight2.vcDirectionW.Set(0.0f, 1.0f, 1.0f);
-    globalDirectionalLight2.vcDirectionW.Normalize();
 
-    g_pDevice->AddLight(globalDirectionalLight2, nGlobalDirectionalLight2);*/
-   
-    /*AWESOMECOLOR ambient = {0.6f, 0.6f, 0.6f, 1.0f};
-    g_pDevice->SetAmbientLight(ambient);
-
-    AWESOMECOLOR diffuse = { 1.0f, 1.0f, 1.0f, 1.0f };
-    g_pDevice->SetDiffuseLight(diffuse);
-
-    AWESOMECOLOR specular = { 1.0f, 1.0f, 1.0f, 1.0f };
-    g_pDevice->SetSpecularLight(specular);
-
-    AWEVector vcLight = AWEVector(0.0f, 1.0f, -1.0f);
-    vcLight.Normalize();
-    g_pDevice->SetLightDirection(vcLight);*/
+    g_bezierVectors1.push_back(AWEVector(0, 0.5f, 10.0f));
+    g_bezierVectors1.push_back(AWEVector(0, 3, 5));
+    g_bezierVectors1.push_back(AWEVector(0, 6, 0));
+    g_bezierVectors1.push_back(AWEVector(0, 3, -5));
+    g_bezierVectors1.push_back(AWEVector(0, 0.5f, -10.0f));
 }
 
 void initCamera() {
     AWEVector pos = AWEVector(0, 30, -30);
-    /*AwesomeFreeCam* freeCam1 = new AwesomeFreeCam();
-    freeCam1->SetPos(pos);
-    freeCam1->SetRotation((45 * AWEPI) / 180.0f, 0.0f, 0.0f);
-
-    pos = AWEVector(0, 10, 30);
-    AwesomeFreeCam* freeCam2 = new AwesomeFreeCam();
-    freeCam2->SetPos(pos);
-    freeCam2->SetRotation((10 * AWEPI) / 180.0f, AWEPI, 0.0f);
-
-
-    pos = AWEVector(0.0f, 100, 0.0f);
-    AwesomeFreeCam* freeCam3 = new AwesomeFreeCam();
-    freeCam3->SetPos(pos);
-    freeCam3->SetRotation((90 * AWEPI) / 180.0f, 0.0f, 0.0f);*/
 
     pos = AWEVector(0, 7, -30);
     AwesomeFirstPersonCam* fpCam = new AwesomeFirstPersonCam();
     fpCam->SetPos(pos);
-
-    /*g_vcCameras.push_back(freeCam1);
-    g_vcCameras.push_back(freeCam2);
-    g_vcCameras.push_back(freeCam3);*/
     g_vcCameras.push_back(fpCam);
 
     g_pDevice->setFoV(45.0f);
@@ -480,14 +458,39 @@ void updateFPS() {
 
 void updateLight() {
     
+    if (g_bezier.GetAnimationFinished())
+    {
+        bezierAnimIndex++;
+        if (bezierAnimIndex == 1)
+        {
+            g_bezier.Set(g_bezierVectors1);
+            bezierAnimIndex = -1;
+        }
+           
+
+        if (bezierAnimIndex == 0)
+        {
+            g_bezier.Set(g_bezierVectors0);
+        }
+    }
+    AWEVector v = g_bezier.Update(g_aweTimer.GetElapsed());
+
+
     // switching the light position
-    static float theta = 0.0f;
+    /*static float theta = 0.0f;
     theta += g_aweTimer.GetElapsed();
     if (theta >= 2.0f * 3.1416f)
         theta = 0.0f;
-    g_globalDirectionalLight.vcPositionW.z = 15.0f * sinf(theta);
+    g_globalDirectionalLight.vcPositionW.z = 15.0f * sinf(theta);*/
 
-    g_vcHadaPos.Set(0.0f, 1.0f, g_globalDirectionalLight.vcPositionW.z);
+    g_globalDirectionalLight.vcPositionW.x = v.x;
+    g_globalDirectionalLight.vcPositionW.y = v.y;
+    g_globalDirectionalLight.vcPositionW.z = v.z;
+
+    OutputDebugStringA(("X: " + std::to_string(v.x) + ", Y: " + std::to_string(v.y) +", Z: " + std::to_string(v.z) + "\n").c_str());
+    
+
+    g_vcHadaPos.Set(g_globalDirectionalLight.vcPositionW.x, g_globalDirectionalLight.vcPositionW.y, g_globalDirectionalLight.vcPositionW.z);
 
     g_pDevice->UpdateLight(g_nGlobalDirectionalLight, g_globalDirectionalLight);
 }

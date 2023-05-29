@@ -75,6 +75,9 @@
     <ClInclude Include="AwesomeGeometryGenerator.h">
       <Filter>Header Files\GeometryGen</Filter>
     </ClInclude>
+    <ClInclude Include="AwesomeBezier.h">
+      <Filter>Header Files\Animation</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AwesomeTimer.cpp">
@@ -100,6 +103,9 @@
     </ClCompile>
     <ClCompile Include="AwesomeGeometryGenerator.cpp">
       <Filter>Source Files\GeometryGen</Filter>
+    </ClCompile>
+    <ClCompile Include="AwesomeBezier.cpp">
+      <Filter>Source Files\Animation</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
