@@ -23,8 +23,8 @@ public:
 
     int RowCount()const;
     int ColumnCount()const;
-    long VertexCount()const;
-    long TriangleCount()const;
+    int VertexCount()const;
+    int TriangleCount()const;
     float Width()const;
     float Depth()const;
 
@@ -44,8 +44,8 @@ private:
     int mNumRows = 0;
     int mNumCols = 0;
 
-    long mVertexCount = 0;
-    long mTriangleCount = 0;
+    int mVertexCount = 0;
+    int mTriangleCount = 0;
 
     // Simulation constants we can precompute.
     float mK1 = 0.0f;

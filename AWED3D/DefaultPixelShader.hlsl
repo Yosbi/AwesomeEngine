@@ -42,7 +42,7 @@ float3 ComputePointLight(uint i, float3 normal, float3 toEye, float3 posW)
 float3 ComputeLighting(float3 normal, float3 toEye, float3 posW)
 {
     float3 result = 0.0f;
-    for (int i = 0; i < 16; ++i)
+    for (int i = 0; i < MaxLights; ++i)
     {
         if (gLights[i].Type == DirectionalLight)
             result += ComputeDirectionalLight(i, normal, toEye);

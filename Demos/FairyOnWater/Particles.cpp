@@ -13,7 +13,7 @@ void Particle::Update(float deltaTime) {
     m_lifetime -= deltaTime;
 }
 
-bool Particle::IsAlive() const{
+bool Particle::IsAlive() const {
     return m_lifetime > 0.0f;
 }
 

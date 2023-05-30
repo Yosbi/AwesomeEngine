@@ -545,12 +545,12 @@ void AwesomeGeometryGenerator::BuildCylinderBottomCap(float bottomRadius, float 
 	}
 }
 
-AwesomeGeometryGenerator::AwesomeMeshData AwesomeGeometryGenerator::CreateGrid(float width, float depth, uint32 m, uint32 n)
+AwesomeGeometryGenerator::AwesomeMeshData AwesomeGeometryGenerator::CreateGrid(float width, float depth, uint64 m, uint64 n)
 {
 	AwesomeMeshData meshData;
 
-	uint32 vertexCount = m * n;
-	uint32 faceCount = (m - 1) * (n - 1) * 2;
+	uint64 vertexCount = m * n;
+	uint64 faceCount = (m - 1) * (n - 1) * 2;
 
 	//
 	// Create the vertices.
@@ -566,10 +566,10 @@ AwesomeGeometryGenerator::AwesomeMeshData AwesomeGeometryGenerator::CreateGrid(f
 	float dv = 1.0f / (m - 1);
 
 	meshData.Vertices.resize(vertexCount);
-	for (uint32 i = 0; i < m; ++i)
+	for (uint64 i = 0; i < m; ++i)
 	{
 		float z = halfDepth - i * dz;
-		for (uint32 j = 0; j < n; ++j)
+		for (uint64 j = 0; j < n; ++j)
 		{
 			float x = -halfWidth + j * dx;
 
@@ -594,10 +594,10 @@ AwesomeGeometryGenerator::AwesomeMeshData AwesomeGeometryGenerator::CreateGrid(f
 	meshData.Indices32.resize(faceCount * 3); // 3 indices per face
 
 	// Iterate over each quad and compute indices.
-	uint32 k = 0;
-	for (uint32 i = 0; i < m - 1; ++i)
+	uint64 k = 0;
+	for (uint64 i = 0; i < m - 1; ++i)
 	{
-		for (uint32 j = 0; j < n - 1; ++j)
+		for (uint64 j = 0; j < n - 1; ++j)
 		{
 			meshData.Indices32[k] = i * n + j;
 			meshData.Indices32[k + 1] = i * n + j + 1;

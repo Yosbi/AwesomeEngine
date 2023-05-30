@@ -20,6 +20,7 @@ public:
 
 	using uint16 = std::uint16_t;
 	using uint32 = std::uint32_t;
+	using uint64 = std::uint64_t;
 
 	struct AwesomeMeshData
 	{
@@ -62,7 +63,7 @@ public:
 
 	// Creates an mxn grid in the xz-plane with m rows and n columns, centered
 	// at the origin with the specified width and depth.
-	AwesomeMeshData CreateGrid(float width, float depth, uint32 m, uint32 n);
+	AwesomeMeshData CreateGrid(float width, float depth, uint64_t m, uint64_t n);
 
 	// Creates a quad aligned with the screen.  This is useful for postprocessing and screen effects.
 	AwesomeMeshData CreateQuad(float x, float y, float w, float h, float depth);

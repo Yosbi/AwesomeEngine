@@ -1,4 +1,4 @@
-#include "PointLight.h"         // prototypes and stuff
+#include "FairyOnWater.h"         // prototypes and stuff
 
 //include our library
 #pragma comment(lib, "AwesomeInput.lib")
@@ -44,13 +44,9 @@ AwesomeLinearInterpolation g_posLerp;
 AwesomeLinearInterpolation g_dirLerp;
 AwesomeLinearInterpolation g_upLerp;
 
-UINT g_sMeshBox = 0;
-UINT g_sMeshGrid = 0;
-UINT g_sMeshSphere = 0;
-UINT g_sMeshCylinder = 0;
-UINT g_sMeshChinesse = 0;
-UINT g_sMeshHada = 0; 
+UINT g_sMeshFairy = 0;
 UINT g_sMeshSpark = 0;
+UINT g_sMeshWaves = 0;
 
 AWEVector g_vcHadaPos;
 
@@ -59,8 +55,8 @@ AWEVector g_vcHadaPos;
 //int g_nVerts = 0;
 //WORD* g_Index = NULL;
 
-AWESOMECOLOR g_whiteColor = {1.0f, 1.0f, 1.0f, 1.0f };
-AWESOMECOLOR g_blackColor = {0.0f, 0.0f, 0.0f, 1.0f };
+AWESOMECOLOR g_whiteColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+AWESOMECOLOR g_blackColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 AWESOMECOLOR g_redColor = { 1.0f, 0.0f, 0.0f, 1.0f };
 AWESOMECOLOR g_greenColor = { 0.0f, 1.0f, 0.0f, 1.0f };
 AWESOMECOLOR g_blueColor = { 0.0f, 0.0f, 1.0f, 1.0f };
@@ -69,12 +65,21 @@ AWESOMECOLOR g_yellowColor = { 0.0f, 1.0f, 1.0f, 1.0f };
 AWELIGHT g_globalDirectionalLight;
 UINT g_nGlobalDirectionalLight = 0;
 
+AWELIGHT g_FairyLight;
+UINT g_nFairyLight = 0;
+
 AwesomeBezier g_bezier;
 std::vector<AWEVector> g_bezierVectors0;
 std::vector<AWEVector> g_bezierVectors1;
 int g_nbezierAnimIndex = 0;
 
 ParticleSystemSparks g_fairySparks;
+
+UINT numColsRowsWater = 250;
+float waterSize = 50.0f;
+AwesomeGeometryGenerator::AwesomeMeshData g_cpuWaves;
+Waves g_waves(numColsRowsWater, numColsRowsWater, 1.0f, 0.03f, 8.0f, 0.2f);
+
 
 
 /**
@@ -168,33 +173,36 @@ void initScene() {
     //g_pDevice->SetClearColor(0.690196097f, 0.768627524f, 0.870588303f); // A light sky blue
     g_pDevice->SetClearColor(0.0f, 0.0f, 0.0f);
 
-    AWESOMECOLOR ambientLight = { 0.20f,0.20f,0.20f };
+    AWESOMECOLOR ambientLight = { 0.35f,0.35f,0.35f };
     g_pDevice->SetAmbientLight(ambientLight);
 
-    g_globalDirectionalLight.Type = AWE_POINT_LIGHT;
-    g_globalDirectionalLight.cDiffuseLight = { 0.5f, 1.0f, 1.0f, 1.0f };
-    g_globalDirectionalLight.cSpecularLight = { 0.5f, 1.0f, 1.0f, 1.0f };
-
-    g_globalDirectionalLight.vcPositionW.Set(0.0f, 3.0f, 0.0f);
-    g_globalDirectionalLight.vcPositionW.Normalize();
-    g_globalDirectionalLight.fAttenuation0 = 1.0f;
-    
+    g_globalDirectionalLight.Type = AWE_DIRECTIONAL_LIGHT;
+    g_globalDirectionalLight.cDiffuseLight = { 0.6f, 0.6f, 0.6f, 1.0f };
+    g_globalDirectionalLight.cSpecularLight = { 1.0f, 1.0f, 1.0f, 1.0f };
+    g_globalDirectionalLight.vcDirectionW.Set(0.0f, 1.0f, 1.0f);
+    g_globalDirectionalLight.vcDirectionW.Normalize();
     g_pDevice->AddLight(g_globalDirectionalLight, g_nGlobalDirectionalLight);
 
+    g_FairyLight.Type = AWE_POINT_LIGHT;
+    g_FairyLight.cDiffuseLight = { 0.5f, 1.0f, 1.0f, 1.0f };
+    g_FairyLight.cSpecularLight = { 0.5f, 1.0f, 1.0f, 1.0f };
+    g_FairyLight.vcPositionW.Set(0.0f, 3.0f, 0.0f);
+    g_FairyLight.vcPositionW.Normalize();
+    g_FairyLight.fAttenuation0 = 1.0f;
+    g_FairyLight.fAttenuation1 = 1.0f;
+    g_FairyLight.fAttenuation2 = 1.0f;
+    g_pDevice->AddLight(g_FairyLight, g_nFairyLight);
 
-    g_bezierVectors0.push_back(AWEVector(0, 0.5f, -10.0f));
-    g_bezierVectors0.push_back(AWEVector(0, 6, -5));
-    g_bezierVectors0.push_back(AWEVector(0, 12, 0));
-    g_bezierVectors0.push_back(AWEVector(0, 6, 5));
-    g_bezierVectors0.push_back(AWEVector(0, 0.5f, 10.0f));
+
+    g_bezierVectors0 = ComputeNewBezierPoints(AWEVector(0.0f, 0.0f, 0.0f));
     g_bezier.Set(g_bezierVectors0);
 
 
-    g_bezierVectors1.push_back(AWEVector(0, 0.5f, 10.0f));
+    /*g_bezierVectors1.push_back(AWEVector(0, 0.5f, 10.0f));
     g_bezierVectors1.push_back(AWEVector(0, 3, 5));
     g_bezierVectors1.push_back(AWEVector(0, 6, 0));
     g_bezierVectors1.push_back(AWEVector(0, 3, -5));
-    g_bezierVectors1.push_back(AWEVector(0, 0.5f, -10.0f));
+    g_bezierVectors1.push_back(AWEVector(0, 0.5f, -10.0f));*/
 }
 
 void initCamera() {
@@ -390,42 +398,28 @@ HRESULT RendererStartup() {
 HRESULT LoadAssets() {
 
     AWESOMECOLOR emissiveWhite = { -0.5f, 1.0f, 1.0f, 1.0f };
-    
-    UINT terrainSkin = g_pDevice->GetSkinManager()->AddSkin(g_blueColor, g_blueColor, g_blackColor, g_whiteColor, 16.0f);
-    UINT cylSkin = g_pDevice->GetSkinManager()->AddSkin(g_redColor, g_redColor, g_blackColor, g_whiteColor, 8.0f);
-    UINT spheSkin = g_pDevice->GetSkinManager()->AddSkin(g_greenColor, g_greenColor, g_blackColor, g_whiteColor, 8.0f);
+
     UINT hadaSkin = g_pDevice->GetSkinManager()->AddSkin(g_yellowColor, g_yellowColor, emissiveWhite, g_yellowColor, 8.0f);
 
     AwesomeGeometryGenerator geoGen;
-    AwesomeGeometryGenerator::AwesomeMeshData grid = geoGen.CreateGrid(20.0f, 30.0f, 60, 40);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(terrainSkin, grid.Vertices.size(), grid.getVertexSize(), grid.Vertices.data(),
-        grid.Indices32.size(), grid.GetIndices16().data(), &g_sMeshGrid);
-
-/*AwesomeGeometryGenerator::AwesomeMeshData box = geoGen.CreateBox(1.5f, 0.5f, 1.5f, 3);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(skin, box.Vertices.size(), box.getVertexSize(), box.Vertices.data(),
-        box.Indices32.size(), box.GetIndices16().data(), &g_sMeshBox);*/
-
-    AwesomeGeometryGenerator::AwesomeMeshData sphere = geoGen.CreateSphere(0.5f, 100, 200);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(spheSkin, sphere.Vertices.size(), sphere.getVertexSize(), sphere.Vertices.data(),
-        sphere.Indices32.size(), sphere.GetIndices16().data(), &g_sMeshSphere);
-
-
-    AwesomeGeometryGenerator::AwesomeMeshData cylinder = geoGen.CreateCylinder(0.5f, 0.3f, 3.0f, 200, 200);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(cylSkin, cylinder.Vertices.size(), cylinder.getVertexSize(), cylinder.Vertices.data(),
-        cylinder.Indices32.size(), cylinder.GetIndices16().data(), &g_sMeshCylinder);
-
-
-    AwesomeOBJLoader loader2;
-    loader2.loadOBJ(L"Chinesse.obj");
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(spheSkin, loader2.getVerteces().size(), loader2.getVertexSize(), loader2.getVerteces().data(), 0, NULL, &g_sMeshChinesse);
-
-    AwesomeGeometryGenerator::AwesomeMeshData hada = geoGen.CreateSphere(0.2f, 5, 5);
-    g_pDevice->GetVertexManager()->CreateStaticBuffer(hadaSkin, hada.Vertices.size(), hada.getVertexSize(), hada.Vertices.data(),
-        hada.Indices32.size(), hada.GetIndices16().data(), &g_sMeshHada);
+    AwesomeGeometryGenerator::AwesomeMeshData fairy = geoGen.CreateSphere(0.2f, 5, 5);
+    g_pDevice->GetVertexManager()->CreateStaticBuffer(hadaSkin, fairy.Vertices.size(), fairy.getVertexSize(), fairy.Vertices.data(),
+        fairy.Indices32.size(), fairy.GetIndices16().data(), &g_sMeshFairy);
 
     AwesomeGeometryGenerator::AwesomeMeshData sparks = geoGen.CreateSphere(0.1f, 5, 5);
     g_pDevice->GetVertexManager()->CreateStaticBuffer(hadaSkin, sparks.Vertices.size(), sparks.getVertexSize(), sparks.Vertices.data(),
         sparks.Indices32.size(), sparks.GetIndices16().data(), &g_sMeshSpark);
+
+    // Loading waves
+
+    AWESOMECOLOR diff = { 0.0f, 0.2f, 0.6f, 1.0f };
+    AWESOMECOLOR ambient = { 0.5f, 0.5f,0.5f, 1.0f };
+    AWESOMECOLOR spec = { 1.0f, 1.0f, 1.0f, 1.0f };
+    UINT sea = g_pDevice->GetSkinManager()->AddSkin(ambient, diff, g_blackColor, spec, 16.0f);
+
+    g_cpuWaves = geoGen.CreateGrid(waterSize, waterSize, numColsRowsWater, numColsRowsWater);
+    g_pDevice->GetVertexManager()->CreateDynamicBuffer(sea, g_cpuWaves.Vertices.size(), g_cpuWaves.Vertices.data(),
+        g_cpuWaves.Indices32.size(), g_cpuWaves.GetIndices16().data(), &g_sMeshWaves);
 
     return S_OK;
 }
@@ -464,49 +458,141 @@ void updateFPS() {
     }
 }
 
+std::vector<AWEVector> ComputeNewBezierPoints(AWEVector vcInitial)
+{
+    std::vector<AWEVector> newBezier;
+    newBezier.push_back(vcInitial);
+    newBezier.push_back(AWEVector(vcInitial.x,3.0f, vcInitial.z));
+
+    int newX = Rand(-1, 1) * Rand(3, 5);
+    int newZ = Rand(-1, 1) * Rand(3, 5);
+
+    newX += vcInitial.x;
+    newZ += vcInitial.z;
+
+    if (newX >= waterSize/2 - 1)
+        newX -= 5;
+    if (newX <= 1)
+        newX += 5;
+
+    if (newZ >= waterSize/2 - 1)
+        newZ -= 5;
+    if (newZ <= 1)
+        newZ += 5;
+
+    newBezier.push_back(AWEVector(newX, 3.0f, newZ));
+    newBezier.push_back(AWEVector(newX, 0.5f, newZ));
+
+    return newBezier;
+
+}
+
 void updateLight() {
-    
+    bool disturbWater = false;
+
     // Updating / Setting animation
+    AWEVector collisionPoint;
     if (g_bezier.GetAnimationFinished())
     {
-        g_nbezierAnimIndex++;
+        disturbWater = true;
+        /*g_nbezierAnimIndex++;
         if (g_nbezierAnimIndex == 1)
         {
+            collisionPoint = g_bezierVectors1.at(0);
             g_bezier.Set(g_bezierVectors1);
             g_nbezierAnimIndex = -1;
         }
-           
+
 
         if (g_nbezierAnimIndex == 0)
         {
+            collisionPoint = g_bezierVectors0.at(0);
             g_bezier.Set(g_bezierVectors0);
-        }
+        }*/
+        collisionPoint = g_bezierVectors0.at(g_bezierVectors0.size() - 1);
+        g_bezierVectors0 = ComputeNewBezierPoints(collisionPoint);
+        g_bezier.Set(g_bezierVectors0);
+
     }
-    AWEVector v = g_bezier.Update(g_aweTimer.GetElapsed());
+
+    if (disturbWater)
+    {
+        float r = RandF(0.1f, 0.3f);
+
+        g_waves.Disturb( ( (-collisionPoint.z + waterSize/2) * numColsRowsWater) / waterSize, 
+                         ( (collisionPoint.x + waterSize/2) * numColsRowsWater) / waterSize, r);
+    }
+
     //OutputDebugStringA(("X: " + std::to_string(v.x) + ", Y: " + std::to_string(v.y) +", Z: " + std::to_string(v.z) + "\n").c_str());
 
+    AWEVector v = g_bezier.Update(g_aweTimer.GetElapsed());
 
     // Updating the light position
-    g_globalDirectionalLight.vcPositionW.x = v.x;
-    g_globalDirectionalLight.vcPositionW.y = v.y;
-    g_globalDirectionalLight.vcPositionW.z = v.z;
-    g_pDevice->UpdateLight(g_nGlobalDirectionalLight, g_globalDirectionalLight);
+    g_FairyLight.vcPositionW.x = v.x;
+    g_FairyLight.vcPositionW.y = v.y;
+    g_FairyLight.vcPositionW.z = v.z;
+    g_pDevice->UpdateLight(g_nFairyLight, g_FairyLight);
 
     // Updating the fairy position
-    g_vcHadaPos.Set(g_globalDirectionalLight.vcPositionW.x, g_globalDirectionalLight.vcPositionW.y, g_globalDirectionalLight.vcPositionW.z);
+    g_vcHadaPos.Set(g_FairyLight.vcPositionW.x, g_FairyLight.vcPositionW.y, g_FairyLight.vcPositionW.z);
 
 
     static float time = 0.0f;
     time += g_aweTimer.GetElapsed();
 
     if (time >= 0.05f) {
-        g_fairySparks.EmitSpark(g_globalDirectionalLight.vcPositionW);
+        g_fairySparks.EmitSpark(g_FairyLight.vcPositionW);
         time = 0.0f;
     }
     g_fairySparks.Update(g_aweTimer.GetElapsed());
-    OutputDebugStringA(("Num particles: " + std::to_string(g_fairySparks.particles.size()) + "\n").c_str());
+    //OutputDebugStringA(("Num particles: " + std::to_string(g_fairySparks.particles.size()) + "\n").c_str());
 
 }
+
+void updateWaves()
+{
+    // Every quarter second, generate a random wave.
+    /*static float t_base = 0.0f;
+    static float t_passed = 0.0f;
+    t_passed += g_aweTimer.GetElapsed();
+
+    if ((t_passed - t_base) >= 0.1f)
+    {
+        t_base += 0.1f;
+
+        int i = Rand(4, g_waves.RowCount() - 5);
+        int j = Rand(4, g_waves.ColumnCount() - 5);
+
+        float r = RandF(0.2f, 0.5f);
+
+        g_waves.Disturb(i, j, r);
+    }-*/
+
+    // Update the wave simulation.
+    g_waves.Update(g_aweTimer.GetElapsed());
+
+    UINT count = g_waves.VertexCount();
+    UINT size = g_cpuWaves.Vertices.size();
+    // Update the wave vertex buffer with the new solution.
+    for (int i = 0; i < g_waves.VertexCount(); ++i)
+    {
+        AWEVector v = g_waves.Position(i);
+        //g_cpuWaves.Vertices[i].x = v.x;
+        g_cpuWaves.Vertices[i].y = v.y;
+        //g_cpuWaves.Vertices[i].z = v.z;
+
+        AWEVector n = g_waves.Normal(i);
+        g_cpuWaves.Vertices[i].vcN[0] = n.x;
+        g_cpuWaves.Vertices[i].vcN[1] = n.y;
+        g_cpuWaves.Vertices[i].vcN[2] = n.z;
+
+    }
+
+    g_pDevice->GetVertexManager()->UpdateDynamicBuffer(g_sMeshWaves, g_cpuWaves.Vertices.data());
+
+}
+
+
 /**
  * Do one frame.
  */
@@ -520,6 +606,8 @@ HRESULT ProgramTick(void) {
 
     updateLight();
 
+    updateWaves();
+
     Render();
 
     return S_OK;
@@ -532,7 +620,7 @@ void Render()
     g_pDevice->BeginRendering(true, true, true);
 
     // Rendering particles first as they have light
-    int i = 1;
+    int i = 2;
     //std::reverse(g_fairySparks.particles.begin(), g_fairySparks.particles.end()); 
     for (const Particle& particle : g_fairySparks.particles)
     {
@@ -569,66 +657,15 @@ void Render()
 
 
     AWEMatrix mWorld;
-    /*mWorld.Translate(0.0f, 0.5f, 0.0f);
-    AWEMatrix mScaling;
-    mScaling._11 = mScaling._22 = mScaling._33 = 2.0f;
-    g_pDevice->SetWorldTransformMatrix(mScaling * mWorld);
-    g_pDevice->GetVertexManager()->Render(g_sMeshBox);*/
-
     mWorld.Identity();
     mWorld.Translate(g_vcHadaPos.x, g_vcHadaPos.y, g_vcHadaPos.z);
     g_pDevice->SetWorldTransformMatrix(mWorld);
-    g_pDevice->GetVertexManager()->Render(g_sMeshHada);
+    g_pDevice->GetVertexManager()->Render(g_sMeshFairy);
 
     mWorld.Identity();
     g_pDevice->SetWorldTransformMatrix(mWorld);
-    g_pDevice->GetVertexManager()->Render(g_sMeshGrid);
+    g_pDevice->GetVertexManager()->Render(g_sMeshWaves);
 
-    // Rendering the spheres and columns
-    for (int i = 0; i < 5; ++i)
-    {
-        AWEMatrix leftCylWorld;
-        leftCylWorld.Translate(-5.0f, 1.5f, -10.0f + i * 5.0f);
-
-        AWEMatrix rightCylWorld;
-        rightCylWorld.Translate(+5.0f, 1.5f, -10.0f + i * 5.0f);
-
-        AWEMatrix leftSphereWorld;
-        AWEMatrix rightSphereWorld;
-
-        g_pDevice->SetWorldTransformMatrix(leftCylWorld);
-        g_pDevice->GetVertexManager()->Render(g_sMeshCylinder);
-
-        g_pDevice->SetWorldTransformMatrix(rightCylWorld);
-        g_pDevice->GetVertexManager()->Render(g_sMeshCylinder);
-
-        if (i % 2 == 0) {
-            leftSphereWorld.Scale(0.07f, 0.07f, 0.07f);
-            leftSphereWorld.Translate(-5.0f, 3.5f, -10.0f + i * 5.0f);
-
-            rightSphereWorld.Scale(0.07f, 0.07f, 0.07f);
-            rightSphereWorld.Translate(+5.0f, 3.5f, -10.0f + i * 5.0f);
-
-            g_pDevice->SetWorldTransformMatrix(leftSphereWorld);
-            g_pDevice->GetVertexManager()->Render(g_sMeshChinesse);
-
-            g_pDevice->SetWorldTransformMatrix(rightSphereWorld);
-            g_pDevice->GetVertexManager()->Render(g_sMeshChinesse);
-        }
-        else
-        {
-            leftSphereWorld.Translate(-5.0f, 3.5f, -10.0f + i * 5.0f);
-            rightSphereWorld.Translate(+5.0f, 3.5f, -10.0f + i * 5.0f);
-
-            g_pDevice->SetWorldTransformMatrix(leftSphereWorld);
-            g_pDevice->GetVertexManager()->Render(g_sMeshSphere);
-
-            g_pDevice->SetWorldTransformMatrix(rightSphereWorld);
-            g_pDevice->GetVertexManager()->Render(g_sMeshSphere);
-        }
-    }
-
-    
 
     // flip backbuffer to front
     g_pDevice->EndRendering();

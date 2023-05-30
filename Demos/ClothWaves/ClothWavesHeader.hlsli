@@ -1,4 +1,4 @@
-#define MaxLights 16
+#define MaxLights 128
 
 #define NotSetLight 0
 #define DirectionalLight 1

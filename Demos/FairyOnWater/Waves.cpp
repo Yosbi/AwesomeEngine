@@ -1,7 +1,3 @@
-//***************************************************************************************
-// Waves.cpp by Frank Luna (C) 2011 All Rights Reserved.
-//***************************************************************************************
-
 #include "Waves.h"
 #include <ppl.h>
 #include <algorithm>
@@ -13,8 +9,8 @@ Waves::Waves(int m, int n, float dx, float dt, float speed, float damping)
 	mNumRows = m;
 	mNumCols = n;
 
-	mVertexCount = (long)m * (long)n;
-	mTriangleCount = ((long)m - 1) * ((long)n - 1) * 2;
+	mVertexCount = m * n;
+	mTriangleCount = (m - 1) * (n - 1) * 2;
 
 	mTimeStep = dt;
 	mSpatialStep = dx;
@@ -63,12 +59,12 @@ int Waves::ColumnCount()const
 	return mNumCols;
 }
 
-long Waves::VertexCount()const
+int Waves::VertexCount()const
 {
 	return mVertexCount;
 }
 
-long Waves::TriangleCount()const
+int Waves::TriangleCount()const
 {
 	return mTriangleCount;
 }
