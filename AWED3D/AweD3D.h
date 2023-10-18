@@ -153,6 +153,7 @@ private:
 
 	bool EnableDebugLayer();
 	void InitFactory();
+	int  SelectAdapter();
 	void CreateDevice();
 	void CreateCommandQueue();
 	void CreateDefaultRootSignature();
@@ -275,6 +276,8 @@ private:
 	std::unique_ptr<AweD3DUploadBuffer<AWEPEROBJECTVARIABLES>> m_CbUploadPerObjectVariables = nullptr;	// Upload constant buffer
 	AWEPEROBJECTVARIABLES m_PerObjectVariables;															// The actual variable
 	//Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_CbvHeapPerObjectVariables = nullptr;					// The heap
+
+	std::vector <IDXGIAdapter*> m_vcAdapters;
 };
 
 #endif // !AWED3D_H

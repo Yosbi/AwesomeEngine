@@ -175,11 +175,39 @@ void AweD3D::InitFactory()
 	ThrowIfFailed(CreateDXGIFactory( IID_PPV_ARGS(&m_dxgiFactory)));
 }
 
+int AweD3D::SelectAdapter() {
+	// Listing the adapters
+	UINT i = 0;
+	IDXGIAdapter* pAdapter;
+	while (m_dxgiFactory->EnumAdapters(i, &pAdapter) != DXGI_ERROR_NOT_FOUND)
+	{
+		m_vcAdapters.push_back(pAdapter);
+		++i;
+	}
+
+	// And Selecting one of them
+	SIZE_T nMemSize = 0;
+	int nSelectedAdapter = 0;
+	for (int i = 0; i < m_vcAdapters.size(); i++) {
+		DXGI_ADAPTER_DESC pDesc;
+		HRESULT hr = m_vcAdapters.at(i)->GetDesc(&pDesc);
+
+		if (pDesc.DedicatedVideoMemory > nMemSize) {
+			nSelectedAdapter = i;
+			nMemSize = pDesc.DedicatedVideoMemory;
+		}	
+	}
+	return nSelectedAdapter;
+}
+
 void AweD3D::CreateDevice()
 {
+	// Selecting the adapter
+	int nSelectedAdapter = SelectAdapter();
+
 	// Try to create hardware device.
 	HRESULT hardwareResult = D3D12CreateDevice(
-		nullptr,             // default adapter
+		m_vcAdapters.at(nSelectedAdapter),
 		D3D_FEATURE_LEVEL_12_0,
 		IID_PPV_ARGS(&m_d3d12Device));
 
