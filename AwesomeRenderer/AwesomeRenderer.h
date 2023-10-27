@@ -34,7 +34,7 @@ public:
 
 private:
 	// Private variables
-	LPAWERENDERDEVICE	m_pDevice;	// Pointer to the object of the DLL casted to the interface type (YRendererDevice)
+	LPAWERENDERDEVICE	m_pDevice;	// Pointer to the object of the DLL casted to the interface type (AWERendererDevice)
 	HINSTANCE			m_hInst;	// Instance of the app
 	HMODULE				m_hDLL;		// Handle of the loaded DLL
 };
