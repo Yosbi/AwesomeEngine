@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "..\AwesomeRenderer\AwesomeRenderer.h"
-#include "..\AwesomeMath\AwesomeMath.h"
-#include "..\AwesomeInput\AwesomeInput.h"
-#include "..\AwesomeGeneral\AwesomeGeneral.h"
+#include "..\..\Graphics\AwesomeRenderer\AwesomeRenderer.h"
+#include "..\..\Math\AwesomeMath\AwesomeMath.h"
+#include "..\..\Input\AwesomeInput\AwesomeInput.h"
+#include "..\..\Utils\AwesomeGeneral\AwesomeGeneral.h"
 // D E F I N E S ///////////////////////////////////////////////////
 
 
@@ -26,7 +26,7 @@ HRESULT   InputStartup();
 void      updateInput();
 void	  updateCamera(AWEVector deltaPos);
 void	  updateFPS();
-void GenGrid(int numVertRows, int numVertCols, float dx, float dz, const AWEVector& center);
+void	  GenGrid(int numVertRows, int numVertCols, float dx, float dz, const AWEVector& center);
 
 
 #endif

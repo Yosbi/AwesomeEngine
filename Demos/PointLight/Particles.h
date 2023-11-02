@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <random>
-#include "..\..\AwesomeMath\AwesomeMath.h"
+#include "..\..\Math\AwesomeMath\AwesomeMath.h"
 
 class Particle {
 public:

@@ -9,8 +9,8 @@
 #define WAVES_H
 #pragma once 
 
-#include "..\..\AwesomeRenderer\AwesomeRenderer.h"
-#include "..\..\AwesomeMath\AwesomeMath.h"
+#include "..\..\Graphics\AwesomeRenderer\AwesomeRenderer.h"
+#include "..\..\Math\AwesomeMath\AwesomeMath.h"
 #include <vector>
 
 class Waves

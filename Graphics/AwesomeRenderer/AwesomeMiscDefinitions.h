@@ -11,7 +11,7 @@
 #pragma once
 
 #include <Windows.h>
-#include "../AwesomeMath/AwesomeMath.h"
+#include "../../Math/AwesomeMath/AwesomeMath.h"
 
 #define MAX_LIGHTS 128
 

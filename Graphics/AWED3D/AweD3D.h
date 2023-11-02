@@ -20,7 +20,7 @@
 // includes
 //----------------------------------------------------------------------
 #include "../AwesomeRenderer/AwesomeRenderDevice.h"
-#include "../AwesomeGeneral/AwesomeTimer.h"
+#include "../../Utils/AwesomeGeneral/AwesomeTimer.h"
 #include <initguid.h>
 #include <wrl/client.h>
 #include <dxgi.h>

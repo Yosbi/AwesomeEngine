@@ -7,10 +7,10 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include "..\..\AwesomeRenderer\AwesomeRenderer.h"
-#include "..\..\AwesomeMath\AwesomeMath.h"
-#include "..\..\AwesomeInput\AwesomeInput.h"
-#include "..\..\AwesomeGeneral\AwesomeGeneral.h"
+#include "..\..\Graphics\AwesomeRenderer\AwesomeRenderer.h"
+#include "..\..\Math\AwesomeMath\AwesomeMath.h"
+#include "..\..\Input\AwesomeInput\AwesomeInput.h"
+#include "..\..\Utils\AwesomeGeneral\AwesomeGeneral.h"
 // D E F I N E S ///////////////////////////////////////////////////
 
 

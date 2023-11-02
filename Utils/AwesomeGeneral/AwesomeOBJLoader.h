@@ -2,7 +2,7 @@
 #define AWEMESH_H
 #pragma once
 #include <wrl/client.h>
-#include "../AwesomeRenderer/AwesomeRenderDevice.h"
+#include "../../Graphics/AwesomeRenderer/AwesomeRenderDevice.h"
 
 #include <vector>
 #include <string>
