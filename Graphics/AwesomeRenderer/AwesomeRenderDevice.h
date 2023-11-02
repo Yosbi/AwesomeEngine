@@ -17,7 +17,7 @@
 #include <vector>
 #include "AwesomeSkinManager.h"
 #include "AwesomeVertexCacheManager.h"
-#include "../AwesomeMath/AwesomeMath.h"
+#include "../../Math/AwesomeMath/AwesomeMath.h"
 
 
 //----------------------------------------------------------------------

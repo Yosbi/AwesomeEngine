@@ -73,8 +73,8 @@
     <None Include="AweD3D.def">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="packages.config" />
     <None Include="DefaultHeaderInput.hlsli" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="DefaultPixelShader.hlsl" />

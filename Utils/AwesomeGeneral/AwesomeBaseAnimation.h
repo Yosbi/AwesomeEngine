@@ -11,7 +11,7 @@
 #define AWEBASEANIM_H
 #pragma once
 
-#include "../AwesomeMath/AwesomeMath.h"
+#include "../../Math/AwesomeMath/AwesomeMath.h"
 
 class AwesomeBaseAnimation {
 public:
