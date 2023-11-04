@@ -208,7 +208,7 @@ inline void AWEMatrix::LookAt(AWEVector vcPos, AWEVector vcLookAt, AWEVector vcW
 	vcUp = vcWorldUp - (vcDir * fAngle);
 	vcUp.Normalize();
 
-	vcRight = vcUp.Cross(vcUp);
+	vcRight = vcUp.Cross(vcDir);
 
 	_11 = vcRight.x; _21 = vcUp.x; _31 = vcDir.x;
 	_12 = vcRight.y; _22 = vcUp.y; _32 = vcDir.y;
