@@ -27,9 +27,6 @@
     <ClInclude Include="AweD3DCommandQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="d3dx12.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="AweUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>

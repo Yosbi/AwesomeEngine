@@ -17,15 +17,17 @@
 #include <limits>
 #define MAX_ID UINT_MAX
 
+#include <d3dx12.h>
 #include <Windows.h>
 #include <wrl/client.h>
 #include <stdio.h>
 #include <string>
 #include <comdef.h>
-//#include <memory>
 #include "AweUtil.h"
 #include "AweD3DException.h"
 #include "AweD3DUploadBuffer.h"
+
+#pragma comment(lib, "dxguid.lib")
 
 #endif // !AWE_H
 

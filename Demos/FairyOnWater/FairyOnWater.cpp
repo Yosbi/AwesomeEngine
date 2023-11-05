@@ -79,14 +79,19 @@ UINT numColsRowsWater = 250;
 float waterSize = 50.0f;
 AwesomeGeometryGenerator::AwesomeMeshData g_cpuWaves;
 Waves g_waves(numColsRowsWater, numColsRowsWater, 1.0f, 0.03f, 8.0f, 0.2f);
+#include <WinBase.h>
 
 
 
 /**
  * WinMain function to get the thing started.
  */
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
-    LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI WinMain(
+    _In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPSTR lpCmdLine,
+    _In_ int nShowCmd
+) {
     WNDCLASSEX	wndclass;
     HRESULT     hr;
     HWND		hWnd;
@@ -98,7 +103,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     wndclass.lpfnWndProc = MsgProc;
     wndclass.cbClsExtra = 0;
     wndclass.cbWndExtra = 0;
-    wndclass.hInstance = hInst;
+    wndclass.hInstance = hInstance;
     wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW);
@@ -116,14 +121,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         WS_MINIMIZEBOX | WS_VISIBLE,
         GetSystemMetrics(SM_CXSCREEN) / 2 - (1280 / 2),
         GetSystemMetrics(SM_CYSCREEN) / 2 - (720 / 2),
-        1280, 720, NULL, NULL, hInst, NULL)))
+        1280, 720, NULL, NULL, hInstance, NULL)))
         return 0;
 
     // dont show everything off yet
     ShowWindow(hWnd, SW_HIDE);
 
     g_hWnd = hWnd;
-    g_hInst = hInst;
+    g_hInst = hInstance;
 
 
     // try to start the engine
@@ -163,7 +168,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     // cleanup stuff
     ProgramCleanup();
 
-    UnregisterClass(g_szAppClass, hInst);
+    UnregisterClass(g_szAppClass, hInstance);
 
     // return back to windows
     return (int)msg.wParam;
@@ -222,7 +227,10 @@ void updateCamera(float deltaT) {
     if (g_dirLerp.GetAnimationFinished()) {
         AwesomeBaseCam* cam = g_vcCameras.at(g_nSelectedCamera);
         cam->Update(deltaT);
-        g_pDevice->SetViewMatrix(cam->GetPos(), cam->GetDir(), cam->GetUp());
+
+        AWEVector lookAt = g_vcHadaPos - cam->GetPos();
+
+        g_pDevice->SetViewMatrix(cam->GetPos(), lookAt, cam->GetUp());
     }
     else
     {

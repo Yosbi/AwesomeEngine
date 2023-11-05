@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include "d3dx12.h"
 #include "Awe.h"
 #include "AweD3DException.h"
 
