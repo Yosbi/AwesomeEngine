@@ -142,7 +142,7 @@ AwesomeGeometryGenerator::AwesomeMeshData AwesomeGeometryGenerator::CreateSphere
 
 			AWEVector p(v.x, v.y, v.z);
 			p.Normalize();
-			v.vcN[0] = p.x; v.vcN[1] = p.y; v.vcN[2] = p.z;
+			v.vcN[0] = p.GetX(); v.vcN[1] = p.GetY(); v.vcN[2] = p.GetZ();
 
 			v.tu = theta / XM_2PI;
 			v.tv = phi / XM_PI;
@@ -288,7 +288,7 @@ VERTEX AwesomeGeometryGenerator::MidPoint(const VERTEX& v0, const VERTEX& v1)
 	AWEVector normal((n0 + n1) * 0.5f); normal.Normalize();
 	AWEVector tex = (tex0 + tex1) * 0.5f;
 
-	VERTEX v(pos.x, pos.y, pos.z, normal.x, normal.y, normal.z, tex.x, tex.y);
+	VERTEX v(pos.GetX(), pos.GetY(), pos.GetZ(), normal.GetX(), normal.GetY(), normal.GetZ(), tex.GetX(), tex.GetY());
 
 	return v;
 }
@@ -327,9 +327,9 @@ AwesomeGeometryGenerator::AwesomeMeshData AwesomeGeometryGenerator::CreateGeosph
 	meshData.Indices32.assign(&k[0], &k[60]);
 
 	for (uint32 i = 0; i < 12; ++i) {
-		meshData.Vertices[i].x = pos[i].x;
-		meshData.Vertices[i].y = pos[i].y;
-		meshData.Vertices[i].z = pos[i].z;
+		meshData.Vertices[i].x = pos[i].GetX();
+		meshData.Vertices[i].y = pos[i].GetY();
+		meshData.Vertices[i].z = pos[i].GetZ();
 	}
 
 	for (uint32 i = 0; i < numSubdivisions; ++i)
@@ -345,8 +345,8 @@ AwesomeGeometryGenerator::AwesomeMeshData AwesomeGeometryGenerator::CreateGeosph
 		// Project onto sphere.
 		AWEVector p = n * radius;
 		
-		meshData.Vertices[i].x = p.x; meshData.Vertices[i].y = p.y, meshData.Vertices[i].z = p.z;
-		meshData.Vertices[i].vcN[0] = n.x; meshData.Vertices[i].vcN[1] = n.y; meshData.Vertices[i].vcN[2] = n.z;
+		meshData.Vertices[i].x = p.GetX(); meshData.Vertices[i].y = p.GetY(), meshData.Vertices[i].z = p.GetZ();
+		meshData.Vertices[i].vcN[0] = n.GetX(); meshData.Vertices[i].vcN[1] = n.GetY(); meshData.Vertices[i].vcN[2] = n.GetZ();
 
 		// Derive texture coordinates from spherical coordinates.
 		float theta = atan2f(meshData.Vertices[i].z, meshData.Vertices[i].x);
@@ -431,15 +431,15 @@ AwesomeGeometryGenerator::AwesomeMeshData AwesomeGeometryGenerator::CreateCylind
 			XMVECTOR B = XMLoadFloat3(&bitangent);
 			XMVECTOR N = XMVector3Normalize(XMVector3Cross(T, B));*/
 			AWEVector Result;
-			Result.x = (TangentU.y * bitangent.z) - (TangentU.z * bitangent.y);
-			Result.y = (TangentU.z * bitangent.x) - (TangentU.x * bitangent.z);
-			Result.z = (TangentU.x * bitangent.y) - (TangentU.y * bitangent.x);
-			Result.w = 0;
+			Result.SetX( (TangentU.GetY() * bitangent.GetZ()) - (TangentU.GetZ() * bitangent.GetY()) );
+			Result.SetY( (TangentU.GetZ() * bitangent.GetX()) - (TangentU.GetX() * bitangent.GetZ()) );
+			Result.SetZ( (TangentU.GetX() * bitangent.GetY()) - (TangentU.GetY() * bitangent.GetX()) );
+			Result.SetW(0);
 			Result.Normalize();
 
-			vertex.vcN[0] = Result.x;
-			vertex.vcN[1] = Result.y;
-			vertex.vcN[2] = Result.z;
+			vertex.vcN[0] = Result.GetX();
+			vertex.vcN[1] = Result.GetY();
+			vertex.vcN[2] = Result.GetZ();
 
 			meshData.Vertices.push_back(vertex);
 		}

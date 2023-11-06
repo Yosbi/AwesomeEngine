@@ -7,9 +7,9 @@ Particle::Particle(AWEVector vcPosition, AWEVector vcSpeed, float scale, float l
     : m_vcPosition(vcPosition), m_vcSpeed(vcSpeed), m_scale(scale), m_lifetime(life) {}
 
 void Particle::Update(float deltaTime) {
-    m_vcPosition.x += m_vcSpeed.x * deltaTime;
-    m_vcPosition.y += m_vcSpeed.y * deltaTime;
-    m_vcPosition.z += m_vcSpeed.z * deltaTime;
+    m_vcPosition.SetX(m_vcPosition.GetX() + m_vcSpeed.GetX() * deltaTime);
+    m_vcPosition.SetY(m_vcPosition.GetY() + m_vcSpeed.GetY() * deltaTime);
+    m_vcPosition.SetZ(m_vcPosition.GetZ() + m_vcSpeed.GetZ() * deltaTime);
     m_lifetime -= deltaTime;
 }
 
@@ -25,9 +25,9 @@ void ParticleSystemSparks::EmitSpark(AWEVector vcPosition) {
     for (int i = 0; i < 10; ++i) {
         AWEVector vcSpeed;
 
-        vcSpeed.x = dist(gen) * 2.0f;
-        vcSpeed.y = dist(gen) * 2.0f;
-        vcSpeed.z = dist(gen) * 2.0f;
+        vcSpeed.SetX(dist(gen) * 2.0f);
+        vcSpeed.SetY(dist(gen) * 2.0f);
+        vcSpeed.SetZ(dist(gen) * 2.0f);
         float lifetime = std::abs(dist(gen));
         float scale = std::abs(dist(gen));
 

@@ -13,6 +13,38 @@
 //-----------------------------------------------------------------------
 #include "AwesomeMath.h"
 
+
+//--------------------------------------------------------------------
+// Name: Constructors
+// Desc: 
+//--------------------------------------------------------------------
+AWEVector::AWEVector(): m_vector(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f)) {}
+AWEVector::AWEVector(float _x, float _y, float _z): m_vector(DirectX::XMVectorSet(_x, _y, _z, 1.0f)) {}
+AWEVector::AWEVector(const AWEVector& other) : m_vector(other.m_vector) {}
+AWEVector::AWEVector(const DirectX::XMVECTOR& v) : m_vector(v) {}
+
+
+//--------------------------------------------------------------------
+// Name: Getters
+// Desc: 
+//--------------------------------------------------------------------
+inline float AWEVector::GetX() const { return DirectX::XMVectorGetX(m_vector); }
+inline float AWEVector::GetY() const { return DirectX::XMVectorGetY(m_vector); }
+inline float AWEVector::GetZ() const { return DirectX::XMVectorGetZ(m_vector); }
+inline float AWEVector::GetW() const { return DirectX::XMVectorGetW(m_vector); }
+
+
+//--------------------------------------------------------------------
+// Name: Setters
+// Desc: 
+//--------------------------------------------------------------------
+inline void AWEVector::SetX(float x) { m_vector = DirectX::XMVectorSetX(m_vector, x); }
+inline void AWEVector::SetY(float y) { m_vector = DirectX::XMVectorSetY(m_vector, y); }
+inline void AWEVector::SetZ(float z) { m_vector = DirectX::XMVectorSetZ(m_vector, z); }
+inline void AWEVector::SetW(float w) { m_vector = DirectX::XMVectorSetW(m_vector, w); }
+
+
+
 //--------------------------------------------------------------------
 // Name: _fabs()
 // Desc: Returns a float positive (absolut value)
@@ -25,10 +57,7 @@ float _fabs(float f) { if (f < 0.0f) return -f; return f; }
 //--------------------------------------------------------------------
 inline void AWEVector::Set(float _x, float _y, float _z, float _w)
 {
-	x = _x;
-	y = _y;
-	z = _z;
-	w = _w;
+	m_vector = DirectX::XMVectorSet(_x, _y, _z, _w);
 }
 
 //--------------------------------------------------------------------
@@ -37,7 +66,7 @@ inline void AWEVector::Set(float _x, float _y, float _z, float _w)
 //--------------------------------------------------------------------
 inline float AWEVector::GetLength()
 {
-	return (float)sqrt(x * x + y * y + z * z); // not using w
+	return DirectX::XMVectorGetX(DirectX::XMVector3Length(m_vector));
 }
 
 //--------------------------------------------------------------------
@@ -46,7 +75,7 @@ inline float AWEVector::GetLength()
 //--------------------------------------------------------------------
 inline float AWEVector::GetSqrLength() const
 {
-	return (x * x, y * y, z * z);
+	return DirectX::XMVectorGetX(DirectX::XMVector3LengthSq(m_vector));
 }
 
 //--------------------------------------------------------------------
@@ -55,10 +84,7 @@ inline float AWEVector::GetSqrLength() const
 //--------------------------------------------------------------------
 inline void AWEVector::Negate()
 {
-	x = -x;
-	y = -y;
-	z = -z;
-
+	m_vector = DirectX::XMVectorNegate(m_vector);
 }
 
 //--------------------------------------------------------------------
@@ -67,7 +93,11 @@ inline void AWEVector::Negate()
 //--------------------------------------------------------------------
 inline float AWEVector::AngleWith(AWEVector& v)
 {
-	return (float)acos(((*this) * v) / (this->GetLength() * v.GetLength()));
+	//return (float)acos(((*this) * v) / (this->GetLength() * v.GetLength()));
+	DirectX::XMVECTOR thisNormalized = DirectX::XMVector3Normalize(m_vector);
+	DirectX::XMVECTOR otherNormalized = DirectX::XMVector3Normalize(v.m_vector);
+
+	return DirectX::XMVectorGetX(DirectX::XMVector3AngleBetweenNormals(thisNormalized, otherNormalized));
 }
 
 //--------------------------------------------------------------------
@@ -76,40 +106,17 @@ inline float AWEVector::AngleWith(AWEVector& v)
 //--------------------------------------------------------------------
 inline void AWEVector::Normalize()
 {
-	float length = GetLength();
-	if (length > 0)
-	{
-		float invLength = 1.0f / length;
-		x *= invLength;
-		y *= invLength;
-		z *= invLength;
-	}
-	w = 1.0f;
+	m_vector = DirectX::XMVector3Normalize(m_vector);
 }
 
-//--------------------------------------------------------------------
-// Name: Difference()
-// Desc: Get the vector difference from v1 to v2
-//--------------------------------------------------------------------
-inline void	AWEVector::Difference(const AWEVector& v1, const AWEVector& v2)
-{
-	x = v2.x - v1.x;
-	y = v2.y - v1.y;
-	z = v2.z - v1.z;
-	w = 1.0;
-}
 
 //--------------------------------------------------------------------
 // Name: Cross()
 // Desc: Build cross prodict of two vectors.
 //--------------------------------------------------------------------
-inline AWEVector AWEVector::Cross(const AWEVector& v2)
+inline AWEVector AWEVector::Cross(const AWEVector& other)
 {
-	float xResult = y * v2.z - z * v2.y;
-	float yResult = z * v2.x - x * v2.z;
-	float zResult = x * v2.y - y * v2.x;
-
-	return AWEVector(xResult, yResult, zResult);
+	return AWEVector(DirectX::XMVector3Cross(m_vector, other.m_vector));
 }
 
 //--------------------------------------------------------------------
@@ -119,11 +126,13 @@ inline AWEVector AWEVector::Cross(const AWEVector& v2)
 //--------------------------------------------------------------------
 inline void AWEVector::RotateWith(const AWEMatrix& m)
 {
-	// Applying rotational part of matrix only
+	m_vector = DirectX::XMVector3TransformCoord(m_vector, m.m_matrix);
+
+	/*// Applying rotational part of matrix only
 	float _x = x * m._11 + y * m._21 + z * m._31;
 	float _y = x * m._12 + y * m._22 + z * m._32;
 	float _z = x * m._13 + y * m._23 + z * m._33;
-	x = _x;   y = _y;   z = _z;
+	x = _x;   y = _y;   z = _z;*/
 }
 
 //--------------------------------------------------------------------
@@ -134,108 +143,157 @@ inline void AWEVector::RotateWith(const AWEMatrix& m)
 inline void AWEVector::InvRotateWith(const AWEMatrix& m)
 {
 
-	// Using transposed matrix
+	// Extract the 3x3 rotation matrix (ignoring translation)
+	DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationQuaternion(DirectX::XMQuaternionRotationMatrix(m.m_matrix));
+
+	// Calculate the inverse of the rotation matrix
+	DirectX::XMMATRIX inverseRotationMatrix = DirectX::XMMatrixInverse(nullptr, rotationMatrix);
+
+	// Apply the inverse rotation to the vector
+	m_vector = DirectX::XMVector3TransformCoord(m_vector, inverseRotationMatrix);
+
+	/*// Using transposed matrix
 	float _x = x * m._11 + y * m._12 + z * m._13;
 	float _y = x * m._21 + y * m._22 + z * m._23;
 	float _z = x * m._31 + y * m._32 + z * m._33;
-	x = _x;   y = _y;   z = _z;
+	x = _x;   y = _y;   z = _z;*/
 }
 
 //--------------------------------------------------------------------
-// Name: InvRotateWith()
+// Name: operator +=
 // Desc: Add two vectors together. Note this is faster than '+' due to lack
 //		 of additional constructor and return.
 //--------------------------------------------------------------------
 void AWEVector::operator += (const AWEVector& v)
 {
-	x += v.x;   y += v.y;   z += v.z;
+	m_vector = DirectX::XMVectorAdd(m_vector, v.m_vector);
 }
 
 //--------------------------------------------------------------------
-// Name: InvRotateWith()
+// Name: operator +
 // Desc: Add two vectors together. Note this is slower than '+=' due to 
 //		 additional constructor and return.
 //--------------------------------------------------------------------
-
-
 AWEVector AWEVector::operator + (const AWEVector& v) const
 {
-	return AWEVector(x + v.x, y + v.y, z + v.z);
+	return AWEVector(DirectX::XMVectorAdd(m_vector, v.m_vector));
 }
 
-
+//--------------------------------------------------------------------
+// Name: operator -=
+// Desc: 
+//--------------------------------------------------------------------
 void AWEVector::operator -= (const AWEVector& v)
 {
-	x -= v.x;   y -= v.y;   z -= v.z;
+	m_vector = DirectX::XMVectorSubtract(m_vector, v.m_vector);
 }
 
-
+//--------------------------------------------------------------------
+// Name: operator -
+// Desc: 
+//--------------------------------------------------------------------
 AWEVector AWEVector::operator - (const AWEVector& v) const
 {
-	return AWEVector(x - v.x, y - v.y, z - v.z);
+	return AWEVector(DirectX::XMVectorSubtract(m_vector, v.m_vector));
 }
 
-
+//--------------------------------------------------------------------
+// Name: operator *=
+// Desc: 
+//--------------------------------------------------------------------
 void AWEVector::operator *= (float f)
 {
-	x *= f;   y *= f;   z *= f;
+	m_vector = DirectX::XMVectorScale(m_vector, f);
 }
 
+//--------------------------------------------------------------------
+// Name: operator /=
+// Desc: 
+//--------------------------------------------------------------------
 void AWEVector::operator /= (float f)
 {
-	x /= f;   y /= f;   z /= f;
+	if (f != 0.0f)
+	{
+		float invScalar = 1.0f / f;
+		m_vector = DirectX::XMVectorScale(m_vector, invScalar);
+	}
 }
 
+//--------------------------------------------------------------------
+// Name: operator *
+// Desc: 
+//--------------------------------------------------------------------
 AWEVector AWEVector::operator * (float f) const
 {
-	return AWEVector(x * f, y * f, z * f);
+	return AWEVector(DirectX::XMVectorScale(m_vector, f));
 }
 
+//--------------------------------------------------------------------
+// Name: operator /
+// Desc: 
+//--------------------------------------------------------------------
 AWEVector AWEVector::operator / (float f) const
 {
-	return AWEVector(x / f, y / f, z / f);
+	if (f != 0.0f)
+	{
+		float invScalar = 1.0f / f;
+		return AWEVector(DirectX::XMVectorScale(m_vector, invScalar));
+	}
+
+	return AWEVector();
 }
 
+//--------------------------------------------------------------------
+// Name: operator +=
+// Desc: 
+//--------------------------------------------------------------------
 void AWEVector::operator += (float f) {
-	x += f;   y += f;   z += f;
+	m_vector = DirectX::XMVectorAdd(m_vector, DirectX::XMVectorReplicate(f));
 }
 
+//--------------------------------------------------------------------
+// Name: operator -=
+// Desc:
+//--------------------------------------------------------------------
 void AWEVector::operator -= (float f)
 {
-	x -= f;   y -= f;   z -= f;
+	m_vector = DirectX::XMVectorSubtract(m_vector, DirectX::XMVectorReplicate(f));
 }
 
+//--------------------------------------------------------------------
+// Name: operator +
+// Desc:
+//--------------------------------------------------------------------
 AWEVector AWEVector::operator + (float f) const
 {
-	return AWEVector(x + f, y + f, z + f);
+	return AWEVector(DirectX::XMVectorAdd(m_vector, DirectX::XMVectorReplicate(f)));
 }
 
+//--------------------------------------------------------------------
+// Name: operator -
+// Desc:
+//--------------------------------------------------------------------
 AWEVector AWEVector::operator - (float f) const
 {
-	return AWEVector(x - f, y - f, z - f);
+	return AWEVector(DirectX::XMVectorSubtract(m_vector, DirectX::XMVectorReplicate(f)));
 }
 
-
+//--------------------------------------------------------------------
+// Name: operator ~*
+// Desc:
+//--------------------------------------------------------------------
 float AWEVector::operator * (const AWEVector& v) const
 {
-	return (v.x * x + v.y * y + v.z * z);
+	return DirectX::XMVectorGetX(DirectX::XMVector3Dot(m_vector, v.m_vector));
+
 
 }
 
+//--------------------------------------------------------------------
+// Name: operator *
+// Desc:
+//--------------------------------------------------------------------
 AWEVector AWEVector::operator * (const AWEMatrix& m) const
 {
-	AWEVector vcResult;
-
-
-	vcResult.x = x * m._11 + y * m._21 + z * m._31 + m._41;
-	vcResult.y = x * m._12 + y * m._22 + z * m._32 + m._42;
-	vcResult.z = x * m._13 + y * m._23 + z * m._33 + m._43;
-	vcResult.w = x * m._14 + y * m._24 + z * m._34 + m._44;
-
-	vcResult.x = vcResult.x / vcResult.w;
-	vcResult.y = vcResult.y / vcResult.w;
-	vcResult.z = vcResult.z / vcResult.w;
-	vcResult.w = 1.0f;
-
-	return vcResult;
+	return AWEVector(DirectX::XMVector4Transform(m_vector, m.m_matrix));
 }

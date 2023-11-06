@@ -79,14 +79,19 @@ UINT numColsRowsWater = 250;
 float waterSize = 50.0f;
 AwesomeGeometryGenerator::AwesomeMeshData g_cpuWaves;
 Waves g_waves(numColsRowsWater, numColsRowsWater, 1.0f, 0.03f, 8.0f, 0.2f);
+#include <WinBase.h>
 
 
 
 /**
  * WinMain function to get the thing started.
  */
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
-    LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI WinMain(
+    _In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPSTR lpCmdLine,
+    _In_ int nShowCmd
+) {
     WNDCLASSEX	wndclass;
     HRESULT     hr;
     HWND		hWnd;
@@ -98,7 +103,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     wndclass.lpfnWndProc = MsgProc;
     wndclass.cbClsExtra = 0;
     wndclass.cbWndExtra = 0;
-    wndclass.hInstance = hInst;
+    wndclass.hInstance = hInstance;
     wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
     wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
     wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW);
@@ -116,14 +121,14 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
         WS_MINIMIZEBOX | WS_VISIBLE,
         GetSystemMetrics(SM_CXSCREEN) / 2 - (1280 / 2),
         GetSystemMetrics(SM_CYSCREEN) / 2 - (720 / 2),
-        1280, 720, NULL, NULL, hInst, NULL)))
+        1280, 720, NULL, NULL, hInstance, NULL)))
         return 0;
 
     // dont show everything off yet
     ShowWindow(hWnd, SW_HIDE);
 
     g_hWnd = hWnd;
-    g_hInst = hInst;
+    g_hInst = hInstance;
 
 
     // try to start the engine
@@ -163,7 +168,7 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInstance,
     // cleanup stuff
     ProgramCleanup();
 
-    UnregisterClass(g_szAppClass, hInst);
+    UnregisterClass(g_szAppClass, hInstance);
 
     // return back to windows
     return (int)msg.wParam;
@@ -222,7 +227,10 @@ void updateCamera(float deltaT) {
     if (g_dirLerp.GetAnimationFinished()) {
         AwesomeBaseCam* cam = g_vcCameras.at(g_nSelectedCamera);
         cam->Update(deltaT);
-        g_pDevice->SetViewMatrix(cam->GetPos(), cam->GetDir(), cam->GetUp());
+
+        AWEVector lookAt = g_vcHadaPos - cam->GetPos();
+
+        g_pDevice->SetViewMatrix(cam->GetPos(), lookAt, cam->GetUp());
     }
     else
     {
@@ -462,13 +470,13 @@ std::vector<AWEVector> ComputeNewBezierPoints(AWEVector vcInitial)
 {
     std::vector<AWEVector> newBezier;
     newBezier.push_back(vcInitial);
-    newBezier.push_back(AWEVector(vcInitial.x,3.0f, vcInitial.z));
+    newBezier.push_back(AWEVector(vcInitial.GetX(), 3.0f, vcInitial.GetZ()));
 
     int newX = Rand(-1, 1) * Rand(3, 5);
     int newZ = Rand(-1, 1) * Rand(3, 5);
 
-    newX += vcInitial.x;
-    newZ += vcInitial.z;
+    newX += vcInitial.GetX();
+    newZ += vcInitial.GetZ();
 
     if (newX >= waterSize/2 - 1)
         newX -= 5;
@@ -519,8 +527,8 @@ void updateLight() {
     {
         float r = RandF(0.1f, 0.3f);
 
-        g_waves.Disturb( ( (-collisionPoint.z + waterSize/2) * numColsRowsWater) / waterSize, 
-                         ( (collisionPoint.x + waterSize/2) * numColsRowsWater) / waterSize, r);
+        g_waves.Disturb( ( (-collisionPoint.GetZ() + waterSize / 2) * numColsRowsWater) / waterSize,
+                         ( (collisionPoint.GetX() + waterSize / 2) * numColsRowsWater) / waterSize, r);
     }
 
     //OutputDebugStringA(("X: " + std::to_string(v.x) + ", Y: " + std::to_string(v.y) +", Z: " + std::to_string(v.z) + "\n").c_str());
@@ -528,13 +536,13 @@ void updateLight() {
     AWEVector v = g_bezier.Update(g_aweTimer.GetElapsed());
 
     // Updating the light position
-    g_FairyLight.vcPositionW.x = v.x;
-    g_FairyLight.vcPositionW.y = v.y;
-    g_FairyLight.vcPositionW.z = v.z;
+    g_FairyLight.vcPositionW.SetX( v.GetX() );
+    g_FairyLight.vcPositionW.SetY( v.GetY() );
+    g_FairyLight.vcPositionW.SetZ( v.GetZ() );
     g_pDevice->UpdateLight(g_nFairyLight, g_FairyLight);
 
     // Updating the fairy position
-    g_vcHadaPos.Set(g_FairyLight.vcPositionW.x, g_FairyLight.vcPositionW.y, g_FairyLight.vcPositionW.z);
+    g_vcHadaPos.Set(g_FairyLight.vcPositionW.GetX(), g_FairyLight.vcPositionW.GetY(), g_FairyLight.vcPositionW.GetZ());
 
 
     static float time = 0.0f;
@@ -578,13 +586,13 @@ void updateWaves()
     {
         AWEVector v = g_waves.Position(i);
         //g_cpuWaves.Vertices[i].x = v.x;
-        g_cpuWaves.Vertices[i].y = v.y;
+        g_cpuWaves.Vertices[i].y = v.GetY();
         //g_cpuWaves.Vertices[i].z = v.z;
 
         AWEVector n = g_waves.Normal(i);
-        g_cpuWaves.Vertices[i].vcN[0] = n.x;
-        g_cpuWaves.Vertices[i].vcN[1] = n.y;
-        g_cpuWaves.Vertices[i].vcN[2] = n.z;
+        g_cpuWaves.Vertices[i].vcN[0] = n.GetX();
+        g_cpuWaves.Vertices[i].vcN[1] = n.GetY();
+        g_cpuWaves.Vertices[i].vcN[2] = n.GetZ();
 
     }
 
@@ -630,7 +638,7 @@ void Render()
         AWEMatrix particleWorld;
         particleWorld.Identity();
         particleWorld.Scale(particle.m_scale, particle.m_scale, particle.m_scale);
-        particleWorld.Translate(particle.m_vcPosition.x, particle.m_vcPosition.y, particle.m_vcPosition.z);
+        particleWorld.Translate(particle.m_vcPosition.GetX(), particle.m_vcPosition.GetY(), particle.m_vcPosition.GetZ());
 
         AWELIGHT sparkLight;
         sparkLight.Type = AWE_POINT_LIGHT;
@@ -658,7 +666,7 @@ void Render()
 
     AWEMatrix mWorld;
     mWorld.Identity();
-    mWorld.Translate(g_vcHadaPos.x, g_vcHadaPos.y, g_vcHadaPos.z);
+    mWorld.Translate(g_vcHadaPos.GetX(), g_vcHadaPos.GetY(), g_vcHadaPos.GetZ());
     g_pDevice->SetWorldTransformMatrix(mWorld);
     g_pDevice->GetVertexManager()->Render(g_sMeshFairy);
 

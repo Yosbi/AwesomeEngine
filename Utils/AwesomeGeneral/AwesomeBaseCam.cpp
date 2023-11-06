@@ -33,8 +33,8 @@ void AwesomeBaseCam::Init(void) {
 	m_vcV.Set(0.0f, 0.0f, 0.0f);
 	m_fRotX = m_fRotY = m_fRotZ = m_fThrust = 0.0f;
 	m_fRollSpd = m_fPitchSpd = m_fYawSpd = 0.0f;
-	m_Quat.x = m_Quat.y = m_Quat.z = 0.0f;
-	m_Quat.w = 1.0f;
+	m_Quat.SetX(0.0f); m_Quat.SetY(0.0f); m_Quat.SetZ(0.0f);
+	m_Quat.SetW(1.0f);
 }
 
 //--------------------------------------------------------------------
@@ -71,17 +71,17 @@ void AwesomeBaseCam::RecalcAxes(void) {
 	m_Quat *= qFrame;
 
 	// extract the local axes
-	m_Quat.GetMatrix(&mat);
+	m_Quat.GetMatrix(mat);
 
-	m_vcRight.x = mat._11;
-	m_vcRight.y = mat._21;
-	m_vcRight.z = mat._31;
+	m_vcRight.SetX(mat.GetElement(1, 1));
+	m_vcRight.SetY(mat.GetElement(2, 1));
+	m_vcRight.SetZ(mat.GetElement(3, 1));
 
-	m_vcUp.x = mat._12;
-	m_vcUp.y = mat._22;
-	m_vcUp.z = mat._32;
+	m_vcUp.SetX(mat.GetElement(1, 2));
+	m_vcUp.SetY(mat.GetElement(2, 2));
+	m_vcUp.SetZ(mat.GetElement(3, 2));
 
-	m_vcDir.x = mat._13;
-	m_vcDir.y = mat._23;
-	m_vcDir.z = mat._33;
+	m_vcDir.SetX(mat.GetElement(1, 3));
+	m_vcDir.SetY(mat.GetElement(2, 3));
+	m_vcDir.SetZ(mat.GetElement(3, 3));
 } 

@@ -12,10 +12,9 @@
 //----------------------------------------------------------------------
 // includes
 //----------------------------------------------------------------------
+#include "Awe.h"
 #include "../AwesomeRenderer/AwesomeRenderDevice.h"
 #include "AweD3DCommandQueue.h"
-#include "Awe.h"
-#include "d3dx12.h"
 #include <DirectXTex.h>
 #include <filesystem>
 #include <fstream>

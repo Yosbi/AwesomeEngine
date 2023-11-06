@@ -5,9 +5,9 @@
 // Copyright (c) 2023
 //-----------------------------------------------------------------------
 //Desc: In this file is the definition of the clases, data types and methods
-//		of the math that the Y-Engine use, it is part of the static math lib
-//		implementing basic 3D math objects. I use c++ only in nessesary cases
-//		because today every processor supports SSE
+//		of the math that the Awesome Engine use, it is part of the static math lib
+//		implementing basic 3D math objects.Using XMVECTOR and XMMATRIX as we 
+//      ar targeting x64 platforms and they are 16 bytes aligned on the heap.
 //--------------------------------------------------------------------------
 
 #ifndef AWEMATH_H
@@ -20,6 +20,9 @@
 #include <math.h> 
 #include <stdio.h>
 #include <memory.h>	//memset
+
+#include <DirectXMath.h>
+#include <DirectXPackedVector.h>
 
 //-------------------------------------------------------------------------
 // Constants definitions
@@ -45,13 +48,27 @@ class AWEQuat;
 //-----------------------------------------------------------------------
 class __declspec(dllexport) AWEVector
 {
+    friend class AWEMatrix;
+    friend class AWEQuat;
+
 public:
     // Costructor and destructor
-    AWEVector() { x = 0, y = 0, z = 0, w = 1.0f; }
-    AWEVector(float _x, float _y, float _z)
-    {
-        x = _x; y = _y; z = _z; w = 1.0f;
-    }
+    AWEVector();
+    AWEVector(float _x, float _y, float _z);
+    AWEVector(const AWEVector& other);
+
+    // Getters
+    inline float GetX() const;
+    inline float GetY() const;
+    inline float GetZ() const;
+    inline float GetW() const;
+
+    // Setters
+    inline void SetX(float x);
+    inline void SetY(float y);
+    inline void SetZ(float z);
+    inline void SetW(float w);
+
 
     // Functions
     inline void		Set(float _x, float _y, float _z, float _w = 1.0f);		// Set the verctor values
@@ -81,8 +98,10 @@ public:
 
     inline AWEVector Cross(const AWEVector& v2);						    // Cross product
 
-    // Variables
-    float x, y, z, w;		// Coordinate set
+private:
+    AWEVector(const DirectX::XMVECTOR& v);
+
+    DirectX::XMVECTOR m_vector;
 
 };
 
@@ -91,10 +110,20 @@ public:
 // Desc: Basic matrix class
 //-----------------------------------------------------------------------
 class __declspec(dllexport) AWEMatrix {
+    friend class AWEVector;
+    friend class AWEQuat;
+
 public:
 
     // Constructor
     AWEMatrix(void);
+    AWEMatrix(const AWEMatrix& other);
+
+    // Getters
+    float GetElement(int row, int col) const;
+
+    // Setters
+    void SetElement(int row, int col, float value);
 
     // Functions
     inline void Identity(void);										    // identity matrix
@@ -104,7 +133,7 @@ public:
     inline void Rota(const AWEVector& vc);								// Rotation matrix arround x, y and z
     inline void Rota(float x, float y, float z);						// Rotation matrix arround x, y and z
     inline void RotaArbi(const AWEVector& vcAxis, float a);				// Rotation arround an arbitrary axis
-    inline void ApplyInverseRota(AWEVector* pvc);						// Inverse rotation
+    inline void ApplyInverseRota(AWEVector& pvc);						// Inverse rotation
     inline void Translate(float dx, float dy, float dz);				// Translate a certain distance
     inline void SetTranslation(AWEVector vc, bool EraseContent = false);// Set translation values
     inline AWEVector GetTranslation(void);								// Get the translation value
@@ -120,32 +149,46 @@ public:
     AWEMatrix operator * (const AWEMatrix& m)const;						// matrix multiplication
     AWEVector operator * (const AWEVector& vc)const;					// matrix vector multiplication
 
-    // Variables
-    float _11, _12, _13, _14;
-    float _21, _22, _23, _24;
-    float _31, _32, _33, _34;
-    float _41, _42, _43, _44;
+   
+
+private:
+    AWEMatrix(const DirectX::XMMATRIX& m);
+
+    DirectX::XMMATRIX m_matrix;
 };
 
 //-----------------------------------------------------------------------
-// Name: AWEOPolygon
+// Name: AWEQuat
 // Desc: Basic quaternion class
 //-----------------------------------------------------------------------
 class __declspec(dllexport) AWEQuat {
+    friend class AWEMatrix;
+    friend class AWEVector;
 public:
     // Constructors
-    AWEQuat(void) { x = 0.0f, y = 0.0f, z = 0.0f, w = 1.0f; }
-    AWEQuat(float _x, float _y, float _z, float _w)
-    {
-        x = _x; y = _y; z = _z; w = _w;
-    }
+    AWEQuat(void);
+    AWEQuat(float _x, float _y, float _z, float _w);
+    AWEQuat(const AWEQuat& other);
+
+    // Getters
+    inline float GetX() const;
+    inline float GetY() const;
+    inline float GetZ() const;
+    inline float GetW() const;
+
+    // Setters
+    inline void SetVector(AWEVector& v);
+    inline void SetX(float x);
+    inline void SetY(float y);
+    inline void SetZ(float z);
+    inline void SetW(float z);
 
     // Functions
     void  MakeFromEuler(float fPitch, float fYaw, float fRoll);
     void  Normalize();
     void  Conjugate(AWEQuat q);
-    void  GetEulers(float* fPitch, float* fYaw, float* fRoll);
-    void  GetMatrix(AWEMatrix* m);
+    void  GetEulers(float& fPitch, float& fYaw, float& fRoll);
+    void  GetMatrix(AWEMatrix& m);
     float GetMagnitude(void);
 
 
@@ -163,14 +206,17 @@ public:
     void  operator += (const AWEQuat& q);
     AWEQuat operator +  (const AWEQuat& q) const;
 
-    AWEQuat operator~(void) const { return AWEQuat(-x, -y, -z, w); }
+    AWEQuat operator~(void) const;
 
     void  Rotate(const AWEQuat& q1, const AWEQuat& q2);
 
     AWEVector Rotate(const AWEVector& v);
 
+private:
+    AWEQuat(const DirectX::XMVECTOR& q);
+
     // Variables
-    float x, y, z, w;
+    DirectX::XMVECTOR m_vector;
 };
 
 #endif //AWEMATH_H

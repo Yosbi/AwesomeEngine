@@ -401,13 +401,13 @@ void UpdateWaves()
     {
         AWEVector v = g_waves.Position(i);
         //g_cpuWaves.Vertices[i].x = v.x;
-        g_cpuWaves.Vertices[i].y = v.y;
+        g_cpuWaves.Vertices[i].y = v.GetY();
         //g_cpuWaves.Vertices[i].z = v.z;
 
         AWEVector n = g_waves.Normal(i);
-        g_cpuWaves.Vertices[i].vcN[0] = n.x;
-        g_cpuWaves.Vertices[i].vcN[1] = n.y;
-        g_cpuWaves.Vertices[i].vcN[2] = n.z;
+        g_cpuWaves.Vertices[i].vcN[0] = n.GetX();
+        g_cpuWaves.Vertices[i].vcN[1] = n.GetY();
+        g_cpuWaves.Vertices[i].vcN[2] = n.GetZ();
 
     }
 
@@ -456,9 +456,9 @@ HRESULT LoadAssets() {
         grid.Vertices[i].y = GetHillsHeight(grid.Vertices[i].x, grid.Vertices[i].z);
         
         AWEVector normal = GetHillsNormal(grid.Vertices[i].x, grid.Vertices[i].z);
-        grid.Vertices[i].vcN[0] = normal.x;
-        grid.Vertices[i].vcN[1] = normal.y;
-        grid.Vertices[i].vcN[2] = normal.z;
+        grid.Vertices[i].vcN[0] = normal.GetX();
+        grid.Vertices[i].vcN[1] = normal.GetY();
+        grid.Vertices[i].vcN[2] = normal.GetZ();
 
     }
     g_pDevice->GetVertexManager()->CreateStaticBuffer(terrainSkin, grid.Vertices.size(), grid.getVertexSize(), grid.Vertices.data(),

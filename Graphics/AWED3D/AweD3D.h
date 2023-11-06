@@ -19,6 +19,7 @@
 //----------------------------------------------------------------------
 // includes
 //----------------------------------------------------------------------
+#include "Awe.h"
 #include "../AwesomeRenderer/AwesomeRenderDevice.h"
 #include "../../Utils/AwesomeGeneral/AwesomeTimer.h"
 #include <initguid.h>
@@ -31,13 +32,11 @@
 #include <d3dcompiler.h>
 #include <string>
 #include <comdef.h>
-#include "d3dx12.h"
 #include "AweD3DException.h"
 #include "AweD3DCommandQueue.h"
 #include "AweD3DSkinManager.h"
 #include "AweD3DVertexCache.h"
 #include "AweUtil.h"
-#include "Awe.h"
 #include <vector>
 
 

@@ -28,9 +28,9 @@ void AweD3D::setFoV(float FoV)
 //-----------------------------------------------------------------------------
 void AweD3D::SetViewMatrix(const AWEVector& vcPos, const AWEVector& vcPoint, const AWEVector& vcWorldUp)
 {
-	const DirectX::XMVECTOR xeyePosition = DirectX::XMVectorSet(vcPos.x, vcPos.y, vcPos.z, vcPos.w);
-	const DirectX::XMVECTOR xfocusPoint  = DirectX::XMVectorSet(vcPoint.x, vcPoint.y, vcPoint.z, vcPoint.w);
-	const DirectX::XMVECTOR xupDirection = DirectX::XMVectorSet(vcWorldUp.x, vcWorldUp.y, vcWorldUp.z, vcWorldUp.w);
+	const DirectX::XMVECTOR xeyePosition = DirectX::XMVectorSet(vcPos.GetX(), vcPos.GetY(), vcPos.GetZ(), vcPos.GetW());
+	const DirectX::XMVECTOR xfocusPoint  = DirectX::XMVectorSet(vcPoint.GetX(), vcPoint.GetY(), vcPoint.GetZ(), vcPoint.GetW());
+	const DirectX::XMVECTOR xupDirection = DirectX::XMVectorSet(vcWorldUp.GetX(), vcWorldUp.GetY(), vcWorldUp.GetZ(), vcWorldUp.GetW());
 
 	DirectX::XMMATRIX xMatrixLookTo = DirectX::XMMatrixLookToLH(xeyePosition, xfocusPoint, xupDirection);
 	DirectX::XMStoreFloat4x4((DirectX::XMFLOAT4X4*) &m_ViewMatrix, xMatrixLookTo);
