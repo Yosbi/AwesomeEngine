@@ -514,7 +514,7 @@ HRESULT ProgramTick(void) {
     AWEMatrix mWorld;
     mWorld.Translate(0.0f, 0.5f, 0.0f);
     AWEMatrix mScaling;
-    mScaling._11 = mScaling._22 = mScaling._33 = 2.0f;
+    mScaling.SetElement(1, 1, 2.0f); mScaling.SetElement(2, 2, 2.0f); mScaling.SetElement(3, 3, 2.0f);
     g_pDevice->SetWorldTransformMatrix(mScaling * mWorld);
     g_pDevice->GetVertexManager()->Render(g_sMeshBox);
 

@@ -15,11 +15,63 @@
 #include "AwesomeMath.h"     
 
 //--------------------------------------------------------------------
+// Name: Constructors
+// Desc: 
+//--------------------------------------------------------------------
+AWEQuat::AWEQuat(void) : m_vector(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f)) {}
+AWEQuat::AWEQuat(float _x, float _y, float _z, float _w) : m_vector(DirectX::XMVectorSet(_x, _y, _z, _w)) {}
+AWEQuat::AWEQuat(const AWEQuat& other) : m_vector(other.m_vector) {}
+AWEQuat::AWEQuat(const DirectX::XMVECTOR& q) : m_vector(q) {}
+
+//--------------------------------------------------------------------
+// Name: Getters
+// Desc: 
+//--------------------------------------------------------------------
+float AWEQuat::GetX() const {
+    return DirectX::XMVectorGetX(m_vector);
+}
+
+float AWEQuat::GetY() const {
+    return DirectX::XMVectorGetY(m_vector);
+}
+
+float AWEQuat::GetZ() const {
+    return DirectX::XMVectorGetZ(m_vector);
+}
+
+float AWEQuat::GetW() const {
+    return DirectX::XMVectorGetW(m_vector);
+}
+//--------------------------------------------------------------------
+// Name: Setters
+// Desc: 
+//--------------------------------------------------------------------
+void AWEQuat::SetVector(AWEVector& v) {
+    m_vector = v.m_vector;
+}
+
+void AWEQuat::SetX(float xValue) {
+    m_vector = DirectX::XMVectorSetX(m_vector, xValue);
+}
+
+void AWEQuat::SetY(float yValue) {
+    m_vector = DirectX::XMVectorSetY(m_vector, yValue);
+}
+
+void AWEQuat::SetZ(float zValue) {
+    m_vector = DirectX::XMVectorSetZ(m_vector, zValue);
+}
+
+void AWEQuat::SetW(float wValue) {
+    m_vector = DirectX::XMVectorSetW(m_vector, wValue);
+}
+
+//--------------------------------------------------------------------
 // Name: GetMagnitude()
 // Desc: Get the mgnitude of a quaternion
 //--------------------------------------------------------------------
 float AWEQuat::GetMagnitude(void) {
-    return sqrtf(x * x + y * y + z * z + w * w);
+    return DirectX::XMVectorGetX(DirectX::XMQuaternionLength(m_vector));
 }
 
 //--------------------------------------------------------------------
@@ -27,11 +79,7 @@ float AWEQuat::GetMagnitude(void) {
 // Desc: Normalize quaternion
 //--------------------------------------------------------------------
 void AWEQuat::Normalize(void) {
-    float m = sqrtf(x * x + y * y + z * z + w * w);
-    if (m != 0)
-    {
-        x /= m; y /= m; z /= m; w /= m;
-    }
+    m_vector = DirectX::XMQuaternionNormalize(m_vector);
 }
 
 //--------------------------------------------------------------------
@@ -39,7 +87,7 @@ void AWEQuat::Normalize(void) {
 // Desc: 
 //--------------------------------------------------------------------
 void AWEQuat::Conjugate(AWEQuat q) {
-    x = -q.x;  y = -q.y;  z = -q.z;  w = q.w;
+    m_vector = DirectX::XMQuaternionConjugate(q.m_vector);
 }
 
 //--------------------------------------------------------------------
@@ -47,8 +95,7 @@ void AWEQuat::Conjugate(AWEQuat q) {
 // Desc: 
 //--------------------------------------------------------------------
 void AWEQuat::Rotate(const AWEQuat& q1, const AWEQuat& q2) {
-    AWEQuat t = q1 * q2 * (~q1);
-    x = t.x; y = t.y; z = t.z; w = t.w;
+    m_vector = DirectX::XMQuaternionMultiply(q2.m_vector, q1.m_vector);
 }
 
 //--------------------------------------------------------------------
@@ -56,49 +103,15 @@ void AWEQuat::Rotate(const AWEQuat& q1, const AWEQuat& q2) {
 // Desc: 
 //--------------------------------------------------------------------
 AWEVector AWEQuat::Rotate(const AWEVector& v) {
-    AWEQuat t(x, y, z, w);
-    AWEQuat r = t * v * (~t);
-    return AWEVector(r.x, r.y, r.z);
+    return AWEVector(DirectX::XMVector3Rotate(v.m_vector, m_vector));
 }
 
 //--------------------------------------------------------------------
 // Name: GetMatrix()
 // Desc: Get a rotation matrix out of the quaternion
 //--------------------------------------------------------------------
-void AWEQuat::GetMatrix(AWEMatrix* pMat) {
-    float wx, wy, wz, xx, yy, yz, xy, xz, zz, x2, y2, z2;
-
-    // set matrix to identity
-    memset(pMat, 0, sizeof(AWEMatrix));
-    pMat->_44 = 1.0f;
-
-    x2 = x + x;
-    y2 = y + y;
-    z2 = z + z;
-
-    xx = x * x2;
-    xy = x * y2;
-    xz = x * z2;
-
-    yy = y * y2;
-    yz = y * z2;
-    zz = z * z2;
-
-    wx = w * x2;
-    wy = w * y2;
-    wz = w * z2;
-
-    pMat->_11 = 1.0f - (yy + zz);
-    pMat->_12 = xy - wz;
-    pMat->_13 = xz + wy;
-
-    pMat->_21 = xy + wz;
-    pMat->_22 = 1.0f - (xx + zz);
-    pMat->_23 = yz - wx;
-
-    pMat->_31 = xz - wy;
-    pMat->_32 = yz + wx;
-    pMat->_33 = 1.0f - (xx + yy);
+void AWEQuat::GetMatrix(AWEMatrix& pMat) {
+    pMat.m_matrix = DirectX::XMMatrixRotationQuaternion(m_vector);
 }
 
 //--------------------------------------------------------------------
@@ -106,66 +119,22 @@ void AWEQuat::GetMatrix(AWEMatrix* pMat) {
 // Desc: Construct quaternion from Euler angles
 //--------------------------------------------------------------------
 void AWEQuat::MakeFromEuler(float fPitch, float fYaw, float fRoll) {
-    float cX, cY, cZ, sX, sY, sZ, cYcZ, sYsZ, cYsZ, sYcZ;
-
-    fPitch *= 0.5f;
-    fYaw *= 0.5f;
-    fRoll *= 0.5f;
-
-    cX = cosf(fPitch);
-    cY = cosf(fYaw);
-    cZ = cosf(fRoll);
-
-    sX = sinf(fPitch);
-    sY = sinf(fYaw);
-    sZ = sinf(fRoll);
-
-    cYcZ = cY * cZ;
-    sYsZ = sY * sZ;
-    cYsZ = cY * sZ;
-    sYcZ = sY * cZ;
-
-    w = cX * cYcZ + sX * sYsZ;
-    x = sX * cYcZ - cX * sYsZ;
-    y = cX * sYcZ + sX * cYsZ;
-    z = cX * cYsZ - sX * sYcZ;
+    DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYaw(fPitch, fYaw, fRoll);
+    m_vector = DirectX::XMQuaternionRotationMatrix(rotationMatrix);
 }
 
 //--------------------------------------------------------------------
 // Name: GetEulers()
 // Desc: Converts quaternion into euler angles
 //--------------------------------------------------------------------
-void AWEQuat::GetEulers(float* fPitch, float* fYaw, float* fRoll) {
-    double   r11, r21, r31, r32, r33, r12, r13;
-    double   q00, q11, q22, q33;
-    double   tmp;
+void AWEQuat::GetEulers(float& fPitch, float& fYaw, float& fRoll) {
+    // Convert the quaternion to a rotation matrix
+    DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationQuaternion(m_vector);
 
-    q00 = w * w;
-    q11 = x * x;
-    q22 = y * y;
-    q33 = z * z;
-
-    r11 = q00 + q11 - q22 - q33;
-    r21 = 2 * (x * y + w * z);
-    r31 = 2 * (x * z - w * y);
-    r32 = 2 * (y * z + w * x);
-    r33 = q00 - q11 - q22 + q33;
-
-    tmp = fabs(r31);
-    if (tmp > 0.999999)
-    {
-        r12 = 2 * (x * y - w * z);
-        r13 = 2 * (x * z + w * y);
-
-        *fPitch = 0.0f;
-        *fYaw = (float)-((AWEPI / 2) * r31 / tmp);
-        *fRoll = (float)atan2(-r12, -r31 * r13);
-    }
-    else {
-        *fPitch = (float)atan2(r32, r33);
-        *fYaw = (float)asin(-r31);
-        *fRoll = (float)atan2(r21, r11);
-    }
+    // Extract Euler angles from the rotation matrix
+    fPitch = asinf(-DirectX::XMVectorGetZ(rotationMatrix.r[1]));
+    fYaw = atan2f(DirectX::XMVectorGetX(rotationMatrix.r[2]), DirectX::XMVectorGetY(rotationMatrix.r[0]));
+    fRoll = atan2f(DirectX::XMVectorGetX(rotationMatrix.r[1]), DirectX::XMVectorGetY(rotationMatrix.r[1]));
 }
 
 //--------------------------------------------------------------------
@@ -174,15 +143,29 @@ void AWEQuat::GetEulers(float* fPitch, float* fYaw, float* fRoll) {
 //--------------------------------------------------------------------
 void AWEQuat::operator /= (float f)
 {
-    w /= f;  x /= f;  y /= f;  z /= f;
+    AWEVector v(m_vector);
+    v = v / f; 
+    m_vector = v.m_vector;
 }
+
+//--------------------------------------------------------------------
+// Name: operator ~ 
+// Desc: 
+//--------------------------------------------------------------------
+AWEQuat AWEQuat::operator~(void) const 
+{ 
+    return AWEQuat(-GetX(), -GetY(), -GetZ(), GetW());
+}
+
 
 //--------------------------------------------------------------------
 // Name: operator /
 // Desc: 
 //--------------------------------------------------------------------
 AWEQuat AWEQuat::operator / (float f) {
-    return AWEQuat(x / f, y / f, z / f, w / f);
+    AWEVector v(m_vector);
+    v = v / f;
+    return AWEQuat(v.m_vector);
 }
 
 //--------------------------------------------------------------------
@@ -191,7 +174,7 @@ AWEQuat AWEQuat::operator / (float f) {
 //--------------------------------------------------------------------
 void AWEQuat::operator *= (float f)
 {
-    w *= f;  x *= f;  y *= f;  z *= f;
+    m_vector = DirectX::XMQuaternionMultiply(m_vector, DirectX::XMVectorSet(f, f, f, f));
 }
 
 //--------------------------------------------------------------------
@@ -199,7 +182,7 @@ void AWEQuat::operator *= (float f)
 // Desc: Multiplies a quaternion by a scalar value
 //--------------------------------------------------------------------
 AWEQuat AWEQuat::operator * (float f) {
-    return AWEQuat(x * f, y * f, z * f, w * f);
+    return AWEQuat(DirectX::XMQuaternionMultiply(m_vector, DirectX::XMVectorSet(f, f, f, f)));
 }
 
 //--------------------------------------------------------------------
@@ -208,11 +191,11 @@ AWEQuat AWEQuat::operator * (float f) {
 //--------------------------------------------------------------------
 void AWEQuat::operator += (const AWEQuat& q)
 {
-    w += q.w;  x += q.x;  y += q.y;  z += q.z;
+    m_vector = DirectX::XMVectorAdd(m_vector, q.m_vector);
 }
 
 AWEQuat AWEQuat::operator + (const AWEQuat& q) const {
-    return AWEQuat(x + q.x, y + q.y, z + q.z, w + q.w);
+    return AWEQuat(DirectX::XMVectorAdd(m_vector, q.m_vector));
 }
 
 
@@ -222,17 +205,7 @@ AWEQuat AWEQuat::operator + (const AWEQuat& q) const {
 //--------------------------------------------------------------------
 // multiplies two quaternions with *= operator
 void AWEQuat::operator *= (const AWEQuat& q) {
-    float _x, _y, _z, _w;
-
-    _w = w * q.w - x * q.x - y * q.y - z * q.z;
-    _x = w * q.x + x * q.w + y * q.z - z * q.y;
-    _y = w * q.y + y * q.w + z * q.x - x * q.z;
-    _z = w * q.z + z * q.w + x * q.y - y * q.x;
-
-    x = _x;
-    y = _y;
-    z = _z;
-    w = _w;
+    m_vector = DirectX::XMQuaternionMultiply(m_vector, q.m_vector);
 }
 
 //--------------------------------------------------------------------
@@ -241,14 +214,7 @@ void AWEQuat::operator *= (const AWEQuat& q) {
 // multiplies two quaternions with * operator
 //--------------------------------------------------------------------
 AWEQuat AWEQuat::operator * (const AWEQuat& q) const {
-    AWEQuat qResult;
-
-    qResult.w = w * q.w - x * q.x - y * q.y - z * q.z;
-    qResult.x = w * q.x + x * q.w + y * q.z - z * q.y;
-    qResult.y = w * q.y + y * q.w + z * q.x - x * q.z;
-    qResult.z = w * q.z + z * q.w + x * q.y - y * q.x;
-
-    return qResult;
+   return AWEQuat(DirectX::XMQuaternionMultiply(m_vector, q.m_vector));
 }
 
 //--------------------------------------------------------------------
@@ -256,10 +222,7 @@ AWEQuat AWEQuat::operator * (const AWEQuat& q) const {
 // Desc: Multiplies a vector with a quaternion
 //--------------------------------------------------------------------
 AWEQuat AWEQuat::operator * (const AWEVector& v) const {
-    return AWEQuat(w * v.x + y * v.z - z * v.y,
-        w * v.y + z * v.x - x * v.z,
-        w * v.z + x * v.y - y * v.x,
-        -(x * v.x + y * v.y + z * v.z));
+    return AWEQuat(DirectX::XMVector3Rotate(v.m_vector, m_vector));
 }
 
 

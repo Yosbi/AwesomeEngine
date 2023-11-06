@@ -21,7 +21,7 @@
 AWEVector::AWEVector(): m_vector(DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f)) {}
 AWEVector::AWEVector(float _x, float _y, float _z): m_vector(DirectX::XMVectorSet(_x, _y, _z, 1.0f)) {}
 AWEVector::AWEVector(const AWEVector& other) : m_vector(other.m_vector) {}
-AWEVector::AWEVector(DirectX::XMVECTOR v) : m_vector(v) {}
+AWEVector::AWEVector(const DirectX::XMVECTOR& v) : m_vector(v) {}
 
 
 //--------------------------------------------------------------------
@@ -31,6 +31,8 @@ AWEVector::AWEVector(DirectX::XMVECTOR v) : m_vector(v) {}
 inline float AWEVector::GetX() const { return DirectX::XMVectorGetX(m_vector); }
 inline float AWEVector::GetY() const { return DirectX::XMVectorGetY(m_vector); }
 inline float AWEVector::GetZ() const { return DirectX::XMVectorGetZ(m_vector); }
+inline float AWEVector::GetW() const { return DirectX::XMVectorGetW(m_vector); }
+
 
 //--------------------------------------------------------------------
 // Name: Setters
@@ -39,6 +41,7 @@ inline float AWEVector::GetZ() const { return DirectX::XMVectorGetZ(m_vector); }
 inline void AWEVector::SetX(float x) { m_vector = DirectX::XMVectorSetX(m_vector, x); }
 inline void AWEVector::SetY(float y) { m_vector = DirectX::XMVectorSetY(m_vector, y); }
 inline void AWEVector::SetZ(float z) { m_vector = DirectX::XMVectorSetZ(m_vector, z); }
+inline void AWEVector::SetW(float w) { m_vector = DirectX::XMVectorSetW(m_vector, w); }
 
 
 
@@ -200,7 +203,7 @@ AWEVector AWEVector::operator - (const AWEVector& v) const
 //--------------------------------------------------------------------
 void AWEVector::operator *= (float f)
 {
-	m_vector = DirectX::XMVectorScale(m_vector, f)
+	m_vector = DirectX::XMVectorScale(m_vector, f);
 }
 
 //--------------------------------------------------------------------
@@ -212,7 +215,7 @@ void AWEVector::operator /= (float f)
 	if (f != 0.0f)
 	{
 		float invScalar = 1.0f / f;
-		m_vector = DirectX::XMVectorScale(m_vector, invScalar));
+		m_vector = DirectX::XMVectorScale(m_vector, invScalar);
 	}
 }
 
@@ -263,7 +266,7 @@ void AWEVector::operator -= (float f)
 //--------------------------------------------------------------------
 AWEVector AWEVector::operator + (float f) const
 {
-	return AWEVector(DirectX::XMVectorAdd(m_vector, DirectX::XMVectorReplicate(f)););
+	return AWEVector(DirectX::XMVectorAdd(m_vector, DirectX::XMVectorReplicate(f)));
 }
 
 //--------------------------------------------------------------------

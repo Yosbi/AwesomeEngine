@@ -104,13 +104,14 @@ void Waves::Update(float dt)
 					// Moreover, our +z axis goes "down"; this is just to 
 					// keep consistent with our row indices going down.
 
-					mPrevSolution[i * mNumCols + j].y =
-						mK1 * mPrevSolution[i * mNumCols + j].y +
-						mK2 * mCurrSolution[i * mNumCols + j].y +
-						mK3 * (mCurrSolution[(i + 1) * mNumCols + j].y +
-							mCurrSolution[(i - 1) * mNumCols + j].y +
-							mCurrSolution[i * mNumCols + j + 1].y +
-							mCurrSolution[i * mNumCols + j - 1].y);
+					mPrevSolution[i * mNumCols + j].SetY(
+						mK1 * mPrevSolution[i * mNumCols + j].GetY() +
+						mK2 * mCurrSolution[i * mNumCols + j].GetY() +
+						mK3 * (mCurrSolution[(i + 1) * mNumCols + j].GetY() +
+							mCurrSolution[(i - 1) * mNumCols + j].GetY() +
+							mCurrSolution[i * mNumCols + j + 1].GetY() +
+							mCurrSolution[i * mNumCols + j - 1].GetY())
+						);
 				}
 			});
 
@@ -129,13 +130,13 @@ void Waves::Update(float dt)
 			{
 				for (int j = 1; j < mNumCols - 1; ++j)
 				{
-					float l = mCurrSolution[i * mNumCols + j - 1].y;
-					float r = mCurrSolution[i * mNumCols + j + 1].y;
-					float t = mCurrSolution[(i - 1) * mNumCols + j].y;
-					float b = mCurrSolution[(i + 1) * mNumCols + j].y;
-					mNormals[i * mNumCols + j].x = -r + l;
-					mNormals[i * mNumCols + j].y = 2.0f * mSpatialStep;
-					mNormals[i * mNumCols + j].z = b - t;
+					float l = mCurrSolution[i * mNumCols + j - 1].GetY();
+					float r = mCurrSolution[i * mNumCols + j + 1].GetY();
+					float t = mCurrSolution[(i - 1) * mNumCols + j].GetY();
+					float b = mCurrSolution[(i + 1) * mNumCols + j].GetY();
+					mNormals[i * mNumCols + j].SetX( - r + l);
+					mNormals[i * mNumCols + j].SetY( 2.0f * mSpatialStep);
+					mNormals[i * mNumCols + j].SetZ( b - t);
 
 
 					mNormals[i * mNumCols + j].Normalize();
@@ -156,9 +157,9 @@ void Waves::Disturb(int i, int j, float magnitude)
 	float halfMag = 0.5f * magnitude;
 
 	// Disturb the ijth vertex height and its neighbors.
-	mCurrSolution[i * mNumCols + j].y -= magnitude;
-	mCurrSolution[i * mNumCols + j + 1].y += halfMag;
-	mCurrSolution[i * mNumCols + j - 1].y += halfMag;
-	mCurrSolution[(i + 1) * mNumCols + j].y += halfMag;
-	mCurrSolution[(i - 1) * mNumCols + j].y += halfMag;
+	mCurrSolution[i * mNumCols + j].SetY(mCurrSolution[i * mNumCols + j].GetY() - magnitude);
+	mCurrSolution[i * mNumCols + j + 1].SetY(mCurrSolution[i * mNumCols + j + 1].GetY() + halfMag);
+	mCurrSolution[i * mNumCols + j - 1].SetY(mCurrSolution[i * mNumCols + j - 1].GetY() + halfMag);
+	mCurrSolution[(i + 1) * mNumCols + j].SetY(mCurrSolution[(i + 1) * mNumCols + j].GetY() + halfMag);
+	mCurrSolution[(i - 1) * mNumCols + j].SetY(mCurrSolution[(i - 1) * mNumCols + j].GetY() + halfMag);
 }

@@ -17,9 +17,9 @@ AWEVector AwesomeLinearInterpolation::Update(float fElapsedTime)
     }
         
     AWEVector result;
-    result.x = (1 - m_fTotalTime) * m_vcStart.x + m_fTotalTime * m_vcEnd.x;
-    result.y = (1 - m_fTotalTime) * m_vcStart.y + m_fTotalTime * m_vcEnd.y;
-    result.z = (1 - m_fTotalTime) * m_vcStart.z + m_fTotalTime * m_vcEnd.z;
+    result.SetX( (1 - m_fTotalTime) * m_vcStart.GetX() + m_fTotalTime * m_vcEnd.GetX());
+    result.SetY( (1 - m_fTotalTime) * m_vcStart.GetY() + m_fTotalTime * m_vcEnd.GetY());
+    result.SetZ( (1 - m_fTotalTime) * m_vcStart.GetZ() + m_fTotalTime * m_vcEnd.GetZ());
 
     return result;
 }

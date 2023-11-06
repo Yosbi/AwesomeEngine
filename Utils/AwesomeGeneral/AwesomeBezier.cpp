@@ -21,9 +21,9 @@ AWEVector AwesomeBezier::Update(float fElapsedTime)
 
     for (int k = 1; k <= n; ++k) {
         for (int i = 0; i <= n - k; ++i) {
-            tempPoints[i].x = (1 - percentage) * tempPoints[i].x + percentage * tempPoints[i + 1].x;
-            tempPoints[i].y = (1 - percentage) * tempPoints[i].y + percentage * tempPoints[i + 1].y;
-            tempPoints[i].z = (1 - percentage) * tempPoints[i].z + percentage * tempPoints[i + 1].z;
+            tempPoints[i].SetX( (1 - percentage) * tempPoints[i].GetX() + percentage * tempPoints[i + 1].GetX());
+            tempPoints[i].SetY( (1 - percentage) * tempPoints[i].GetY() + percentage * tempPoints[i + 1].GetY());
+            tempPoints[i].SetZ( (1 - percentage) * tempPoints[i].GetZ() + percentage * tempPoints[i + 1].GetZ());
         }
     }
 

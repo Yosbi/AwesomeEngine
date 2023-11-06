@@ -470,13 +470,13 @@ std::vector<AWEVector> ComputeNewBezierPoints(AWEVector vcInitial)
 {
     std::vector<AWEVector> newBezier;
     newBezier.push_back(vcInitial);
-    newBezier.push_back(AWEVector(vcInitial.x,3.0f, vcInitial.z));
+    newBezier.push_back(AWEVector(vcInitial.GetX(), 3.0f, vcInitial.GetZ()));
 
     int newX = Rand(-1, 1) * Rand(3, 5);
     int newZ = Rand(-1, 1) * Rand(3, 5);
 
-    newX += vcInitial.x;
-    newZ += vcInitial.z;
+    newX += vcInitial.GetX();
+    newZ += vcInitial.GetZ();
 
     if (newX >= waterSize/2 - 1)
         newX -= 5;
@@ -527,8 +527,8 @@ void updateLight() {
     {
         float r = RandF(0.1f, 0.3f);
 
-        g_waves.Disturb( ( (-collisionPoint.z + waterSize/2) * numColsRowsWater) / waterSize, 
-                         ( (collisionPoint.x + waterSize/2) * numColsRowsWater) / waterSize, r);
+        g_waves.Disturb( ( (-collisionPoint.GetZ() + waterSize / 2) * numColsRowsWater) / waterSize,
+                         ( (collisionPoint.GetX() + waterSize / 2) * numColsRowsWater) / waterSize, r);
     }
 
     //OutputDebugStringA(("X: " + std::to_string(v.x) + ", Y: " + std::to_string(v.y) +", Z: " + std::to_string(v.z) + "\n").c_str());
@@ -536,13 +536,13 @@ void updateLight() {
     AWEVector v = g_bezier.Update(g_aweTimer.GetElapsed());
 
     // Updating the light position
-    g_FairyLight.vcPositionW.x = v.x;
-    g_FairyLight.vcPositionW.y = v.y;
-    g_FairyLight.vcPositionW.z = v.z;
+    g_FairyLight.vcPositionW.SetX( v.GetX() );
+    g_FairyLight.vcPositionW.SetY( v.GetY() );
+    g_FairyLight.vcPositionW.SetZ( v.GetZ() );
     g_pDevice->UpdateLight(g_nFairyLight, g_FairyLight);
 
     // Updating the fairy position
-    g_vcHadaPos.Set(g_FairyLight.vcPositionW.x, g_FairyLight.vcPositionW.y, g_FairyLight.vcPositionW.z);
+    g_vcHadaPos.Set(g_FairyLight.vcPositionW.GetX(), g_FairyLight.vcPositionW.GetY(), g_FairyLight.vcPositionW.GetZ());
 
 
     static float time = 0.0f;
@@ -586,13 +586,13 @@ void updateWaves()
     {
         AWEVector v = g_waves.Position(i);
         //g_cpuWaves.Vertices[i].x = v.x;
-        g_cpuWaves.Vertices[i].y = v.y;
+        g_cpuWaves.Vertices[i].y = v.GetY();
         //g_cpuWaves.Vertices[i].z = v.z;
 
         AWEVector n = g_waves.Normal(i);
-        g_cpuWaves.Vertices[i].vcN[0] = n.x;
-        g_cpuWaves.Vertices[i].vcN[1] = n.y;
-        g_cpuWaves.Vertices[i].vcN[2] = n.z;
+        g_cpuWaves.Vertices[i].vcN[0] = n.GetX();
+        g_cpuWaves.Vertices[i].vcN[1] = n.GetY();
+        g_cpuWaves.Vertices[i].vcN[2] = n.GetZ();
 
     }
 
@@ -638,7 +638,7 @@ void Render()
         AWEMatrix particleWorld;
         particleWorld.Identity();
         particleWorld.Scale(particle.m_scale, particle.m_scale, particle.m_scale);
-        particleWorld.Translate(particle.m_vcPosition.x, particle.m_vcPosition.y, particle.m_vcPosition.z);
+        particleWorld.Translate(particle.m_vcPosition.GetX(), particle.m_vcPosition.GetY(), particle.m_vcPosition.GetZ());
 
         AWELIGHT sparkLight;
         sparkLight.Type = AWE_POINT_LIGHT;
@@ -666,7 +666,7 @@ void Render()
 
     AWEMatrix mWorld;
     mWorld.Identity();
-    mWorld.Translate(g_vcHadaPos.x, g_vcHadaPos.y, g_vcHadaPos.z);
+    mWorld.Translate(g_vcHadaPos.GetX(), g_vcHadaPos.GetY(), g_vcHadaPos.GetZ());
     g_pDevice->SetWorldTransformMatrix(mWorld);
     g_pDevice->GetVertexManager()->Render(g_sMeshFairy);
 

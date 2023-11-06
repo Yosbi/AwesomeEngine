@@ -49,6 +49,7 @@ class AWEQuat;
 class __declspec(dllexport) AWEVector
 {
     friend class AWEMatrix;
+    friend class AWEQuat;
 
 public:
     // Costructor and destructor
@@ -60,11 +61,13 @@ public:
     inline float GetX() const;
     inline float GetY() const;
     inline float GetZ() const;
+    inline float GetW() const;
 
     // Setters
     inline void SetX(float x);
     inline void SetY(float y);
     inline void SetZ(float z);
+    inline void SetW(float w);
 
 
     // Functions
@@ -96,7 +99,7 @@ public:
     inline AWEVector Cross(const AWEVector& v2);						    // Cross product
 
 private:
-    AWEVector(DirectX::XMVECTOR v);
+    AWEVector(const DirectX::XMVECTOR& v);
 
     DirectX::XMVECTOR m_vector;
 
@@ -108,11 +111,13 @@ private:
 //-----------------------------------------------------------------------
 class __declspec(dllexport) AWEMatrix {
     friend class AWEVector;
+    friend class AWEQuat;
 
 public:
 
     // Constructor
     AWEMatrix(void);
+    AWEMatrix(const AWEMatrix& other);
 
     // Getters
     float GetElement(int row, int col) const;
@@ -147,7 +152,7 @@ public:
    
 
 private:
-    AWEMatrix(DirectX::XMMATRIX m);
+    AWEMatrix(const DirectX::XMMATRIX& m);
 
     DirectX::XMMATRIX m_matrix;
 };
@@ -161,18 +166,29 @@ class __declspec(dllexport) AWEQuat {
     friend class AWEVector;
 public:
     // Constructors
-    AWEQuat(void) { x = 0.0f, y = 0.0f, z = 0.0f, w = 1.0f; }
-    AWEQuat(float _x, float _y, float _z, float _w)
-    {
-        x = _x; y = _y; z = _z; w = _w;
-    }
+    AWEQuat(void);
+    AWEQuat(float _x, float _y, float _z, float _w);
+    AWEQuat(const AWEQuat& other);
+
+    // Getters
+    inline float GetX() const;
+    inline float GetY() const;
+    inline float GetZ() const;
+    inline float GetW() const;
+
+    // Setters
+    inline void SetVector(AWEVector& v);
+    inline void SetX(float x);
+    inline void SetY(float y);
+    inline void SetZ(float z);
+    inline void SetW(float z);
 
     // Functions
     void  MakeFromEuler(float fPitch, float fYaw, float fRoll);
     void  Normalize();
     void  Conjugate(AWEQuat q);
-    void  GetEulers(float* fPitch, float* fYaw, float* fRoll);
-    void  GetMatrix(AWEMatrix* m);
+    void  GetEulers(float& fPitch, float& fYaw, float& fRoll);
+    void  GetMatrix(AWEMatrix& m);
     float GetMagnitude(void);
 
 
@@ -190,14 +206,17 @@ public:
     void  operator += (const AWEQuat& q);
     AWEQuat operator +  (const AWEQuat& q) const;
 
-    AWEQuat operator~(void) const { return AWEQuat(-x, -y, -z, w); }
+    AWEQuat operator~(void) const;
 
     void  Rotate(const AWEQuat& q1, const AWEQuat& q2);
 
     AWEVector Rotate(const AWEVector& v);
 
+private:
+    AWEQuat(const DirectX::XMVECTOR& q);
+
     // Variables
-    float x, y, z, w;
+    DirectX::XMVECTOR m_vector;
 };
 
 #endif //AWEMATH_H

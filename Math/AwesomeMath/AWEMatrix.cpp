@@ -21,6 +21,8 @@ AWEMatrix::AWEMatrix()
 	// Set a default identity matrix
 	this->Identity();
 }
+AWEMatrix::AWEMatrix(const AWEMatrix& other) : m_matrix(other.m_matrix) {}
+AWEMatrix::AWEMatrix(const DirectX::XMMATRIX& m) : m_matrix(m) {}
 
 //--------------------------------------------------------------------
 // Name: GetElement

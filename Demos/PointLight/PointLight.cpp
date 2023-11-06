@@ -487,13 +487,13 @@ void updateLight() {
 
 
     // Updating the light position
-    g_globalDirectionalLight.vcPositionW.x = v.x;
-    g_globalDirectionalLight.vcPositionW.y = v.y;
-    g_globalDirectionalLight.vcPositionW.z = v.z;
+    g_globalDirectionalLight.vcPositionW.SetX( v.GetX());
+    g_globalDirectionalLight.vcPositionW.SetY( v.GetY());
+    g_globalDirectionalLight.vcPositionW.SetZ( v.GetZ());
     g_pDevice->UpdateLight(g_nGlobalDirectionalLight, g_globalDirectionalLight);
 
     // Updating the fairy position
-    g_vcHadaPos.Set(g_globalDirectionalLight.vcPositionW.x, g_globalDirectionalLight.vcPositionW.y, g_globalDirectionalLight.vcPositionW.z);
+    g_vcHadaPos.Set(g_globalDirectionalLight.vcPositionW.GetX(), g_globalDirectionalLight.vcPositionW.GetY(), g_globalDirectionalLight.vcPositionW.GetZ());
 
 
     static float time = 0.0f;
@@ -542,7 +542,7 @@ void Render()
         AWEMatrix particleWorld;
         particleWorld.Identity();
         particleWorld.Scale(particle.m_scale, particle.m_scale, particle.m_scale);
-        particleWorld.Translate(particle.m_vcPosition.x, particle.m_vcPosition.y, particle.m_vcPosition.z);
+        particleWorld.Translate(particle.m_vcPosition.GetX(), particle.m_vcPosition.GetY(), particle.m_vcPosition.GetZ());
 
         AWELIGHT sparkLight;
         sparkLight.Type = AWE_POINT_LIGHT;
@@ -576,7 +576,7 @@ void Render()
     g_pDevice->GetVertexManager()->Render(g_sMeshBox);*/
 
     mWorld.Identity();
-    mWorld.Translate(g_vcHadaPos.x, g_vcHadaPos.y, g_vcHadaPos.z);
+    mWorld.Translate(g_vcHadaPos.GetX(), g_vcHadaPos.GetY(), g_vcHadaPos.GetZ());
     g_pDevice->SetWorldTransformMatrix(mWorld);
     g_pDevice->GetVertexManager()->Render(g_sMeshHada);
 
